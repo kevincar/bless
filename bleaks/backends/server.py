@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import abc
 import asyncio
 import logging
@@ -162,7 +160,6 @@ class BaseBleakServer(abc.ABC):
     def read_request_func(
             self,
             characteristic: BleakGATTCharacteristic,
-            server: BaseBleakServer
             ) -> bytearray:
         """
         The callback for read requests on characteristics
@@ -171,8 +168,6 @@ class BaseBleakServer(abc.ABC):
         ----------
         characteristic : BleakGATTCharacteristic
             The Characteristic object whose value is to be read
-        server : BaseBleakServer
-            A reference to self
 
         Returns
         -------
@@ -185,8 +180,7 @@ class BaseBleakServer(abc.ABC):
     def write_request_func(
             self,
             characteristic: BleakGATTCharacteristic,
-            value: bytearray,
-            server: BaseBleakServer
+            value: bytearray
             ):
         """
         The callback for the write request on characteristics
@@ -197,8 +191,6 @@ class BaseBleakServer(abc.ABC):
             The charateristic object whose value is to be written
         value : bytearray
             The value to be assigned to the characteristic object
-        server : BaseBleakServer
-            A reference to self
         """
         raise NotImplementedError()
 
@@ -231,7 +223,7 @@ class BaseBleakServer(abc.ABC):
         if not characteristic:
             raise BleaksError("Invalid characteristic: {}".format(uuid))
 
-        return self.read_request_func(characteristic, server=self)
+        return self.read_request_func(characteristic)
 
     def write_request(self, uuid: str, value: Any):
         """
@@ -247,4 +239,4 @@ class BaseBleakServer(abc.ABC):
         if not characteristic:
             raise BleaksError("Invalid characteristic: {}".format(uuid))
 
-        self.write_request_func(characteristic, value, server=self)
+        self.write_request_func(characteristic, value)
