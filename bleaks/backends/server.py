@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 from asyncio import AbstractEventLoop
-from typing import Any, Optional, cast
+from typing import Any, Optional, cast, Dict, Callable
 from bleak.backends.service import BleakGATTServiceCollection
 from bleak.backends.characteristic import (
         BleakGATTCharacteristic,
@@ -29,6 +29,8 @@ class BaseBleakServer(abc.ABC):
         self.loop: AbstractEventLoop = (
                 loop if loop else asyncio.get_event_loop()
                 )
+
+        self._callbacks: Dict[str, Callable[[Any], Any]] = {}
 
         self.services: Optional[BleakGATTServiceCollection] = None
 
@@ -156,44 +158,6 @@ class BaseBleakServer(abc.ABC):
         """
         raise NotImplementedError()
 
-    @abc.abstractmethod
-    def read_request_func(
-            self,
-            characteristic: BleakGATTCharacteristic,
-            ) -> bytearray:
-        """
-        The callback for read requests on characteristics
-
-        Parameters
-        ----------
-        characteristic : BleakGATTCharacteristic
-            The Characteristic object whose value is to be read
-
-        Returns
-        -------
-        bytearray
-            The value of the characteristic to be returned
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def write_request_func(
-            self,
-            characteristic: BleakGATTCharacteristic,
-            value: bytearray
-            ):
-        """
-        The callback for the write request on characteristics
-
-        Parameters
-        ----------
-        characteristic : BleakGATTCharacteristic
-            The charateristic object whose value is to be written
-        value : bytearray
-            The value to be assigned to the characteristic object
-        """
-        raise NotImplementedError()
-
     def read_request(self, uuid: str) -> bytearray:
         """
         This function should be handed off to the subsequent backend bluetooth
@@ -240,3 +204,39 @@ class BaseBleakServer(abc.ABC):
             raise BleaksError("Invalid characteristic: {}".format(uuid))
 
         self.write_request_func(characteristic, value)
+
+    @property
+    def read_request_func(self) -> Callable[[Any], Any]:
+        """
+        Return an instance of the function to handle incoming read requests
+        """
+        func: Optional[Callable[[Any], Any]] = self._callbacks.get('read')
+        if func is not None:
+            return func
+        else:
+            raise BleaksError("Server: Read Callback is undefined")
+
+    @read_request_func.setter
+    def read_request_func(self, func: Callable):
+        """
+        Set the function to handle incoming read requests
+        """
+        self._callbacks['read'] = func
+
+    @property
+    def write_request_func(self) -> Callable:
+        """
+        Return an instance of the function to handle incoming write requests
+        """
+        func: Optional[Callable[[Any], Any]] = self._callbacks.get('write')
+        if func is not None:
+            return func
+        else:
+            raise BleaksError("Server: Write Callback is undefined")
+
+    @write_request_func.setter
+    def write_request_func(self, func: Callable):
+        """
+        Set the function to handle incoming write requests
+        """
+        self._callbacks['write'] = func
