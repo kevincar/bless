@@ -33,6 +33,9 @@ jobs:
         flake8 . --count --show-source --statistics
         # exit-zero treats all errors as warnings.
         flake8 . --count --exit-zero --statistics
+    - name: Check mypy
+      run: |
+        mypy .
     - name: Test with pytest
       run: |
         python -m pytest
