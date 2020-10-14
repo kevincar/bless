@@ -1,1 +1,4 @@
 pytest
+pytest-asyncio
+bleak
+pyobjc; platform_system == "Darwin"
