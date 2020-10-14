@@ -10,7 +10,6 @@ from typing import (
         Callable
         )
 
-from bleak.backends.corebluetooth.error import CBATTError
 
 from CoreBluetooth import (
         CBManagerStateUnknown,
@@ -20,6 +19,7 @@ from CoreBluetooth import (
         CBManagerStatePoweredOff,
         CBManagerStatePoweredOn
         )
+
 from Foundation import (
         NSObject,
         CBPeripheralManager,
@@ -34,6 +34,7 @@ from Foundation import (
 from libdispatch import dispatch_queue_create, DISPATCH_QUEUE_SERIAL
 
 from bleaks.exceptions import BleaksError
+from bleaks.backends.corebluetooth.error import CBATTError
 
 
 logger = logging.getLogger(name=__name__)
@@ -118,7 +119,7 @@ class PeripheralManagerDelegate(NSObject):
         timeout : float
             How long to wait for the powered on event
         """
-        await asyncio.wait_for(self.powered_on_event.wait(), timeout)
+        await asyncio.wait_for(self._powered_on_event.wait(), timeout)
 
     def is_connected(self) -> bool:
         """
@@ -145,7 +146,7 @@ class PeripheralManagerDelegate(NSObject):
         return self.peripheral_manager.isAdvertising()
 
     @objc.python_method
-    async def addService_(self, service: CBMutableService):  # noqa
+    async def addService(self, service: CBMutableService):  # noqa
         """
         Add a service to the peripheral
 
@@ -250,9 +251,9 @@ class PeripheralManagerDelegate(NSObject):
             logger.debug("Bluetooth powered on")
 
         if peripheral_manager.state() == CBManagerStatePoweredOn:
-            self.powered_on_event.set()
+            self._powered_on_event.set()
         else:
-            self.powered_on_event.clear()
+            self._powered_on_event.clear()
             self.advertisement_started_event.clear()
 
     def peripheralManagerDidUpdateState_(  # noqa
