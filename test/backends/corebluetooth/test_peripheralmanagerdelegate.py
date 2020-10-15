@@ -1,26 +1,32 @@
+import sys
 import uuid
 import pytest
 
-from CoreBluetooth import (
+if sys.platform != "Darwin":
+    pytest.skip("Only for MacOS", allow_module_level=True)
+
+from CoreBluetooth import (  # noqa: E402
         CBUUID,
         CBMutableCharacteristic
         )
 
-from bleaks.backends.characteristic import GattCharacteristicsFlags
+from bleaks.backends.characteristic import (  # noqa: E402
+        GattCharacteristicsFlags
+        )
 
-from bleaks.backends.corebluetooth.PeripheralManagerDelegate import (
+from bleaks.backends.corebluetooth.PeripheralManagerDelegate import (  # noqa: E402 E501
         PeripheralManagerDelegate,
         CBMutableService,
         )
 
-from bleaks.backends.corebluetooth.characteristic import CBAttributePermissions
+from bleaks.backends.corebluetooth.characteristic import (  # noqa: E402
+        CBAttributePermissions
+        )
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
-darwin_only = pytest.mark.skipif("'darwin' not in sys.platform")
 
 
 @hardware_only
-@darwin_only
 class TestPeripheralManagerDelegate:
     """
     Test specification for CoreBluetooth PeripheralManagerDelegate
