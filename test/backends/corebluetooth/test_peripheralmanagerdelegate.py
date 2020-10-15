@@ -1,8 +1,13 @@
 import sys
 import uuid
 import pytest
+import logging
+import asyncio
+import aioconsole
 
-if sys.platform != "Darwin":
+from typing import Dict, Any
+
+if sys.platform.lower() != "darwin":
     pytest.skip("Only for MacOS", allow_module_level=True)
 
 from CoreBluetooth import (  # noqa: E402
@@ -24,6 +29,7 @@ from bleaks.backends.corebluetooth.characteristic import (  # noqa: E402
         )
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
+logging.basicConfig(level=logging.DEBUG)
 
 
 @hardware_only
@@ -50,41 +56,78 @@ class TestPeripheralManagerDelegate:
 
     @pytest.mark.asyncio
     async def test_is_advertising(self, pmd: PeripheralManagerDelegate):
-        # Setup Service
-        id: str = str(uuid.uuid4())
-        cbid: CBUUID = CBUUID.alloc().initWithString_(id)
-        service: CBMutableService = (
-                CBMutableService.alloc().initWithType_primary_(cbid, True)
-                )
 
-        # Add Characteristic
+        def read(char_id: str):
+            print("READ")
+
+        def write(char_id: str, value: bytearray):
+            print("WRITE")
+
+        pmd.read_request_func = read
+        pmd.write_request_func = write
+
+        service_id: str = str(uuid.uuid4())
         char_id: str = str(uuid.uuid4())
-        props: GattCharacteristicsFlags = (
-                GattCharacteristicsFlags.read |
-                GattCharacteristicsFlags.write
-                )
-        permissions: CBAttributePermissions = (
-                CBAttributePermissions.readable |
-                CBAttributePermissions.writeable
-                )
-        cb_char_id: CBUUID = CBUUID.alloc().initWithString_(char_id)
-        cb_char: CBMutableCharacteristic = (
-                CBMutableCharacteristic.alloc()
-                .initWithType_properties_value_permissions_(
-                    cb_char_id,
-                    props.value,
-                    None,
-                    permissions.value
+
+        async def setup():
+            await pmd.wait_for_powered_on(5)
+            # Setup Service
+            cbid: CBUUID = CBUUID.alloc().initWithString_(service_id)
+            service: CBMutableService = (
+                    CBMutableService.alloc().initWithType_primary_(cbid, True)
                     )
-                )
-        service.setCharacteristics_([cb_char])
 
-        await pmd.addService(service)
-        assert pmd._services_added_events[cbid.UUIDString()].is_set()
+            # Add a subscribable Characteristic
+            props: GattCharacteristicsFlags = (
+                    GattCharacteristicsFlags.read |
+                    GattCharacteristicsFlags.write |
+                    GattCharacteristicsFlags.notify
+                    )
+            permissions: CBAttributePermissions = (
+                    CBAttributePermissions.readable |
+                    CBAttributePermissions.writeable
+                    )
+            cb_char_id: CBUUID = CBUUID.alloc().initWithString_(char_id)
+            cb_char: CBMutableCharacteristic = (
+                    CBMutableCharacteristic.alloc()
+                    .initWithType_properties_value_permissions_(
+                        cb_char_id,
+                        props.value,
+                        None,
+                        permissions.value
+                        )
+                    )
+            service.setCharacteristics_([cb_char])
 
-    def test_is_connected(self, pmd: PeripheralManagerDelegate):
-        # Verify that initially it should be disconnected
+            await pmd.addService(service)
+            assert pmd._services_added_events[cbid.UUIDString()].is_set()
+
+            # Verify that we're not yet advertising
+            assert pmd.is_advertising() is False
+
+            # Start Advertising
+            advertisement_data: Dict[str, Any] = {
+                    "kCBAdvDataServiceUUIDs": [cbid],
+                    "kCBAdvDataLocalName": "TestPeripheral"
+                    }
+
+            try:
+                await pmd.startAdvertising_(advertisement_data, timeout=5)
+            except asyncio.exceptions.TimeoutError:
+                await setup()
+
+        await setup()
+
+        assert pmd.is_advertising() is True
+
+        # Test Connection
+
         assert pmd.is_connected() is False
 
-        # Now wait for connection
-        print("")
+        print(
+                "Please connect now and subscribe to the characterisitc {}..."
+                .format(char_id)
+                )
+        await aioconsole.ainput("Press entry when ready...")
+
+        assert pmd.is_connected() is True
