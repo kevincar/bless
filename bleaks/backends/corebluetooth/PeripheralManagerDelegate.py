@@ -179,7 +179,7 @@ class PeripheralManagerDelegate(NSObject):
         self.peripheral_manager.startAdvertising_(advertisement_data)
 
         await asyncio.wait_for(
-                self.advertisement_started_event.wait(),
+                self._advertisement_started_event.wait(),
                 timeout
                 )
 
@@ -254,7 +254,7 @@ class PeripheralManagerDelegate(NSObject):
             self._powered_on_event.set()
         else:
             self._powered_on_event.clear()
-            self.advertisement_started_event.clear()
+            self._advertisement_started_event.clear()
 
     def peripheralManagerDidUpdateState_(  # noqa
             self,
@@ -314,13 +314,15 @@ class PeripheralManagerDelegate(NSObject):
             raise BleaksError("Failed to start advertising: {}".format(error))
 
         logger.debug("Peripheral manager did start advertising")
-        self.advertisement_started_event.set()
+        print("HI")
+        self._advertisement_started_event.set()
 
     def peripheralManagerDidStartAdvertising_error_(  # noqa
             self,
             peripheral_manager: CBPeripheralManager,
             error: NSError
             ):
+        logger.debug("Received DidStartAdvertising Message")
         self.event_loop.call_soon_threadsafe(
                 self.peripheralManagerDidStartAdvertising_error,
                 peripheral_manager,
@@ -389,7 +391,7 @@ class PeripheralManagerDelegate(NSObject):
                     )
                 )
         request.setValue_(
-                self.readRequestFunc(
+                self.read_request_func(
                     request.characteristic().UUID().UUIDString()
                     )
                 )
@@ -416,7 +418,7 @@ class PeripheralManagerDelegate(NSObject):
                         char.UUID().UUIDString(), value
                         )
                     )
-            self.writeRequestsFunc(char.UUID().UUIDString(), value)
+            self.write_requests_func(char.UUID().UUIDString(), value)
 
         peripheral_manager.respondToRequest_withResult_(
                 requests[0],
