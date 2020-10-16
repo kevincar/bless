@@ -5,7 +5,9 @@ import logging
 import asyncio
 import aioconsole
 
-from typing import Dict, Any
+import numpy as np
+
+from typing import Dict, Any, List, Optional
 
 if sys.platform.lower() != "darwin":
     pytest.skip("Only for MacOS", allow_module_level=True)
@@ -44,7 +46,12 @@ class TestPeripheralManagerDelegate:
     TEST_HARDWARE
     """
 
-    peripheral_manager_delegate: PeripheralManagerDelegate
+    hex_words: List[str] = [
+            'DEAD', 'FACE', 'BABE',
+            'CAFE', 'FADE', 'BAD',
+            'DAD', 'ACE', 'BED'
+            ]
+    val: bytearray = bytearray([0])
 
     @pytest.fixture
     def pmd(self) -> PeripheralManagerDelegate:
@@ -57,19 +64,21 @@ class TestPeripheralManagerDelegate:
     @pytest.mark.asyncio
     async def test_is_advertising(self, pmd: PeripheralManagerDelegate):
 
-        def read(char_id: str):
-            print("READ")
+        def read(char_id: str) -> bytearray:
+            return self.val
 
         def write(char_id: str, value: bytearray):
-            print("WRITE")
+            self.val = value
 
         pmd.read_request_func = read
         pmd.write_request_func = write
 
         service_id: str = str(uuid.uuid4())
         char_id: str = str(uuid.uuid4())
+        cb_char: Optional[CBMutableCharacteristic] = None
 
         async def setup():
+            nonlocal cb_char
             await pmd.wait_for_powered_on(5)
             # Setup Service
             cbid: CBUUID = CBUUID.alloc().initWithString_(service_id)
@@ -88,7 +97,7 @@ class TestPeripheralManagerDelegate:
                     CBAttributePermissions.writeable
                     )
             cb_char_id: CBUUID = CBUUID.alloc().initWithString_(char_id)
-            cb_char: CBMutableCharacteristic = (
+            cb_char = (
                     CBMutableCharacteristic.alloc()
                     .initWithType_properties_value_permissions_(
                         cb_char_id,
@@ -125,9 +134,61 @@ class TestPeripheralManagerDelegate:
         assert pmd.is_connected() is False
 
         print(
-                "Please connect now and subscribe to the characterisitc {}..."
+                "\nPlease connect now" +
+                "and subscribe to the characterisitc {}..."
                 .format(char_id)
                 )
         await aioconsole.ainput("Press entry when ready...")
 
         assert pmd.is_connected() is True
+
+        # Read Test
+        rng: np.random._generator.Generator = np.random.default_rng()
+        hex_val: str = ''.join(rng.choice(self.hex_words, 2, replace=False))
+        self.val = bytearray(
+                int(f"0x{hex_val}", 16).to_bytes(
+                    length=int(np.ceil(len(hex_val)/2)),
+                    byteorder='big'
+                    )
+                )
+        print("Trigger a read and enter the hex value you see below")
+        entered_value = await aioconsole.ainput("Value: ")
+        assert entered_value == hex_val
+
+        # Write test
+        hex_val = ''.join(rng.choice(self.hex_words, 2, replace=False))
+        print(f"Set the characteristic to the following: {hex_val}")
+        await aioconsole.ainput("Press enter when ready...")
+        str_val: str = ''.join([hex(x)[2:] for x in self.val]).upper()
+        assert str_val == hex_val
+
+        # Notify test
+        hex_val = ''.join(rng.choice(self.hex_words, 2, replace=False))
+        self.val = bytearray(
+                int(f"0x{hex_val}", 16).to_bytes(
+                    length=int(np.ceil(len(hex_val)/2)),
+                    byteorder='big'
+                    )
+                )
+
+        print("A new value will be sent")
+        await aioconsole.ainput("Press enter to receive the new value...")
+
+        (pmd.peripheral_manager
+            .updateValue_forCharacteristic_onSubscribedCentrals_(
+                    self.val,
+                    cb_char,
+                    None
+                    ))
+        new_value: str = await aioconsole.ainput("Enter the New value: ")
+        assert new_value == hex_val
+
+        # unsubscribe
+        print("Unsubscribe from the characteristic")
+        await aioconsole.ainput("Press enter when ready...")
+        assert pmd.is_connected() is False
+
+        # Stop Advertising
+        await pmd.stopAdvertising()
+        await asyncio.sleep(2)
+        assert pmd.is_advertising() is False
