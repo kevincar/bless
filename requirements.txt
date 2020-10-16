@@ -2,4 +2,5 @@ pytest
 pytest-asyncio
 bleak
 aioconsole
+numpy
 pyobjc; platform_system == "Darwin"
