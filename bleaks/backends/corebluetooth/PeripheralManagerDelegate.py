@@ -256,7 +256,7 @@ class PeripheralManagerDelegate(NSObject):
             self._powered_on_event.clear()
             self._advertisement_started_event.clear()
 
-    def peripheralManagerDidUpdateState_(  # noqa
+    def peripheralManagerDidUpdateState_(  # noqa: N802
             self,
             peripheral_manager: CBPeripheralManager
             ):
@@ -265,13 +265,13 @@ class PeripheralManagerDelegate(NSObject):
                 peripheral_manager
                 )
 
-    def peripheralManager_willRestoreState_(  # noqa
+    def peripheralManager_willRestoreState_(  # noqa: N802
             self, peripheral: CBPeripheralManager, d: dict
             ):
         logger.debug("PeripheralManager restoring state: {}".format(d))
 
     @objc.python_method
-    def peripheralManager_didAddService_error(  # noqa
+    def peripheralManager_didAddService_error(  # noqa: N802
             self,
             peripheral_manager: CBPeripheralManager,
             service: CBService,
@@ -291,7 +291,7 @@ class PeripheralManagerDelegate(NSObject):
                 )
         self._services_added_events[uuid].set()
 
-    def peripheralManager_didAddService_error_(  # noqa
+    def peripheralManager_didAddService_error_(  # noqa: N802
             self,
             peripheral_manager: CBPeripheralManager,
             service: CBService,
@@ -305,7 +305,7 @@ class PeripheralManagerDelegate(NSObject):
                 )
 
     @objc.python_method
-    def peripheralManagerDidStartAdvertising_error(  # noqa
+    def peripheralManagerDidStartAdvertising_error(  # noqa: N802
             self,
             peripheral_manager: CBPeripheralManager,
             error: NSError
@@ -314,10 +314,9 @@ class PeripheralManagerDelegate(NSObject):
             raise BleaksError("Failed to start advertising: {}".format(error))
 
         logger.debug("Peripheral manager did start advertising")
-        print("HI")
         self._advertisement_started_event.set()
 
-    def peripheralManagerDidStartAdvertising_error_(  # noqa
+    def peripheralManagerDidStartAdvertising_error_(  # noqa: N802
             self,
             peripheral_manager: CBPeripheralManager,
             error: NSError
@@ -329,7 +328,7 @@ class PeripheralManagerDelegate(NSObject):
                 error
                 )
 
-    def peripheralManager_central_didSubscribeToCharacteristic_(  # noqa
+    def peripheralManager_central_didSubscribeToCharacteristic_(  # noqa: N802
             self,
             peripheral_manager: CBPeripheralManager,
             central: CBCentral,
@@ -356,7 +355,7 @@ class PeripheralManagerDelegate(NSObject):
         else:
             self._central_subscriptions[central_uuid] = [char_uuid]
 
-    def peripheralManager_central_didUnsubscribeFromCharacteristic_(  # noqa
+    def peripheralManager_central_didUnsubscribeFromCharacteristic_(  # noqa: N802 E501
             self,
             peripheral_manager: CBPeripheralManager,
             central: CBCentral,
@@ -369,14 +368,16 @@ class PeripheralManagerDelegate(NSObject):
                 .format(central_uuid, char_uuid)
                 )
         self._central_subscriptions[central_uuid].remove(char_uuid)
+        if len(self._central_subscriptions[central_uuid]) < 1:
+            del self._central_subscriptions[central_uuid]
 
-    def peripheralManagerIsReadyToUpdateSubscribers_(  # noqa
+    def peripheralManagerIsReadyToUpdateSubscribers_(  # noqa: N802
             self,
             peripheral_manager: CBPeripheralManager
             ):
         logger.debug("Peripheral is ready to update subscribers")
 
-    def peripheralManager_didReceiveReadRequest_(  # noqa
+    def peripheralManager_didReceiveReadRequest_(  # noqa: N802
             self,
             peripheral_manager: CBPeripheralManager,
             request: CBATTRequest
@@ -400,7 +401,7 @@ class PeripheralManagerDelegate(NSObject):
                 CBATTError.Success.value
                 )
 
-    def peripheralManager_didReceiveWriteRequests_(  # noqa
+    def peripheralManager_didReceiveWriteRequests_(  # noqa: N802
             self,
             peripheral_manager: CBPeripheralManager,
             requests: List[CBATTRequest]
@@ -418,7 +419,7 @@ class PeripheralManagerDelegate(NSObject):
                         char.UUID().UUIDString(), value
                         )
                     )
-            self.write_requests_func(char.UUID().UUIDString(), value)
+            self.write_request_func(char.UUID().UUIDString(), value)
 
         peripheral_manager.respondToRequest_withResult_(
                 requests[0],
