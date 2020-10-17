@@ -1,4 +1,8 @@
+import abc
+
 from enum import Flag
+
+from bleak.backends.characteristic import BleakGATTCharacteristic
 
 
 class GattCharacteristicsFlags(Flag):
@@ -19,3 +23,21 @@ class GATTAttributePermissions(Flag):
     writeable = 0x2
     read_encryption_required = 0x4
     write_encryption_required = 0x8
+
+
+class BleaksGATTCharacteristic(BleakGATTCharacteristic):
+    """
+    Extension of the BleakGATTCharacteristic to allow for writeable values
+    """
+
+    @property  # type: ignore
+    @abc.abstractmethod
+    def value(self) -> bytearray:
+        """Value of this characteristic"""
+        raise NotImplementedError()
+
+    @value.setter  # type: ignore
+    @abc.abstractmethod
+    def value(self, val: bytearray):
+        """Set the value of this characteristic"""
+        raise NotImplementedError
