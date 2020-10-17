@@ -1,6 +1,6 @@
 import logging
 
-from typing import Optional
+from typing import Optional, Dict
 
 from asyncio.exceptions import TimeoutError
 from asyncio.events import AbstractEventLoop
@@ -12,12 +12,10 @@ from Foundation import (
         CBMutableCharacteristic
         )
 
-from bleak.backends.server import BaseBleakServer
 from bleak.backends.service import BleakGATTService
 from bleak.backends.characteristic import GattCharacteristicsFlags
 from bleak.backends.corebluetooth.service import (
-        BleakGATTServiceCoreBluetooth,
-        BleakGATTServiceCollectionCoreBluetooth
+        BleakGATTServiceCoreBluetooth
         )
 
 from bleak.backends.corebluetooth.characteristic import (
@@ -28,6 +26,7 @@ from .PeripheralManagerDelegate import (
         PeripheralManagerDelegate
         )
 
+from bleaks.backends.server import BaseBleakServer
 from bleaks.exceptions import BleaksError
 
 logger = logging.getLogger(name=__name__)
@@ -54,9 +53,7 @@ class BleakServerCoreBluetooth(BaseBleakServer):
         super(BleakServerCoreBluetooth, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
-        self.services: BleakGATTServiceCollectionCoreBluetooth = (
-                BleakGATTServiceCollectionCoreBluetooth()
-                )
+        self.services: Dict[str, BleakGATTServiceCoreBluetooth] = {}
 
         self.peripheral_manager_delegate: PeripheralManagerDelegate = (
                 PeripheralManagerDelegate.alloc().init()
@@ -76,10 +73,8 @@ class BleakServerCoreBluetooth(BaseBleakServer):
         """
         await self.peripheral_manager_delegate.wait_for_powered_on(timeout)
 
-        for service_uuid in self.services.services:
-            bleak_service: BleakGATTService = self.services.get_service(
-                    service_uuid
-                    )
+        for service_uuid in self.services:
+            bleak_service: BleakGATTService = self.services[service_uuid]
             service_obj: CBService = bleak_service.obj
             logger.debug("Adding service: {}".format(bleak_service.uuid))
             await self.peripheral_manager_delegate.addService_(service_obj)
@@ -89,7 +84,7 @@ class BleakServerCoreBluetooth(BaseBleakServer):
 
         advertisement_data = {
             "kCBAdvDataServiceUUIDs": list(
-                map(lambda x: x.obj.UUID(), self.services)
+                map(lambda x: self.services[x].obj.UUID(), self.services)
                 ),
             "kCBAdvDataLocalName": self.name
             }
@@ -159,7 +154,7 @@ class BleakServerCoreBluetooth(BaseBleakServer):
                 BleakGATTServiceCoreBluetooth(obj=cb_service)
                 )
 
-        self.services.add_service(bleak_service)
+        self.services[uuid] = bleak_service
 
     async def add_new_characteristic(
             self,
@@ -203,11 +198,9 @@ class BleakServerCoreBluetooth(BaseBleakServer):
         bleak_characteristic = (
                 BleakGATTCharacteristicCoreBluetooth(obj=cb_characteristic)
                 )
-        self.services.get_service(service_uuid).add_characteristic(
+        self.services[service_uuid].add_characteristic(
                 bleak_characteristic
                 )
-
-        self.services.add_characteristic(bleak_characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
@@ -230,7 +223,9 @@ class BleakServerCoreBluetooth(BaseBleakServer):
             Whether the value was successfully updated
         """
         characteristic: BleakGATTCharacteristicCoreBluetooth = (
-                self.services.characteristics[char_uuid.lower()]
+                self.services[service_uuid].get_characteristic(
+                    char_uuid.lower()
+                    )
                 )
 
         value: bytes = characteristic.value
