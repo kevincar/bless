@@ -2,11 +2,13 @@ import abc
 import asyncio
 import logging
 
+
 from asyncio import AbstractEventLoop
-from typing import Any, Optional, cast, Dict, Callable
-from bleak.backends.service import BleakGATTServiceCollection
-from bleak.backends.characteristic import (
-        BleakGATTCharacteristic,
+from typing import Any, Optional, Dict, Callable, List, Union
+from bleak.backends.service import BleakGATTService
+
+from bleaks.backends.characteristic import (
+        BleaksGATTCharacteristic,
         GattCharacteristicsFlags
         )
 
@@ -32,7 +34,7 @@ class BaseBleakServer(abc.ABC):
 
         self._callbacks: Dict[str, Callable[[Any], Any]] = {}
 
-        self.services: Optional[BleakGATTServiceCollection] = None
+        self.services: Dict[str, BleakGATTService] = {}
 
     # Async Context managers
 
@@ -158,6 +160,37 @@ class BaseBleakServer(abc.ABC):
         """
         raise NotImplementedError()
 
+    def get_characteristic(self, uuid: str) -> Union[
+            BleaksGATTCharacteristic,
+            None
+            ]:
+        """
+        Retrieves the characteristic whose UUID matches the string given.
+        Comparable to BleakGATTServiceCollection
+
+        Parameters
+        ----------
+        uuid : str
+            The string representation of the UUID for the characteristic to
+            retrieve
+
+        Returns
+        -------
+        BleaksGATTCharacteristic
+            The characteristic object
+        """
+        uuid = uuid.lower()
+        potentials: List[BleaksGATTCharacteristic] = [
+                self.services[service_uuid].get_characteristic(uuid)
+                for service_uuid in self.services
+                if self.services[service_uuid].get_characteristic(uuid)
+                is not None
+                ]
+        try:
+            return potentials[0]
+        except KeyError:
+            return None
+
     def read_request(self, uuid: str) -> bytearray:
         """
         This function should be handed off to the subsequent backend bluetooth
@@ -180,10 +213,10 @@ class BaseBleakServer(abc.ABC):
             A bytearray value that represents the value for the characteristic
             requested
         """
-        characteristic: BleakGATTCharacteristic = cast(
-                BleakGATTServiceCollection,
-                self.services
-                ).get_characteristic(uuid)
+        characteristic: BleaksGATTCharacteristic = self.get_characteristic(
+                uuid
+                )
+
         if not characteristic:
             raise BleaksError("Invalid characteristic: {}".format(uuid))
 
@@ -196,12 +229,9 @@ class BaseBleakServer(abc.ABC):
 
         Note: write_request_func must be defined on the child class
         """
-        characteristic: BleakGATTCharacteristic = cast(
-                BleakGATTServiceCollection,
-                self.services
-                ).get_characteristic(uuid)
-        if not characteristic:
-            raise BleaksError("Invalid characteristic: {}".format(uuid))
+        characteristic: BleaksGATTCharacteristic = self.get_characteristic(
+                uuid
+                )
 
         self.write_request_func(characteristic, value)
 
