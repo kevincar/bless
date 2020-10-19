@@ -14,11 +14,11 @@ from bleaks.backends.characteristic import BleaksGATTCharacteristic
 if sys.platform not in ['darwin']:
     pytest.skip("Only mac current works", allow_module_level=True)
 
-from bleaks import BleakServer  # noqa: E402
-from bleaks.backends.characteristic import (  # noqa: E402
-        GattCharacteristicsFlags,
-        GATTAttributePermissions
-        )
+    from bleaks import BleakServer  # noqa: E402
+    from bleaks.backends.characteristic import (  # noqa: E402
+            GattCharacteristicsFlags,
+            GATTAttributePermissions
+            )
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
