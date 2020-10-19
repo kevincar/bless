@@ -13,21 +13,20 @@ from Foundation import (
         )
 
 from bleak.backends.service import BleakGATTService
-from bleak.backends.characteristic import GattCharacteristicsFlags
 from bleak.backends.corebluetooth.service import (
         BleakGATTServiceCoreBluetooth
-        )
-
-from bleaks.backends.corebluetooth.characteristic import (
-        BleaksGATTCharacteristicCoreBluetooth
         )
 
 from .PeripheralManagerDelegate import (
         PeripheralManagerDelegate
         )
-
-from bleaks.backends.server import BaseBleakServer
 from bleaks.exceptions import BleaksError
+from bleaks.backends.server import BaseBleakServer
+from bleaks.backends.corebluetooth.characteristic import (
+        BleaksGATTCharacteristicCoreBluetooth
+        )
+from bleaks.backends.characteristic import GattCharacteristicsFlags
+
 
 logger = logging.getLogger(name=__name__)
 
