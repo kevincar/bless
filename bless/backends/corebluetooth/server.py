@@ -2,7 +2,7 @@ import logging
 
 from typing import Optional, Dict, List
 
-from asyncio.exceptions import TimeoutError
+from asyncio import TimeoutError
 from asyncio.events import AbstractEventLoop
 
 from Foundation import (
