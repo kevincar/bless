@@ -1,8 +1,12 @@
+# type: ignore
 import sys
 
 if sys.platform == 'darwin':
+
     # Server
-    from bless.backends.corebluetooth.server import BlessServerCoreBluetooth as BlessServer  # noqa: F401 E501
+    from bless.backends.corebluetooth.server import (  # noqa: F401
+            BlessServerCoreBluetooth as BlessServer
+            )
 
     # Characteristic Classes
     from bless.backends.corebluetooth.characteristic import (  # noqa: F401
@@ -10,6 +14,7 @@ if sys.platform == 'darwin':
             as BlessGATTCharacteristic
             )
 
+# type: ignore
 from bless.backends.characteristic import (  # noqa: E402 F401
         GattCharacteristicsFlags,
         GATTAttributePermissions
