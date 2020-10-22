@@ -33,8 +33,8 @@ from Foundation import (
 
 from libdispatch import dispatch_queue_create, DISPATCH_QUEUE_SERIAL
 
-from bleaks.exceptions import BleaksError
-from bleaks.backends.corebluetooth.error import CBATTError
+from bless.exceptions import BlessError
+from bless.backends.corebluetooth.error import CBATTError
 
 
 logger = logging.getLogger(name=__name__)
@@ -203,7 +203,7 @@ class PeripheralManagerDelegate(NSObject):
         if func is not None:
             return func
         else:
-            raise BleaksError("read request function undefined")
+            raise BlessError("read request function undefined")
 
     @read_request_func.setter
     def read_request_func(self, func: Callable):
@@ -221,7 +221,7 @@ class PeripheralManagerDelegate(NSObject):
         if func is not None:
             return func
         else:
-            raise BleaksError("write request func is undefined")
+            raise BlessError("write request func is undefined")
 
     @write_request_func.setter
     def write_request_func(self, func: Callable):
@@ -279,7 +279,7 @@ class PeripheralManagerDelegate(NSObject):
             ):
         uuid: str = service.UUID().UUIDString()
         if error:
-            raise BleaksError(
+            raise BlessError(
                     "Failed to add service {}: {}"
                     .format(uuid, error)
                     )
@@ -311,7 +311,7 @@ class PeripheralManagerDelegate(NSObject):
             error: NSError
             ):
         if error:
-            raise BleaksError("Failed to start advertising: {}".format(error))
+            raise BlessError("Failed to start advertising: {}".format(error))
 
         logger.debug("Peripheral manager did start advertising")
         self._advertisement_started_event.set()

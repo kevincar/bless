@@ -20,20 +20,20 @@ from bleak.backends.corebluetooth.service import (
 from .PeripheralManagerDelegate import (
         PeripheralManagerDelegate
         )
-from bleaks.exceptions import BleaksError
-from bleaks.backends.server import BaseBleakServer
-from bleaks.backends.corebluetooth.characteristic import (
-        BleaksGATTCharacteristicCoreBluetooth
+from bless.exceptions import BlessError
+from bless.backends.server import BaseBlessServer
+from bless.backends.corebluetooth.characteristic import (
+        BlessGATTCharacteristicCoreBluetooth
         )
-from bleaks.backends.characteristic import GattCharacteristicsFlags
+from bless.backends.characteristic import GattCharacteristicsFlags
 
 
 logger = logging.getLogger(name=__name__)
 
 
-class BleakServerCoreBluetooth(BaseBleakServer):
+class BlessServerCoreBluetooth(BaseBlessServer):
     """
-    CoreBluetooth Implementation of BleakServer
+    CoreBluetooth Implementation of BlessServer
 
     This implementation essentially wraps the PeripheralManagerDelegate Class
     from CoreBluetooth
@@ -49,7 +49,7 @@ class BleakServerCoreBluetooth(BaseBleakServer):
     """
 
     def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
-        super(BleakServerCoreBluetooth, self).__init__(loop=loop, **kwargs)
+        super(BlessServerCoreBluetooth, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
         self.services: Dict[str, BleakGATTServiceCoreBluetooth] = {}
@@ -81,7 +81,7 @@ class BleakServerCoreBluetooth(BaseBleakServer):
             await self.peripheral_manager_delegate.addService(service_obj)
 
         if not self.read_request_func or not self.write_request_func:
-            raise BleaksError("Callback functions must be initialized first")
+            raise BlessError("Callback functions must be initialized first")
 
         advertisement_data = {
             "kCBAdvDataServiceUUIDs": list(
@@ -196,8 +196,8 @@ class BleakServerCoreBluetooth(BaseBleakServer):
                     permissions
                     )
                 )
-        bleak_characteristic: BleaksGATTCharacteristicCoreBluetooth = (
-                BleaksGATTCharacteristicCoreBluetooth(obj=cb_characteristic)
+        bleak_characteristic: BlessGATTCharacteristicCoreBluetooth = (
+                BlessGATTCharacteristicCoreBluetooth(obj=cb_characteristic)
                 )
 
         service: BleakGATTService = self.services[service_uuid]
@@ -228,7 +228,7 @@ class BleakServerCoreBluetooth(BaseBleakServer):
         bool
             Whether the value was successfully updated
         """
-        characteristic: BleaksGATTCharacteristicCoreBluetooth = (
+        characteristic: BlessGATTCharacteristicCoreBluetooth = (
                 self.services[service_uuid].get_characteristic(
                     char_uuid.lower()
                     )

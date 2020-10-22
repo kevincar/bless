@@ -25,7 +25,7 @@ class GATTAttributePermissions(Flag):
     write_encryption_required = 0x8
 
 
-class BleaksGATTCharacteristic(BleakGATTCharacteristic):
+class BlessGATTCharacteristic(BleakGATTCharacteristic):
     """
     Extension of the BleakGATTCharacteristic to allow for writeable values
     """

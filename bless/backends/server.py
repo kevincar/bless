@@ -7,17 +7,17 @@ from asyncio import AbstractEventLoop
 from typing import Any, Optional, Dict, Callable, List, Union
 from bleak.backends.service import BleakGATTService
 
-from bleaks.backends.characteristic import (
-        BleaksGATTCharacteristic,
+from bless.backends.characteristic import (
+        BlessGATTCharacteristic,
         GattCharacteristicsFlags
         )
 
-from bleaks.exceptions import BleaksError
+from bless.exceptions import BlessError
 
 LOGGER = logging.getLogger(__name__)
 
 
-class BaseBleakServer(abc.ABC):
+class BaseBlessServer(abc.ABC):
     """
     The Server Interface for Bleak Backend
 
@@ -161,7 +161,7 @@ class BaseBleakServer(abc.ABC):
         raise NotImplementedError()
 
     def get_characteristic(self, uuid: str) -> Union[
-            BleaksGATTCharacteristic,
+            BlessGATTCharacteristic,
             None
             ]:
         """
@@ -176,11 +176,11 @@ class BaseBleakServer(abc.ABC):
 
         Returns
         -------
-        BleaksGATTCharacteristic
+        BlessGATTCharacteristic
             The characteristic object
         """
         uuid = uuid.lower()
-        potentials: List[BleaksGATTCharacteristic] = [
+        potentials: List[BlessGATTCharacteristic] = [
                 self.services[service_uuid].get_characteristic(uuid)
                 for service_uuid in self.services
                 if self.services[service_uuid].get_characteristic(uuid)
@@ -213,12 +213,12 @@ class BaseBleakServer(abc.ABC):
             A bytearray value that represents the value for the characteristic
             requested
         """
-        characteristic: BleaksGATTCharacteristic = self.get_characteristic(
+        characteristic: BlessGATTCharacteristic = self.get_characteristic(
                 uuid
                 )
 
         if not characteristic:
-            raise BleaksError("Invalid characteristic: {}".format(uuid))
+            raise BlessError("Invalid characteristic: {}".format(uuid))
 
         return self.read_request_func(characteristic)
 
@@ -229,7 +229,7 @@ class BaseBleakServer(abc.ABC):
 
         Note: write_request_func must be defined on the child class
         """
-        characteristic: BleaksGATTCharacteristic = self.get_characteristic(
+        characteristic: BlessGATTCharacteristic = self.get_characteristic(
                 uuid
                 )
 
@@ -244,7 +244,7 @@ class BaseBleakServer(abc.ABC):
         if func is not None:
             return func
         else:
-            raise BleaksError("Server: Read Callback is undefined")
+            raise BlessError("Server: Read Callback is undefined")
 
     @read_request_func.setter
     def read_request_func(self, func: Callable):
@@ -262,7 +262,7 @@ class BaseBleakServer(abc.ABC):
         if func is not None:
             return func
         else:
-            raise BleaksError("Server: Write Callback is undefined")
+            raise BlessError("Server: Write Callback is undefined")
 
     @write_request_func.setter
     def write_request_func(self, func: Callable):

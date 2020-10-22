@@ -17,16 +17,16 @@ from CoreBluetooth import (  # noqa: E402
         CBMutableCharacteristic
         )
 
-from bleaks.backends.characteristic import (  # noqa: E402
+from bless.backends.characteristic import (  # noqa: E402
         GattCharacteristicsFlags
         )
 
-from bleaks.backends.corebluetooth.PeripheralManagerDelegate import (  # noqa: E402 E501
+from bless.backends.corebluetooth.PeripheralManagerDelegate import (  # noqa: E402 E501
         PeripheralManagerDelegate,
         CBMutableService,
         )
 
-from bleaks.backends.corebluetooth.characteristic import (  # noqa: E402
+from bless.backends.corebluetooth.characteristic import (  # noqa: E402
         CBAttributePermissions
         )
 

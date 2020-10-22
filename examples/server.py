@@ -9,9 +9,9 @@ import asyncio
 from typing import Any
 
 
-from bleaks import (
-        BleakServer,
-        BleaksGATTCharacteristic,
+from bless import (
+        BlessServer,
+        BlessGATTCharacteristic,
         GattCharacteristicsFlags,
         GATTAttributePermissions
         )
@@ -21,7 +21,7 @@ logger = logging.getLogger(name=__name__)
 
 
 def read_request(
-        characteristic: BleaksGATTCharacteristic,
+        characteristic: BlessGATTCharacteristic,
         **kwargs
         ) -> bytearray:
     logger.debug(f"Reading {characteristic.value}")
@@ -29,7 +29,7 @@ def read_request(
 
 
 def write_request(
-        characteristic: BleaksGATTCharacteristic,
+        characteristic: BlessGATTCharacteristic,
         value: Any,
         **kwargs
         ):
@@ -40,7 +40,7 @@ def write_request(
 async def run(loop):
     # Instantiate the server
     my_service_name = "ECoGLink"
-    server = BleakServer(name=my_service_name, loop=loop)
+    server = BlessServer(name=my_service_name, loop=loop)
     server.read_request_func = read_request
     server.write_request_func = write_request
 

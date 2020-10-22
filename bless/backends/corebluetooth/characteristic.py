@@ -14,11 +14,11 @@ class CBAttributePermissions(Flag):
     write_encryption_required = 0x8
 
 
-class BleaksGATTCharacteristicCoreBluetooth(
+class BlessGATTCharacteristicCoreBluetooth(
         BleakGATTCharacteristicCoreBluetooth
         ):
     """
-    CoreBluetooth implementation of the BleaksGATTCharacteristic
+    CoreBluetooth implementation of the BlessGATTCharacteristic
     """
 
     @property

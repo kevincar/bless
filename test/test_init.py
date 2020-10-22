@@ -1,5 +1,5 @@
-import bleaks
+import bless
 
 
 def test_check():
-    assert bleaks.check_test()
+    assert bless.check_test()

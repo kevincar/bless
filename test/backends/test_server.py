@@ -8,23 +8,23 @@ import numpy as np
 
 from typing import Optional, List
 
-from bleaks.backends.characteristic import BleaksGATTCharacteristic
+from bless.backends.characteristic import BlessGATTCharacteristic
 
 # Eventually should be removed when MacOS, Windows, and Linux are added
 if sys.platform not in ['darwin']:
     pytest.skip("Only mac current works", allow_module_level=True)
 
-    from bleaks import BleakServer  # noqa: E402
-    from bleaks.backends.characteristic import (  # noqa: E402
-            GattCharacteristicsFlags,
-            GATTAttributePermissions
-            )
+from bless import BlessServer  # noqa: E402
+from bless.backends.characteristic import (  # noqa: E402
+        GattCharacteristicsFlags,
+        GATTAttributePermissions
+        )
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
 
 @hardware_only
-class TestBleakServer:
+class TestBlessServer:
     """
     Test specification for bleak server
 
@@ -55,7 +55,7 @@ class TestBleakServer:
     @pytest.mark.asyncio
     async def test_server(self):
         # Initialize
-        server: BleakServer = BleakServer("Test Server")
+        server: BlessServer = BlessServer("Test Server")
 
         # setup a service
         service_uuid: str = str(uuid.uuid4())
@@ -88,10 +88,10 @@ class TestBleakServer:
         assert server.services[service_uuid].get_characteristic(char_uuid)
 
         # Set up read and write callbacks
-        def read(characteristic: BleaksGATTCharacteristic) -> bytearray:
+        def read(characteristic: BlessGATTCharacteristic) -> bytearray:
             return characteristic.value
 
-        def write(characteristic: BleaksGATTCharacteristic, value: bytearray):
+        def write(characteristic: BlessGATTCharacteristic, value: bytearray):
             characteristic.value = value
 
         server.read_request_func = read
