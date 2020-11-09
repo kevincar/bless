@@ -20,6 +20,19 @@ elif sys.platform == 'linux':
             BlessServerBlueZDBus as BlessServer
             )
 
+elif sys.platform == 'win32':
+
+    # Server
+    from bless.backends.dotnet.server import (
+            BlessServerDotNet as BlessServer
+    )
+
+    # Characteristic Classes
+    from bless.backends.dotnet.characteristic import (
+            BlessGATTCharacteristicDotNet
+            as BlessGATTCharacteristic
+    )
+
 # type: ignore
 from bless.backends.characteristic import (  # noqa: E402 F401
         GattCharacteristicsFlags,
