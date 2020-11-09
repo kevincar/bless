@@ -11,7 +11,7 @@ from typing import Optional, List
 from bless.backends.characteristic import BlessGATTCharacteristic
 
 # Eventually should be removed when MacOS, Windows, and Linux are added
-if sys.platform not in ['darwin']:
+if sys.platform not in ['darwin', 'win32']:
     pytest.skip("Only mac current works", allow_module_level=True)
 
 from bless import BlessServer  # noqa: E402

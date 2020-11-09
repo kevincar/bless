@@ -4,13 +4,13 @@ import asyncio
 from asyncio.events import AbstractEventLoop
 from typing import Union, Dict, Optional, cast
 
-from bless.exceptions import BlessError
-from bless.backends.server import BaseBlessServer
-
 from bleak.backends.dotnet.utils import wrap_IAsyncOperation
 from bleak.backends.dotnet.service import BleakGATTServiceDotNet
-from bleak.backends.characteristic import GattCharacteristicsFlags
-from bleak.backends.dotnet.characteristic import BleakGATTCharacteristicDotNet
+
+from bless.exceptions import BlessError
+from bless.backends.server import BaseBlessServer
+from bless.backends.characteristic import GattCharacteristicsFlags
+from bless.backends.dotnet.characteristic import BleakGATTCharacteristicDotNet
 
 # CLR imports
 # Import of Bleak CLR->UWP Bridge.
@@ -154,6 +154,14 @@ class BlessServerDotNet(BaseBlessServer):
                                      permissions: int):
         """
         Generate a new characteristic to be associated with the server
+
+        Parameters
+        ----------
+        service_uuid : str
+            The string representation of the uuid of the service to associate the new characteristic with
+        char_uuid : str
+            The string representation of the uuid of the new characteristic
+        
         """
         charguid = Guid.Parse(char_uuid)
         serverguid = Guid.Parse(service_uuid)
