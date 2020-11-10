@@ -134,19 +134,17 @@ class BlessServerDotNet(BaseBlessServer):
             The string representation of the UUID of the service to be added
         """
         logger.debug("Creating a new service with uuid: {}".format(uuid))
-        guid = Guid.Parse(_uuid)
-        loop = asyncio.get_event_loop()
+        guid = Guid.Parse(uuid)
         spr = await wrap_IAsyncOperation(
                 IAsyncOperation[GattServiceProviderResult](
                         GattServiceProvider.CreateAsync(guid)
                     ),
-                return_type=GattServiceProviderResult,
-                loop=loop)
+                return_type=GattServiceProviderResult)
         self.service_provider = spr.ServiceProvider
         newService = self.service_provider.Service
         bleak_service = BleakGATTServiceDotNet(obj=newService)
-        logger.debug("Adding service to server with uuid {}".format(_uuid))
-        self.services.add_service(bleak_service)
+        logger.debug("Adding service to server with uuid {}".format(uuid))
+        self.services[uuid] = bleak_service
 
     async def add_new_characteristic(self, service_uuid: str, char_uuid: str,
                                      properties: GattCharacteristicsFlags,
@@ -173,28 +171,43 @@ class BlessServerDotNet(BaseBlessServer):
         loop = asyncio.get_event_loop()
         characteristicResult = await wrap_IAsyncOperation(
                 IAsyncOperation[GattLocalCharacteristicResult](
-                        self.services.get_service(str(serverguid))
+                        self.services.get(str(serverguid), None)
                         .obj.CreateCharacteristicAsync(
                             charguid, ReadParameters)
                     ),
-                return_type=GattLocalCharacteristicResult,
-                loop=loop)
+                return_type=GattLocalCharacteristicResult)
         newChar = characteristicResult.Characteristic
         newChar.ReadRequested += self._read_characteristic
         newChar.WriteRequested += self._write_characteristic
         bleak_characteristic = BleakGATTCharacteristicDotNet(obj=newChar)
-        self.services.get_service(str(serverguid)).add_characteristic(
+        self.services.get(str(serverguid)).add_characteristic(
                 bleak_characteristic)
 
-        self.services.add_characteristic(bleak_characteristic)
+        self.services[char_uuid] = bleak_characteristic
 
-    def updateValue(self, service_uuid: str, char_uuid: str) -> bool:
+    def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
         Update the characteristic value. This is different than using
         characteristic.set_value. This send notifications to subscribed
         central devices.
+
+        Parameters
+        ----------
+        service_uuid : str
+            The string representation of the UUID for the service associated
+            with the characteristic to be added
+        char_uuid : str
+            The string representation of the UUID for the characteristic to be
+            added
+
+        Returns
+        -------
+        bool
+            Whether the value was successfully updated
         """
-        characteristic: BleakGATTCharacteristicDotNet = self.services.characteristics[char_uuid.lower()]
+        characteristic: BleakGATTCharacteristicDotNet = (
+            self.services.characteristics[char_uuid.lower()]
+        )
         value: bytes = characteristic.value
         value = value if value is not None else b'\x00'
         writer: DataWriter = DataWriter()
