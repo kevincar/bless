@@ -2,7 +2,7 @@ import logging
 import asyncio
 
 from asyncio.events import AbstractEventLoop
-from typing import Union, Dict, Optional
+from typing import Union, Dict, Optional, List
 
 from bleak.backends.dotnet.utils import (
         wrap_IAsyncOperation,
@@ -35,15 +35,17 @@ from Windows.Devices.Bluetooth.GenericAttributeProfile import (
     GattLocalCharacteristic,
     GattLocalCharacteristicParameters,
     GattServiceProviderAdvertisingParameters,
-    # GattServiceProviderAdvertisementStatus,
     GattReadRequestedEventArgs,
     GattReadRequest,
     GattWriteRequestedEventArgs,
     GattWriteRequest,
-    # GattClientNotificationResult
+    GattSubscribedClient
 )
 
-from System import Guid
+from System import (
+        Guid,
+        Object
+        )
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +74,7 @@ class BlessServerDotNet(BaseBlessServer):
         self.services: Dict[str, BleakGATTServiceDotNet] = {}
 
         self._service_provider: Optional[GattServiceProvider] = None
+        self._subscribed_clients: List[GattSubscribedClient] = []
 
     async def start(self, **kwargs):
         """
@@ -197,6 +200,7 @@ class BlessServerDotNet(BaseBlessServer):
         newChar: GattLocalCharacteristic = characteristic_result.Characteristic
         newChar.ReadRequested += self._read_characteristic
         newChar.WriteRequested += self._write_characteristic
+        newChar.SubscribedClientsChanged += self._subscribe_characteristic
         bleak_characteristic: BleakGATTCharacteristicDotNet = (
                 BleakGATTCharacteristicDotNet(obj=newChar)
                 )
@@ -244,7 +248,6 @@ class BlessServerDotNet(BaseBlessServer):
 
         return True
 
-    # @staticmethod
     def _read_characteristic(self,
                              sender: GattLocalCharacteristic,
                              args: GattReadRequestedEventArgs):
@@ -270,7 +273,6 @@ class BlessServerDotNet(BaseBlessServer):
             request.RespondWithValue(writer.DetachBuffer())
         deferral.Complete()
 
-    # @staticmethod
     def _write_characteristic(self,
                               sender: GattLocalCharacteristic,
                               args: GattWriteRequestedEventArgs):
@@ -289,6 +291,14 @@ class BlessServerDotNet(BaseBlessServer):
 
         logger.debug("Write Complete")
         deferral.Complete()
+
+    def _subscribe_characteristic(
+            self,
+            sender: GattLocalCharacteristic,
+            args: Object
+            ):
+        self._subscribed_clients = sender.SubscribedClients
+        logger.info("New device subscribed")
 
     def _get_request(self,
                      args: Union[
