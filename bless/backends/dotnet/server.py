@@ -123,7 +123,7 @@ class BlessServerDotNet(BaseBlessServer):
             True if there are any central devices that have subscribed to our
             characteristics
         """
-        return False
+        return len(self._subscribed_clients) > 0
 
     def is_advertising(self) -> bool:
         """
@@ -207,8 +207,6 @@ class BlessServerDotNet(BaseBlessServer):
 
         service: BleakGATTServiceDotNet = self.services.get(str(serverguid))
         service.add_characteristic(bleak_characteristic)
-
-        self.services[char_uuid] = bleak_characteristic
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
@@ -297,7 +295,7 @@ class BlessServerDotNet(BaseBlessServer):
             sender: GattLocalCharacteristic,
             args: Object
             ):
-        self._subscribed_clients = sender.SubscribedClients
+        self._subscribed_clients = list(sender.SubscribedClients)
         logger.info("New device subscribed")
 
     def _get_request(self,
