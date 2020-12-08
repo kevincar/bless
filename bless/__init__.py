@@ -13,6 +13,12 @@ if sys.platform == 'darwin':
             BlessGATTCharacteristicCoreBluetooth
             as BlessGATTCharacteristic
             )
+elif sys.platform == 'linux':
+
+    # Server
+    from bless.backends.bluezdbus.server import (  # noqa: F401
+            BlessServerBlueZDBus as BlessServer
+            )
 
 # type: ignore
 from bless.backends.characteristic import (  # noqa: E402 F401
