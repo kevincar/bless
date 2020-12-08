@@ -1,5 +1,3 @@
-import asyncio
-
 from asyncio import AbstractEventLoop
 from bless.backends.server import BaseBlessServer
 
