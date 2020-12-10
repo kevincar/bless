@@ -129,3 +129,43 @@ class BlueZGattApplication(DBusObject):
                 {},
                 interface=defs.GATT_MANAGER_INTERFACE
                 ).asFuture(self.loop)
+
+    async def start_advertising(self, adapter: RemoteDBusObject):
+        """
+        Start Advertising the application
+        """
+        advertisement: BlueZLEAdvertisement = BlueZLEAdvertisement(
+                Type.PERIPHERAL, len(self.advertisements)+1, self
+                )
+        self.advertisements.append(advertisement)
+
+        for service in self.services:
+            advertisement.service_uuids.append(service.uuid)
+
+        self.bus.exportObject(advertisement)
+        await self.bus.requestBusName(self.destination).asFuture(self.loop)
+
+        await adapter.callRemote(
+                "RegisterAdvertisement",
+                advertisement.path,
+                {}
+                ).asFuture(self.loop)
+
+    async def is_advertising(self, adapter: RemoteDBusObject):
+        """
+        Check if the adapter is advertising
+        """
+        objects: Dict = await adapter.callRemote(
+                "GetManagedObjects",
+                interface=defs.OBJECT_MANAGER_INTERFACE
+                ).asFuture(self.loop)
+        print(objects)
+    async def stop_advertising(self, adapter: RemoteDBusObject):
+        """
+        Stop Advertising
+        """
+        advertisement: BlueZLEAdvertisement = self.advertisements.pop()
+        await adapter.callRemote(
+                "UnregisterAdvertisement",
+                advertisement.path
+                ).asFuture(self.loop)
