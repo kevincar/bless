@@ -113,3 +113,19 @@ class BlueZGattApplication(DBusObject):
         service.characteristics.append(characteristic)
         self.bus.exportObject(characteristic)
         await self.bus.requestBusName(self.destination).asFuture(self.loop)
+
+    async def register(self, adapter: RemoteDBusObject):
+        """
+        Register the application with BlueZDBus
+
+        Parameters
+        ----------
+        adapter : DBusObject
+            The adapter to register the application with
+        """
+        await adapter.callRemote(
+                "RegisterApplication",
+                self.path,
+                {},
+                interface=defs.GATT_MANAGER_INTERFACE
+                ).asFuture(self.loop)
