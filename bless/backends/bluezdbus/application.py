@@ -1,11 +1,21 @@
-from __future__ import annotations
-
 import asyncio
 
-from typing import List
+import bleak.backends.bluezdbus.defs as defs
+
+from typing import List, Any
 
 from txdbus import client
-from txdbus.objects import DBusObject
+from txdbus.objects import DBusObject, RemoteDBusObject
+
+from bless.backends.bluezdbus.advertisement import (
+        Type,
+        BlueZLEAdvertisement
+        )
+from bless.backends.bluezdbus.service import BlueZGattService
+from bless.backends.bluezdbus.characteristic import (
+        Flags,
+        BlueZGattCharacteristic
+        )
 
 
 class BlueZGattApplication(DBusObject):
