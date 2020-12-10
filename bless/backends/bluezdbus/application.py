@@ -48,24 +48,68 @@ class BlueZGattApplication(DBusObject):
         self.name: str = name
         self.destination: str = destination
         self.bus: client = bus
-        self.loop: asyncio.AbstractEventLoop
+        self.loop: asyncio.AbstractEventLoop = loop
 
         self.base_path: str = "/org/bluez/" + name
-        self.services: List['BlueZGattService'] = []  # noqa: F821
+        self.advertisements: List[BlueZLEAdvertisement] = []
+        self.services: List[BlueZGattService] = []
 
         super(BlueZGattApplication, self).__init__(self.path)
 
-    async def add_service(self, service: "BlueZGattService"):  # noqa: F821
+    async def add_service(self, uuid: str):  # noqa: F821
         """
         Add a service to the application
+        The first service to be added will be the primary service
 
         Parameters
         ----------
-        service : BlueZGattService
-            The Service to add to the application. Characteristics must have
-            already by added
+        uuid : str
+            The string representation of the uuid for the service to create
         """
 
+        index: int = len(self.services) + 1
+        primary: bool = index == 1
+        service: BlueZGattService = BlueZGattService(
+                uuid, primary, index, self
+                )
         self.services.append(service)
         self.bus.exportObject(service)
+        await self.bus.requestBusName(self.destination).asFuture(self.loop)
+
+    async def add_characteristic(
+            self,
+            service_uuid: str,
+            uuid: str,
+            value: Any,
+            flags: List[Flags]
+            ):
+        """
+        Add a characteristic to the service
+
+
+        Parameters
+        ----------
+        service_uuid: str
+            The string representation of the UUID for the service that this
+            characteristic belongs to
+        uuid : str
+            The string representation of the UUID for the characteristic
+        value : Any
+            The value of the characteristic,
+        flags: List[Flags]
+            A list of flags to apply to the characteristic
+        """
+        service: BlueZGattService = next(iter([
+            x
+            for x in self.services
+            if x.uuid == service_uuid
+            ]))
+        index: int = len(service.characteristics) + 1
+        characteristic: BlueZGattCharacteristic = BlueZGattCharacteristic(
+                uuid, flags, index, service
+                )
+        characteristic.value = value
+
+        service.characteristics.append(characteristic)
+        self.bus.exportObject(characteristic)
         await self.bus.requestBusName(self.destination).asFuture(self.loop)
