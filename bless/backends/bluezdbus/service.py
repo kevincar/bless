@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 import asyncio
+
+import bleak.backends.bluezdbus.defs as defs
 
 from typing import List
 
@@ -18,7 +18,7 @@ class BlueZGattService(DBusObject):
     org.bluez.GattService1 interface implementation
     """
 
-    interface_name: str = "org.bluez.GattService1"
+    interface_name: str = defs.GATT_SERVICE_INTERFACE
 
     iface: DBusInterface = DBusInterface(
             interface_name,
@@ -37,9 +37,6 @@ class BlueZGattService(DBusObject):
             primary: bool,
             index: int,
             app: 'BlueZGattApplication',  # noqa: F821
-            destination: str,
-            bus: client,
-            loop: asyncio.AbstractEventLoop
             ):
         """
         Initialize the DBusObject
@@ -56,19 +53,13 @@ class BlueZGattService(DBusObject):
             application
         app : BlueZApp
             A BlueZApp object that owns this service
-        destination : str
-            A string representation of the destination interface this object
-            should belong to
-        bus : client
-            An active client connection to DBus
-        loop : asyncio.AbstractEventLoop
-            The asyncio loop the service should run on
         """
-        self.path: str = app.path + "/service" + str(index)
-        self.bus: client = bus
-        self.destination: str = destination
+        self.path: str = app.base_path + "/service" + str(index)
+        self.bus: client = app.bus
+        self.destination: str = app.destination
         self.uuid: str = uuid
         self.primary: bool = primary
-        self.loop: asyncio.AbstractEventLoop = loop
+        self.loop: asyncio.AbstractEventLoop = app.loop
 
         self.characteristics: List[BlueZGattCharacteristic] = []
+        super(BlueZGattService, self).__init__(self.path)
