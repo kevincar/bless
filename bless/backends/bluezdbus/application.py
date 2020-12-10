@@ -2,7 +2,7 @@ import asyncio
 
 import bleak.backends.bluezdbus.defs as defs
 
-from typing import List, Any
+from typing import List, Any, Dict
 
 from txdbus import client
 from txdbus.objects import DBusObject, RemoteDBusObject
@@ -160,6 +160,7 @@ class BlueZGattApplication(DBusObject):
                 interface=defs.OBJECT_MANAGER_INTERFACE
                 ).asFuture(self.loop)
         print(objects)
+
     async def stop_advertising(self, adapter: RemoteDBusObject):
         """
         Stop Advertising

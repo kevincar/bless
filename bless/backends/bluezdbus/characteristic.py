@@ -8,7 +8,6 @@ from txdbus.objects import DBusObject, DBusProperty
 from txdbus.interface import DBusInterface, Method, Property
 
 
-
 class Flags(Enum):
     BROADCAST = "broadcast"
     READ = "read"
