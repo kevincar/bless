@@ -1,7 +1,11 @@
 from typing import Optional
 
 from asyncio import AbstractEventLoop
+from twisted.internet.asyncioreactor import AsyncioSelectorReactor
+from txdbus import client
+
 from bless.backends.server import BaseBlessServer
+from bless.backends.bluezdbus.application import BlueZGattApplication
 
 from bless.backends.characteristic import (
         GattCharacteristicsFlags
@@ -21,6 +25,8 @@ class BlessServerBlueZDBus(BaseBlessServer):
 
     def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
         super(BlessServerBlueZDBus, self).__init__(loop=loop, **kwargs)
+        self.name: str = name
+        self.reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(loop)
 
     async def start(self, **kwargs) -> bool:
         """
@@ -31,7 +37,15 @@ class BlessServerBlueZDBus(BaseBlessServer):
         bool
             Whether the server started successfully
         """
-        raise NotImplementedError()
+        self.bus: client = await client.connect(
+                self.reactor, "system"
+                ).asFuture(self.loop)
+
+        self.app: BlueZGattApplication = BlueZGattApplication(
+                self.name, "org.bluez."+self.name, self.bus, self.loop
+                )
+
+        return True
 
     async def stop(self) -> bool:
         """
