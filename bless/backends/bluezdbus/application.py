@@ -2,7 +2,7 @@ import asyncio
 
 import bleak.backends.bluezdbus.defs as defs
 
-from typing import List, Any, Dict
+from typing import List, Any, Callable, Optional
 
 from txdbus import client
 from txdbus.objects import DBusObject, RemoteDBusObject
@@ -53,6 +53,13 @@ class BlueZGattApplication(DBusObject):
         self.base_path: str = "/org/bluez/" + name
         self.advertisements: List[BlueZLEAdvertisement] = []
         self.services: List[BlueZGattService] = []
+
+        self.Read: Optional[Callable[[BlueZGattCharacteristic], bytearray]] = None
+        self.Write: Optional[Callable[[BlueZGattCharacteristic, bytearray], None]] = None
+        self.StartNotify: Optional[Callable[[None], None]] = None
+        self.StopNotify: Optional[Callable[[None], None]] = None
+
+        self.subscribed_characteristics: List[str] = []
 
         super(BlueZGattApplication, self).__init__(self.path)
 
@@ -133,6 +140,11 @@ class BlueZGattApplication(DBusObject):
     async def start_advertising(self, adapter: RemoteDBusObject):
         """
         Start Advertising the application
+
+        Parameters
+        ----------
+        adapter : RemoteDBusObject
+            The adapter object to start advertising on
         """
         advertisement: BlueZLEAdvertisement = BlueZLEAdvertisement(
                 Type.PERIPHERAL, len(self.advertisements)+1, self
@@ -151,22 +163,52 @@ class BlueZGattApplication(DBusObject):
                 {}
                 ).asFuture(self.loop)
 
-    async def is_advertising(self, adapter: RemoteDBusObject):
+    async def is_advertising(self, adapter: RemoteDBusObject) -> bool:
         """
         Check if the adapter is advertising
+
+        Parameters
+        ----------
+        adapter : RemoteDBusObject
+            The adapter object to check for advertising
+
+        Returns
+        -------
+        bool
+            Whether the adapter is advertising anything
         """
-        objects: Dict = await adapter.callRemote(
-                "GetManagedObjects",
-                interface=defs.OBJECT_MANAGER_INTERFACE
+        instances: int = await adapter.callRemote(
+                "Get",
+                "org.bluez.LEAdvertisingManager1",
+                "ActiveInstances",
+                interface=defs.PROPERTIES_INTERFACE,
                 ).asFuture(self.loop)
-        print(objects)
+        return instances > 0
 
     async def stop_advertising(self, adapter: RemoteDBusObject):
         """
         Stop Advertising
+
+        Parameters
+        ----------
+        adapter : RemoteDBusObject
+            The adapter object to stop advertising
         """
         advertisement: BlueZLEAdvertisement = self.advertisements.pop()
         await adapter.callRemote(
                 "UnregisterAdvertisement",
                 advertisement.path
                 ).asFuture(self.loop)
+
+    async def is_connected(self) -> bool:
+        """
+        Check if the application is connected
+        This is not the same as if the adapter is connected to a device, but
+        rather if there is a subscribed characteristic
+
+        Returns
+        -------
+        bool
+            Whether a central device is subscribed to one of our characteristics
+        """
+        return len(self.subscribed_characteristics) > 0
