@@ -24,7 +24,7 @@ from twisted.internet.asyncioreactor import AsyncioSelectorReactor
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
 
-# @hardware_only
+@hardware_only
 class TestBlueZGattApplication:
     """
     Test
