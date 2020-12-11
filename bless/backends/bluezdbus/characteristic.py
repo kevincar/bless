@@ -2,9 +2,9 @@ import bleak.backends.bluezdbus.defs as defs
 
 from enum import Enum
 
-from typing import List
+from typing import List, Dict
 
-from txdbus.objects import DBusObject, DBusProperty
+from txdbus.objects import DBusObject, DBusProperty, dbusMethod
 from txdbus.interface import DBusInterface, Method, Property
 
 
@@ -50,6 +50,7 @@ class BlueZGattCharacteristic(DBusObject):
     service: DBusProperty = DBusProperty("Service")
     flags: DBusProperty = DBusProperty("Flags")
     value: DBusProperty = DBusProperty("Value")
+    notifying: DBusProperty = DBusProperty("Notifying")
 
     def __init__(
             self,
@@ -77,8 +78,71 @@ class BlueZGattCharacteristic(DBusObject):
         self.uuid: str = uuid
         self.flags: List[str] = [x.value for x in flags]
         self.service: str = service.path  # noqa: F821
+        self._service: 'BlueZGattService' = service
 
         self.value: bytes = b''
+        self.notifying: bool = False
         self.descriptors: List['BlueZGattDescriptor'] = []  # noqa: F821
 
         super(BlueZGattCharacteristic, self).__init__(self.path)
+
+    @dbusMethod(interface_name, "ReadValue")
+    def ReadValue(self, options: Dict) -> bytearray:
+        """
+        Read the value of the characteristic.
+        This is to be fully implemented at the application level
+
+        Parameters
+        ----------
+        options : Dict
+            A list of options
+
+        Returns
+        -------
+        bytearray
+            The bytearray that is the value of the characteristic
+        """
+        f = self._service.app.Read
+        if f is None:
+            raise NotImplementedError()
+        return f(self)
+
+    @dbusMethod(interface_name, "WriteValue")
+    def WriteValue(self, value: bytearray, options: Dict):
+        """
+        Write a value to the characteristic
+        This is to be fully implemented at the application level
+
+        Parameters
+        ----------
+        value : bytearray
+            The value to set
+        options : Dict
+            Some options for you to select from
+        """
+        f = self._service.app.Write
+        if f is None:
+            raise NotImplementedError()
+        f(self, value)
+
+    @dbusMethod(interface_name, "StartNotify")
+    def StartNotify(self):
+        """
+        Begin a subscription to the characteristic
+        """
+        f = self._service.app.StartNotify
+        if f is None:
+            raise NotImplementedError()
+        f(self)
+        self._service.app.subscribed_characteristics.append(self.uuid)
+
+    @dbusMethod(interface_name, "StopNotify")
+    def StopNotify(self):
+        """
+        Stop a subscription to the characteristic
+        """
+        f = self._service.app.StopNotify
+        if f is None:
+            raise NotImplementedError()
+        f(self)
+        self._service.app.subscribed_characteristics.remove(self.uuid)
