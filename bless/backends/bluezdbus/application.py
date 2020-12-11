@@ -50,7 +50,7 @@ class BlueZGattApplication(DBusObject):
         self.bus: client = bus
         self.loop: asyncio.AbstractEventLoop = loop
 
-        self.base_path: str = "/org/bluez/" + name
+        self.base_path: str = "/org/bluez/" + self.name
         self.advertisements: List[BlueZLEAdvertisement] = []
         self.services: List[BlueZGattService] = []
 
@@ -67,7 +67,7 @@ class BlueZGattApplication(DBusObject):
 
         super(BlueZGattApplication, self).__init__(self.path)
 
-    async def add_service(self, uuid: str):  # noqa: F821
+    async def add_service(self, uuid: str) -> BlueZGattService:  # noqa: F821
         """
         Add a service to the application
         The first service to be added will be the primary service
@@ -76,6 +76,11 @@ class BlueZGattApplication(DBusObject):
         ----------
         uuid : str
             The string representation of the uuid for the service to create
+
+        Returns
+        -------
+        BlueZGattService
+            Returns and instance of the service object
         """
 
         index: int = len(self.services) + 1
@@ -86,6 +91,7 @@ class BlueZGattApplication(DBusObject):
         self.services.append(service)
         self.bus.exportObject(service)
         await self.bus.requestBusName(self.destination).asFuture(self.loop)
+        return service
 
     async def add_characteristic(
             self,
