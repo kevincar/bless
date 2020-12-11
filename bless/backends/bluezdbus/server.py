@@ -1,11 +1,16 @@
-from typing import Optional
+import asyncio
+
+from typing import Optional, Dict
 
 from asyncio import AbstractEventLoop
 from twisted.internet.asyncioreactor import AsyncioSelectorReactor
 from txdbus import client
 
+from bleak.backends.bluezdbus.service import BleakGATTServiceBlueZDBus
+
 from bless.backends.server import BaseBlessServer
 from bless.backends.bluezdbus.application import BlueZGattApplication
+from bless.backends.bluezdbus.service import BlueZGattService
 
 from bless.backends.characteristic import (
         GattCharacteristicsFlags
@@ -28,6 +33,23 @@ class BlessServerBlueZDBus(BaseBlessServer):
         self.name: str = name
         self.reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(loop)
 
+        self.services: Dict[str, BleakGATTServiceBlueZDBus] = {}
+
+        self.setup_task: asyncio.Task = self.loop.create_task(self.setup())
+
+    async def setup(self):
+        """
+        Asyncronous side of init
+        """
+        self.bus: client = await client.connect(
+                self.reactor, "system"
+                ).asFuture(self.loop)
+
+        gatt_name: str = self.name.replace(" ", "")
+        self.app: BlueZGattApplication = BlueZGattApplication(
+                gatt_name, "org.bluez."+gatt_name, self.bus, self.loop
+                )
+
     async def start(self, **kwargs) -> bool:
         """
         Start the server
@@ -37,13 +59,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
         bool
             Whether the server started successfully
         """
-        self.bus: client = await client.connect(
-                self.reactor, "system"
-                ).asFuture(self.loop)
-
-        self.app: BlueZGattApplication = BlueZGattApplication(
-                self.name, "org.bluez."+self.name, self.bus, self.loop
-                )
+        # Initialize advertising
 
         return True
 
@@ -88,7 +104,18 @@ class BlessServerBlueZDBus(BaseBlessServer):
         uuid : str
             The UUID for the service to add
         """
-        raise NotImplementedError()
+        print("Add Service 1")
+        await self.setup_task
+        print("Add Service 1")
+        gatt_service: BlueZGattService = await self.app.add_service(uuid)
+        print("Add Service 1")
+        service: BleakGATTServiceBlueZDBus = BleakGATTServiceBlueZDBus(
+                gatt_service,
+                gatt_service.path
+                )
+        print("Add Service 1")
+        self.services[uuid] = service
+        print("Add Service 1")
 
     async def add_new_characteristic(
             self,
