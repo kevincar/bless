@@ -78,7 +78,7 @@ class BlueZGattCharacteristic(DBusObject):
         self.uuid: str = uuid
         self.flags: List[str] = [x.value for x in flags]
         self.service: str = service.path  # noqa: F821
-        self._service: 'BlueZGattService' = service
+        self._service: 'BlueZGattService' = service  # noqa: F821
 
         self.value: bytes = b''
         self.notifying: bool = False

@@ -60,7 +60,7 @@ class BlueZGattService(DBusObject):
         self.uuid: str = uuid
         self.primary: bool = primary
         self.loop: asyncio.AbstractEventLoop = app.loop
-        self.app: 'BlueZGattApplication' = app
+        self.app: 'BlueZGattApplication' = app  # noqa: F821
 
         self.characteristics: List[BlueZGattCharacteristic] = []
         super(BlueZGattService, self).__init__(self.path)

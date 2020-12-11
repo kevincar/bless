@@ -54,8 +54,12 @@ class BlueZGattApplication(DBusObject):
         self.advertisements: List[BlueZLEAdvertisement] = []
         self.services: List[BlueZGattService] = []
 
-        self.Read: Optional[Callable[[BlueZGattCharacteristic], bytearray]] = None
-        self.Write: Optional[Callable[[BlueZGattCharacteristic, bytearray], None]] = None
+        self.Read: Optional[Callable[[BlueZGattCharacteristic], bytearray]] = (
+                None
+                )
+        self.Write: Optional[
+                Callable[[BlueZGattCharacteristic, bytearray], None]
+                ] = None
         self.StartNotify: Optional[Callable[[None], None]] = None
         self.StopNotify: Optional[Callable[[None], None]] = None
 
@@ -209,6 +213,7 @@ class BlueZGattApplication(DBusObject):
         Returns
         -------
         bool
-            Whether a central device is subscribed to one of our characteristics
+            Whether a central device is subscribed to one of our
+            characteristics
         """
         return len(self.subscribed_characteristics) > 0
