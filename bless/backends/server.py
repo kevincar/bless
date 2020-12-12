@@ -72,7 +72,7 @@ class BaseBlessServer(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def is_connected(self) -> bool:
+    async def is_connected(self) -> bool:
         """
         Determine whether there are any connected peripheral devices
 
@@ -84,7 +84,7 @@ class BaseBlessServer(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def is_advertising(self) -> bool:
+    async def is_advertising(self) -> bool:
         """
         Determine whether the server is advertising
 
@@ -93,6 +93,7 @@ class BaseBlessServer(abc.ABC):
         bool
             True if the server is advertising
         """
+        raise NotImplementedError()
 
     @abc.abstractmethod
     async def add_new_service(self, uuid: str):

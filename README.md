@@ -21,7 +21,7 @@ on a [custom branch](https://github.com/kevincar/bleak/tree/server) of Bleak
 |--|---------|
 |MacOS|✅|
 |Windows|❌|
-|Linux|❌|
+|Linux|✅|
 
 # Examples
 
