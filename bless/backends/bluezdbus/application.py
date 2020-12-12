@@ -99,7 +99,7 @@ class BlueZGattApplication(DBusObject):
             uuid: str,
             value: Any,
             flags: List[Flags]
-            ):
+            ) -> BlueZGattCharacteristic:
         """
         Add a characteristic to the service
 
@@ -115,6 +115,11 @@ class BlueZGattApplication(DBusObject):
             The value of the characteristic,
         flags: List[Flags]
             A list of flags to apply to the characteristic
+
+        Returns
+        -------
+        BlueZGattCharacteristic
+            The characteristic object
         """
         service: BlueZGattService = next(iter([
             x
@@ -130,6 +135,8 @@ class BlueZGattApplication(DBusObject):
         service.characteristics.append(characteristic)
         self.bus.exportObject(characteristic)
         await self.bus.requestBusName(self.destination).asFuture(self.loop)
+
+        return characteristic
 
     async def register(self, adapter: RemoteDBusObject):
         """
