@@ -102,7 +102,13 @@ class BlessServerBlueZDBus(BaseBlessServer):
         bool
             Whether the server stopped successfully
         """
-        raise NotImplementedError()
+        # Stop Advertising
+        await self.app.stop_advertising(self.adapter)
+
+        # Unregister
+        await self.app.unregister(self.adapter)
+
+        return True
 
     async def is_connected(self) -> bool:
         """
