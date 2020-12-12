@@ -13,6 +13,25 @@ if sys.platform == 'darwin':
             BlessGATTCharacteristicCoreBluetooth
             as BlessGATTCharacteristic
             )
+elif sys.platform == 'linux':
+
+    # Server
+    from bless.backends.bluezdbus.server import (  # noqa: F401
+            BlessServerBlueZDBus as BlessServer
+            )
+
+elif sys.platform == 'win32':
+
+    # Server
+    from bless.backends.dotnet.server import (  # noqa: F401
+            BlessServerDotNet as BlessServer
+    )
+
+    # Characteristic Classes
+    from bless.backends.dotnet.characteristic import (  # noqa: F401
+            BlessGATTCharacteristicDotNet
+            as BlessGATTCharacteristic
+    )
 
 elif sys.platform == 'win32':
 

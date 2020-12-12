@@ -3,7 +3,8 @@ name: Build, Lint, and Test
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - '*'
   pull_request:
     branches: [ master ]
 
@@ -14,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: 
-          # - ubuntu-latest
+          - ubuntu-latest
           # - windows-latest
           - macos-latest
         python-version: [3.6, 3.7, 3.8]
@@ -30,6 +31,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 mypy pytest
         pip install -r requirements.txt
+        if [ "$RUNNER_OS" == "Linux" ] ; then
+            # Circumvent bleak's check for bluetoothctl version
+            # It's not needed for non-hardware tests
+            pwd >> $GITHUB_PATH
+            printf "#include <stdio.h>\nint main(void)\n{\n\tprintf(\"bluetoothctl: 5.55\\\n\");\n\treturn 0;\n}\n" | gcc -x c -o ./bluetoothctl -
+            ./bluetoothctl
+        fi
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
