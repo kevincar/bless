@@ -107,7 +107,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         """
         await self.peripheral_manager_delegate.stopAdvertising()
 
-    def is_connected(self) -> bool:
+    async def is_connected(self) -> bool:
         """
         Determine whether there are any connected central devices
 
@@ -121,7 +121,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
                 )
         return n_subscriptions > 0
 
-    def is_advertising(self) -> bool:
+    async def is_advertising(self) -> bool:
         """
         Determine whether the service is advertising
 
