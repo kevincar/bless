@@ -154,6 +154,21 @@ class BlueZGattApplication(DBusObject):
                 interface=defs.GATT_MANAGER_INTERFACE
                 ).asFuture(self.loop)
 
+    async def unregister(self, adapter: RemoteDBusObject):
+        """
+        Unregister the application with BlueZDBus
+
+        Parameters
+        ----------
+        adapter : RemoteDBusObject
+            The adapter on which the current application is registered
+        """
+        await adapter.callRemote(
+                "UnregisterApplication",
+                self.path,
+                interface=defs.GATT_MANAGER_INTERFACE
+                ).asFuture(self.loop)
+
     async def start_advertising(self, adapter: RemoteDBusObject):
         """
         Start Advertising the application
