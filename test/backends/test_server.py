@@ -11,8 +11,8 @@ from typing import Optional, List
 from bless.backends.characteristic import BlessGATTCharacteristic
 
 # Eventually should be removed when MacOS, Windows, and Linux are added
-if sys.platform not in ['darwin']:
-    pytest.skip("Only mac current works", allow_module_level=True)
+if sys.platform not in ['darwin', 'linux']:
+    pytest.skip("Only mac and linux currently works", allow_module_level=True)
 
 from bless import BlessServer  # noqa: E402
 from bless.backends.characteristic import (  # noqa: E402
@@ -98,14 +98,14 @@ class TestBlessServer:
         server.write_request_func = write
 
         # Start advertising
-        assert server.is_advertising() is False
+        assert await server.is_advertising() is False
 
         await server.start()
 
-        assert server.is_advertising() is True
+        assert await server.is_advertising() is True
 
         # Subscribe
-        assert server.is_connected() is False
+        assert await server.is_connected() is False
 
         print(
                 "\nPlease connect to the computer and " +
@@ -113,7 +113,7 @@ class TestBlessServer:
                 )
         await aioconsole.ainput("Press enter when ready...")
 
-        assert server.is_connected() is True
+        assert await server.is_connected() is True
 
         # Read Test
         hex_val: str = self.gen_hex_pairs()
@@ -149,9 +149,9 @@ class TestBlessServer:
         # unsubscribe
         print("Unsubscribe from the characteristic")
         await aioconsole.ainput("Press entery when ready...")
-        assert server.is_connected() is False
+        assert await server.is_connected() is False
 
         # Stop Advertising
         await server.stop()
         await asyncio.sleep(2)
-        assert server.is_advertising() is False
+        assert await server.is_advertising() is False
