@@ -2,7 +2,7 @@ import asyncio
 
 import bleak.backends.bluezdbus.defs as defs
 
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 
 from asyncio import AbstractEventLoop
 from twisted.internet.asyncioreactor import AsyncioSelectorReactor
@@ -240,8 +240,8 @@ class BlessServerBlueZDBus(BaseBlessServer):
         bool
             Whether the characteristic value was successfully updated
         """
-        bless_service: BleakGATTService = self.services[service_uuid]
-        bless_char: BleakGATTCharacteristic = next(iter([
+        bless_service: BleakGATTServiceBlueZDBus = self.services[service_uuid]
+        bless_char: BleakGATTCharacteristicBlueZDBus = next(iter([
             char for char in bless_service.characteristics
             if char.uuid == char_uuid
             ]))
