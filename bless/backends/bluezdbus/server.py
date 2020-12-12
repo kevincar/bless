@@ -234,7 +234,22 @@ class BlessServerBlueZDBus(BaseBlessServer):
         bool
             Whether the characteristic value was successfully updated
         """
-        raise NotImplementedError()
+        bless_service: BleakGATTService = self.services[service_uuid]
+        bless_char: BleakGATTCharacteristic = next(iter([
+            char for char in bless_service.characteristics
+            if char.uuid == char_uuid
+            ]))
+        cur_value: Any = bless_char.value
+
+        service: BlueZGattService = next(iter([
+            service for service in self.app.services
+            if service.uuid == service_uuid
+            ]))
+        characteristic: BlueZGattCharacteristic = next(iter([
+            char for char in service.characteristics
+            if char.uuid == char_uuid
+            ]))
+        characteristic.value = cur_value
 
     def read(self, char: BlueZGattCharacteristic) -> bytearray:
         """
