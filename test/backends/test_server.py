@@ -98,14 +98,14 @@ class TestBlessServer:
         server.write_request_func = write
 
         # Start advertising
-        assert server.is_advertising() is False
+        assert await server.is_advertising() is False
 
         await server.start()
 
-        assert server.is_advertising() is True
+        assert await server.is_advertising() is True
 
         # Subscribe
-        assert server.is_connected() is False
+        assert await server.is_connected() is False
 
         print(
                 "\nPlease connect to the computer and " +
@@ -113,7 +113,7 @@ class TestBlessServer:
                 )
         await aioconsole.ainput("Press enter when ready...")
 
-        assert server.is_connected() is True
+        assert await server.is_connected() is True
 
         # Read Test
         hex_val: str = self.gen_hex_pairs()
