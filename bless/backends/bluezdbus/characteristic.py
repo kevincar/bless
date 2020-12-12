@@ -113,7 +113,7 @@ class BlueZGattCharacteristic(DBusObject):
         service : BlueZService
             The Gatt Service that owns this characteristic
         """
-        self.path: str = service.path + "/char" + str(index)
+        self.path: str = service.path + "/char" + f"{index:04d}"
         self.uuid: str = uuid
         self.flags: List[str] = [x.value for x in flags]
         self.service: str = service.path  # noqa: F821
