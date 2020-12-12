@@ -149,9 +149,9 @@ class TestBlessServer:
         # unsubscribe
         print("Unsubscribe from the characteristic")
         await aioconsole.ainput("Press entery when ready...")
-        assert server.is_connected() is False
+        assert await server.is_connected() is False
 
         # Stop Advertising
         await server.stop()
         await asyncio.sleep(2)
-        assert server.is_advertising() is False
+        assert await server.is_advertising() is False
