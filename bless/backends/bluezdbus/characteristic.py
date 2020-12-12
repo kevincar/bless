@@ -7,6 +7,11 @@ from typing import List, Dict
 from txdbus.objects import DBusObject, DBusProperty, dbusMethod
 from txdbus.interface import DBusInterface, Method, Property
 
+from bleak.backends.bluezdbus.characteristic import (
+        _GattCharacteristicsFlagsEnum
+        )
+from bless.backends.characteristic import GattCharacteristicsFlags
+
 
 class Flags(Enum):
     BROADCAST = "broadcast"
@@ -22,6 +27,40 @@ class Flags(Enum):
     ENCRYPT_WRITE = "encrypt-write"
     ENCRYPT_AUTHENTICATED_READ = "encrypt-authenticated-read"
     ENCRYPT_AUTHENTICATED_WRITE = "encrypt-authenticated-write"
+
+    @classmethod
+    def from_bless(
+            cls,
+            flags: GattCharacteristicsFlags
+            ) -> List['Flags']:
+        """
+        Convert Bleak/Bless flags
+
+        Parameters
+        ----------
+        flags : GattCharacteristicFlags
+            The numerical enumeration for the combined flags
+
+        Returns
+        -------
+        List[Flags]
+            A list fo Flags for use in BlueZDBus
+        """
+        result: List[Flags] = []
+        # Apparently, the tests and examples are passing in integers, these
+        # should be th Gatt Flags
+        flag_value: int = flags
+        for i, int_flag in enumerate(_GattCharacteristicsFlagsEnum.keys()):
+            included: bool = int_flag & flag_value > 0
+            if included:
+                flag_enum_val: str = _GattCharacteristicsFlagsEnum[int_flag]
+                flag: Flags = next(iter([
+                    Flags.__members__[x] for x in list(Flags.__members__)
+                    if Flags.__members__[x].value == flag_enum_val
+                    ]))
+                result.append(flag)
+
+        return result
 
 
 class BlueZGattCharacteristic(DBusObject):
