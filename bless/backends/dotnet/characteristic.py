@@ -3,7 +3,7 @@ from enum import Flag
 from bleak.backends.dotnet.characteristic import (
         BleakGATTCharacteristicDotNet
         )
-        
+
 
 class CBAttributePermissions(Flag):
     readable = 0x1
