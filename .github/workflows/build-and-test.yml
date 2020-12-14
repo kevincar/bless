@@ -31,6 +31,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 mypy pytest
         pip install -r requirements.txt
+    - name: Install bluetooth ctl linux
+      if: runner.os == 'Linux'
+      run: |
         if [ "$RUNNER_OS" == "Linux" ] ; then
             # Circumvent bleak's check for bluetoothctl version
             # It's not needed for non-hardware tests
