@@ -13,7 +13,7 @@ from bleak.backends.dotnet.service import BleakGATTServiceDotNet
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer
 from bless.backends.characteristic import GattCharacteristicsFlags
-from bless.backends.dotnet.characteristic import BleakGATTCharacteristicDotNet
+from bless.backends.dotnet.characteristic import BlessGATTCharacteristicDotNet
 from bless.backends.dotnet.utils import sync_async_wrap
 
 # CLR imports
@@ -203,8 +203,8 @@ class BlessServerDotNet(BaseBlessServer):
         newChar.ReadRequested += self.read_characteristic
         newChar.WriteRequested += self.write_characteristic
         newChar.SubscribedClientsChanged += self.subscribe_characteristic
-        bleak_characteristic: BleakGATTCharacteristicDotNet = (
-                BleakGATTCharacteristicDotNet(obj=newChar)
+        bleak_characteristic: BlessGATTCharacteristicDotNet = (
+                BlessGATTCharacteristicDotNet(obj=newChar)
                 )
 
         service: BleakGATTServiceDotNet = self.services.get(str(serverguid))
@@ -264,7 +264,6 @@ class BlessServerDotNet(BaseBlessServer):
         args : GattReadRequestedEventArgs
             Arguments for the read request
         """
-
         logger.debug("Reading Characteristic")
         deferral: Deferral = args.GetDeferral()
         value: bytearray = self.read_request(str(sender.Uuid))
@@ -275,7 +274,7 @@ class BlessServerDotNet(BaseBlessServer):
         logger.debug("Getting request object {}".format(self))
         request: GattReadRequest = sync_async_wrap(
                 GattReadRequest,
-                args.GetRequestAsycn
+                args.GetRequestAsync
                 )
         logger.debug("Got request object {}".format(request))
         request.RespondWithValue(writer.DetachBuffer())
@@ -301,7 +300,7 @@ class BlessServerDotNet(BaseBlessServer):
         deferral: Deferral = args.GetDeferral()
         request: GattWriteRequest = sync_async_wrap(
                 GattWriteRequest,
-                args.getRequestAsync
+                args.GetRequestAsync
                 )
         logger.debug("Request value: {}".format(request.Value))
         reader: DataReader = DataReader.FromBuffer(request.Value)
