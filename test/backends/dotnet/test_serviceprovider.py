@@ -14,7 +14,6 @@ hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
 from bleak.backends.dotnet.utils import (  # noqa: E402
         wrap_IAsyncOperation,
-        BleakDataReader,
         BleakDataWriter
         )
 
@@ -28,6 +27,8 @@ from Windows.Foundation import (  # noqa: E402
         IAsyncOperation,
         Deferral
         )
+
+from Windows.Storage.Streams import DataReader, DataWriter  # noqa: E402
 
 from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # noqa: E402 F401 E501
     GattWriteOption,
@@ -75,13 +76,13 @@ class TestServiceProvider:
                 ):
             deferral: Deferral = args.GetDeferral()
             value = self.val
-            with BleakDataWriter(value) as writer:
-                request: GattReadRequest = sync_async_wrap(
-                        GattReadRequest,
-                        args.GetRequestAsync
-                        )
-                request.RespondWithValue(writer.DetachBuffer())
-
+            writer: DataWriter = DataWriter()
+            writer.WriteBytes(value)
+            request: GattReadRequest = sync_async_wrap(
+                GattReadRequest,
+                args.GetRequestAsync
+            )
+            request.RespondWithValue(writer.DetachBuffer())
             deferral.Complete()
 
         def write(
@@ -91,12 +92,15 @@ class TestServiceProvider:
             deferral: Deferral = args.GetDeferral()
             request: GattWriteRequest = sync_async_wrap(
                     GattWriteRequest,
-                    args.GetWriteRequest
+                    args.GetRequestAsync
                     )
-
-            with BleakDataReader(request.Value) as reader:
-                value: bytearray = bytearray(reader.read())
-                self.val = value
+            reader: DataReader = DataReader.FromBuffer(request.Value)
+            n_bytes: int = reader.UnconsumedBufferLength
+            value: bytearray = bytearray()
+            for n in range(0, n_bytes):
+                next_byte: bytes = reader.ReadByte()
+                value.append(next_byte)
+            self.val = value
 
             if request.Option == GattWriteOption.WriteWithResponse:
                 request.Respond()
@@ -143,8 +147,8 @@ class TestServiceProvider:
         ReadParameters: GattLocalCharacteristicParameters = (
                 GattLocalCharacteristicParameters()
                 )
-        ReadParameters.CharacteristicProperties = properties
-        ReadParameters.ReadProtectionLevel = permissions
+        ReadParameters.CharacteristicProperties = properties.value
+        ReadParameters.ReadProtectionLevel = permissions.value
 
         characteristic_result: GattLocalCharacteristicResult = (
                 await wrap_IAsyncOperation(
