@@ -19,9 +19,9 @@ on a [custom branch](https://github.com/kevincar/bleak/tree/server) of Bleak
 
 |OS|Implemented|
 |--|---------|
-|MacOS|✅|
-|Windows|❌|
-|Linux|✅|
+|MacOS|:white_check_mark:|
+|Windows|:white_check_mark:|
+|Linux|:white_check_mark:|
 
 # Examples
 
