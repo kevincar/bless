@@ -39,9 +39,9 @@ elif sys.platform == 'win32':
     from bless.backends.dotnet.server import (
             BlessServerDotNet as BlessServer
     )
-
+    BlessServer
     # Characteristic Classes
-    from bless.backends.dotnet.characteristic import (
+    from bless.backends.dotnet.characteristic import (  # noqa: F401
             BlessGATTCharacteristicDotNet
             as BlessGATTCharacteristic
     )

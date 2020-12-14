@@ -126,7 +126,7 @@ class BlueZGattCharacteristic(DBusObject):
         super(BlueZGattCharacteristic, self).__init__(self.path)
 
     @dbusMethod(interface_name, "ReadValue")
-    def ReadValue(self, options: Dict) -> bytearray:
+    def ReadValue(self, options: Dict) -> bytearray:  # noqa: N802
         """
         Read the value of the characteristic.
         This is to be fully implemented at the application level
@@ -147,7 +147,7 @@ class BlueZGattCharacteristic(DBusObject):
         return f(self)
 
     @dbusMethod(interface_name, "WriteValue")
-    def WriteValue(self, value: bytearray, options: Dict):
+    def WriteValue(self, value: bytearray, options: Dict):  # noqa: N802
         """
         Write a value to the characteristic
         This is to be fully implemented at the application level
@@ -165,7 +165,7 @@ class BlueZGattCharacteristic(DBusObject):
         f(self, value)
 
     @dbusMethod(interface_name, "StartNotify")
-    def StartNotify(self):
+    def StartNotify(self):  # noqa: N802
         """
         Begin a subscription to the characteristic
         """
@@ -176,7 +176,7 @@ class BlueZGattCharacteristic(DBusObject):
         self._service.app.subscribed_characteristics.append(self.uuid)
 
     @dbusMethod(interface_name, "StopNotify")
-    def StopNotify(self):
+    def StopNotify(self):  # noqa: N802
         """
         Stop a subscription to the characteristic
         """
