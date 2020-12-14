@@ -9,12 +9,14 @@ from bleak.backends.dotnet.utils import (
         BleakDataReader,
         BleakDataWriter
         )
+
 from bleak.backends.dotnet.service import BleakGATTServiceDotNet
 
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer
 from bless.backends.characteristic import GattCharacteristicsFlags
 from bless.backends.dotnet.characteristic import BleakGATTCharacteristicDotNet
+from bless.backends.dotnet.utils import sync_async_wrap
 
 # CLR imports
 # Import of Bleak CLR->UWP Bridge.
@@ -25,6 +27,8 @@ from Windows.Foundation import (
         IAsyncOperation,
         Deferral
         )
+
+from Windows.Storage.Streams import DataReader, DataWriter
 
 from Windows.Devices.Bluetooth.GenericAttributeProfile import (
     GattWriteOption,
@@ -113,7 +117,7 @@ class BlessServerDotNet(BaseBlessServer):
     def service_provider(self, value: GattServiceProvider):
         self._service_provider = value
 
-    def is_connected(self) -> bool:
+    async def is_connected(self) -> bool:
         """
         Determine whether there are any connected peripheral devices
 
@@ -125,7 +129,7 @@ class BlessServerDotNet(BaseBlessServer):
         """
         return len(self._subscribed_clients) > 0
 
-    def is_advertising(self) -> bool:
+    async def is_advertising(self) -> bool:
         """
         Determine whether the server is advertising
 
@@ -198,9 +202,9 @@ class BlessServerDotNet(BaseBlessServer):
                     return_type=GattLocalCharacteristicResult)
                 )
         newChar: GattLocalCharacteristic = characteristic_result.Characteristic
-        newChar.ReadRequested += self._read_characteristic
-        newChar.WriteRequested += self._write_characteristic
-        newChar.SubscribedClientsChanged += self._subscribe_characteristic
+        newChar.ReadRequested += self.read_characteristic
+        newChar.WriteRequested += self.write_characteristic
+        newChar.SubscribedClientsChanged += self.subscribe_characteristic
         bleak_characteristic: BleakGATTCharacteristicDotNet = (
                 BleakGATTCharacteristicDotNet(obj=newChar)
                 )
@@ -246,43 +250,67 @@ class BlessServerDotNet(BaseBlessServer):
 
         return True
 
-    def _read_characteristic(self,
+    def read_characteristic(self,
                              sender: GattLocalCharacteristic,
                              args: GattReadRequestedEventArgs):
         """
-        This method, and the _write_characteristic method, both utilize the
-        _get_request method.  The _get_request method, utilizes native thread
-        modeling. The reason for this is that the methods used to obtain the
-        GattCharacteristics require the use of coroutines.  But the service
-        requires functions. We cannot give back coroutines, else these
-        functions will never run. Thus, we start up a thread to temporarily get
-        or set the characteristic in question.
+        The is triggered by pythonnet when windows receives a read request for
+        a given characteristic
+
+        Parameters
+        ----------
+        sender : GattLocalCharacteristic
+            The characteristic Gatt object whose value was requested
+        args : GattReadRequestedEventArgs
+            Arguments for the read request
         """
 
         logger.debug("Reading Characteristic")
         deferral: Deferral = args.GetDeferral()
         value: bytearray = self.read_request(str(sender.Uuid))
+        logger.debug(f"Current Characteristic value {value}")
         value = value if value is not None else b'\x00'
-        with BleakDataWriter(value) as writer:
-            logger.debug(f"Current Characteristic value {value}")
-            logger.debug("Getting request object {}".format(self))
-            request: GattReadRequest = self._get_request(args)
-            logger.debug("Got request object {}".format(request))
-            request.RespondWithValue(writer.DetachBuffer())
+        writer: DataWriter = DataWriter()
+        writer.WriteBytes(value)
+        logger.debug("Getting request object {}".format(self))
+        request: GattReadRequest = sync_async_wrap(
+                GattReadRequest,
+                args.GetRequestAsycn
+                )
+        logger.debug("Got request object {}".format(request))
+        request.RespondWithValue(writer.DetachBuffer())
         deferral.Complete()
 
-    def _write_characteristic(self,
+    def write_characteristic(self,
                               sender: GattLocalCharacteristic,
                               args: GattWriteRequestedEventArgs):
+        """
+        Called by pythonnet when a write request is submitted
+
+        Parameters
+        ----------
+        sender : GattLocalCharacteristic
+            The object representation of the gatt characteristic whose value we
+            should write to
+        args : GattWriteRequestedEventArgs
+            The event arguments for the write request
+        """
 
         deferral: Deferral = args.GetDeferral()
-        request: GattWriteRequest = self._get_request(args)
+        request: GattWriteRequest = sync_async_wrap(
+                GattWriteRequest,
+                args.getRequestAsync
+                )
         logger.debug("Request value: {}".format(request.Value))
+        reader: DataReader = DataReader.FromBuffer(request.Value)
+        n_bytes: int = reader.UnconsumedBufferLength
+        value: bytearray = bytearray()
+        for n in range(0, n_bytes):
+            next_byte: int = reader.ReadByte()
+            value.append(next_byte)
 
-        with BleakDataReader(request.Value) as reader:
-            value: bytearray = bytearray(reader.read())
-            logger.debug("Written Value: {}".format(value))
-            self.write_request(str(sender.Uuid), value)
+        logger.debug("Written Value: {}".format(value))
+        self.write_request(str(sender.Uuid), value)
 
         if request.Option == GattWriteOption.WriteWithResponse:
             request.Respond()
@@ -290,46 +318,21 @@ class BlessServerDotNet(BaseBlessServer):
         logger.debug("Write Complete")
         deferral.Complete()
 
-    def _subscribe_characteristic(
+    def subscribe_characteristic(
             self,
             sender: GattLocalCharacteristic,
             args: Object
             ):
+        """
+        Called when a characteristic is subscribed to
+
+        Parameters
+        ----------
+        sender : GattLocalCharacteristic
+            The characteristic object associated with the characteristic to
+            which the device would like to subscribe
+        args : Object
+            Additional arguments to use for the subscription
+        """
         self._subscribed_clients = list(sender.SubscribedClients)
         logger.info("New device subscribed")
-
-    def _get_request(self,
-                     args: Union[
-                         GattReadRequestedEventArgs,
-                         GattWriteRequestedEventArgs
-                         ]) -> Union[
-                                 GattReadRequest,
-                                 GattWriteRequest
-                                 ]:
-
-        request: Request = Request()
-        logger.debug("THREAD: Starting threaded event loop")
-        loop = asyncio.new_event_loop()
-        loop.run_until_complete(self._request_loop(args, request))
-        logger.debug("THREAD: Completed request loop")
-        return request._obj
-
-    async def _request_loop(self,
-                            args: Union[
-                                GattReadRequestedEventArgs,
-                                GattWriteRequestedEventArgs],
-                            request: Request):
-
-        loop = asyncio.get_event_loop()
-        if isinstance(args, GattReadRequestedEventArgs):
-            request._obj = await wrap_IAsyncOperation(
-                        IAsyncOperation[GattReadRequest](
-                            args.GetRequestAsync()),
-                        return_type=GattReadRequest,
-                        loop=loop)
-        elif isinstance(args, GattWriteRequestedEventArgs):
-            request._obj = await wrap_IAsyncOperation(
-                        IAsyncOperation[GattWriteRequest](
-                            args.GetRequestAsync()),
-                        return_type=GattWriteRequest,
-                        loop=loop)
