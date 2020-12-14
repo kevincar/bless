@@ -232,7 +232,7 @@ class BlessServerDotNet(BaseBlessServer):
         """
 
         service: BleakGATTServiceDotNet = self.services[service_uuid.lower()]
-        characteristic: BleakGATTCharacteristicDotNet = next(
+        characteristic: BlessGATTCharacteristicDotNet = next(
                 iter([
                     char
                     for char in service.characteristics
