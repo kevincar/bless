@@ -1,12 +1,10 @@
 import logging
-import asyncio
 
 from asyncio.events import AbstractEventLoop
-from typing import Union, Dict, Optional, List
+from typing import Dict, Optional, List
 
 from bleak.backends.dotnet.utils import (
         wrap_IAsyncOperation,
-        BleakDataReader,
         BleakDataWriter
         )
 
@@ -250,9 +248,11 @@ class BlessServerDotNet(BaseBlessServer):
 
         return True
 
-    def read_characteristic(self,
-                             sender: GattLocalCharacteristic,
-                             args: GattReadRequestedEventArgs):
+    def read_characteristic(
+            self,
+            sender: GattLocalCharacteristic,
+            args: GattReadRequestedEventArgs
+            ):
         """
         The is triggered by pythonnet when windows receives a read request for
         a given characteristic
@@ -281,9 +281,11 @@ class BlessServerDotNet(BaseBlessServer):
         request.RespondWithValue(writer.DetachBuffer())
         deferral.Complete()
 
-    def write_characteristic(self,
-                              sender: GattLocalCharacteristic,
-                              args: GattWriteRequestedEventArgs):
+    def write_characteristic(
+            self,
+            sender: GattLocalCharacteristic,
+            args: GattWriteRequestedEventArgs
+            ):
         """
         Called by pythonnet when a write request is submitted
 
