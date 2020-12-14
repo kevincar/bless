@@ -19,8 +19,8 @@ class BlessGATTCharacteristicDotNet(
     DotNet implementation of the BlessGATTCharacteristic
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, obj):
+        super().__init__(obj)
         self._value: bytearray = bytearray(b'')
 
     @property
