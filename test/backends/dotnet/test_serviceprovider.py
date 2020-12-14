@@ -98,7 +98,7 @@ class TestServiceProvider:
             n_bytes: int = reader.UnconsumedBufferLength
             value: bytearray = bytearray()
             for n in range(0, n_bytes):
-                next_byte: bytes = reader.ReadByte()
+                next_byte: int = reader.ReadByte()
                 value.append(next_byte)
             self.val = value
 
