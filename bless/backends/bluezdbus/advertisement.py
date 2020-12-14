@@ -70,5 +70,5 @@ class BlueZLEAdvertisement(DBusObject):
         super(BlueZLEAdvertisement, self).__init__(self.path)
 
     @dbusMethod(interface_name, "Release")
-    def Release(self):
+    def Release(self):  # noqa: N802
         print("%s: Released!" % self.path)

@@ -14,14 +14,11 @@ pip install bless
 
 # Features
 
-**NOTE:** This library is a *work in progress*, pulling and adapting work previously made
-on a [custom branch](https://github.com/kevincar/bleak/tree/server) of Bleak
-
 |OS|Implemented|
 |--|---------|
-|MacOS|✅|
-|Windows|❌|
-|Linux|✅|
+|MacOS|:white_check_mark:|
+|Windows|:white_check_mark:|
+|Linux|:white_check_mark:|
 
 # Examples
 
