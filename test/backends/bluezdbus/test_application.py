@@ -9,17 +9,17 @@ import numpy as np
 if sys.platform.lower() != "linux":
     pytest.skip("Only for linux", allow_module_level=True)
 
-from typing import List
+from typing import List  # noqa: E402
 
-from txdbus import client
-from txdbus.objects import RemoteDBusObject
+from txdbus import client  # noqa: E402
+from txdbus.objects import RemoteDBusObject  # noqa: E402
 
-from bless.backends.bluezdbus.characteristic import Flags
-from bless.backends.bluezdbus.utils import get_adapter
-from bless.backends.bluezdbus.application import BlueZGattApplication
-from bless.backends.bluezdbus.characteristic import BlueZGattCharacteristic
+from bless.backends.bluezdbus.characteristic import Flags  # noqa: E402
+from bless.backends.bluezdbus.utils import get_adapter  # noqa: E402
+from bless.backends.bluezdbus.application import BlueZGattApplication  # noqa: E402 E501
+from bless.backends.bluezdbus.characteristic import BlueZGattCharacteristic  # noqa: E402 E501
 
-from twisted.internet.asyncioreactor import AsyncioSelectorReactor
+from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # noqa: E402 E501
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 

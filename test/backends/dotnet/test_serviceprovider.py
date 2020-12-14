@@ -8,7 +8,7 @@ import numpy as np
 if sys.platform.lower() != "win32":
     pytest.skip("Only for windows", allow_module_level=True)
 
-from typing import List
+from typing import List  # noqa: E402
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
