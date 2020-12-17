@@ -5,14 +5,15 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="bless",
-    version="0.1.0",
+    version="0.1.1",
     author="Kevin Davis",
     author_email="kevincarrolldavis@gmail.com",
     description="A Bluetooth Low Energy Server supplement to Bleak",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/kevincar/bless",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=("test", "examples")),
+    include_package_data=True,
     install_requires=[
         "bleak"
         ],
