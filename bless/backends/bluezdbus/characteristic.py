@@ -1,16 +1,24 @@
-import bleak.backends.bluezdbus.defs as defs
+import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from enum import Enum
 
-from typing import List, Dict
+from typing import List, Dict, TYPE_CHECKING
 
-from txdbus.objects import DBusObject, DBusProperty, dbusMethod
-from txdbus.interface import DBusInterface, Method, Property
+from txdbus.objects import DBusObject, DBusProperty, dbusMethod  # type: ignore
+from txdbus.interface import DBusInterface, Method, Property  # type: ignore
 
-from bleak.backends.bluezdbus.characteristic import (
+from bleak.backends.bluezdbus.characteristic import (  # type: ignore
         _GattCharacteristicsFlagsEnum
         )
-from bless.backends.characteristic import GattCharacteristicsFlags
+from bless.backends.characteristic import (  # type: ignore
+        GattCharacteristicsFlags
+        )
+
+if TYPE_CHECKING:
+    from bless.backends.bluezdbus.service import (  # type: ignore
+            BlueZGattService,
+            BlueZGattDescriptor
+            )
 
 
 class Flags(Enum):

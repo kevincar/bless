@@ -1,9 +1,14 @@
 from enum import Enum
 
-from typing import List, Dict
+from typing import List, Dict, TYPE_CHECKING
 
-from txdbus.objects import DBusObject, DBusProperty, dbusMethod
-from txdbus.interface import DBusInterface, Method, Property
+from txdbus.objects import DBusObject, DBusProperty, dbusMethod  # type: ignore
+from txdbus.interface import DBusInterface, Method, Property  # type: ignore
+
+if TYPE_CHECKING:
+    from bless.backends.bluezdbus.application import (  # type: ignore
+            BlueZGattApplication
+            )
 
 
 class Type(Enum):

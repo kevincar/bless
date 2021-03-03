@@ -1,16 +1,19 @@
 import asyncio
 
-import bleak.backends.bluezdbus.defs as defs
+import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
-from typing import List
+from typing import List, TYPE_CHECKING
 
-from txdbus import client
-from txdbus.objects import DBusObject, DBusProperty
-from txdbus.interface import DBusInterface, Property
+from txdbus import client  # type: ignore
+from txdbus.objects import DBusObject, DBusProperty  # type: ignore
+from txdbus.interface import DBusInterface, Property  # type: ignore
 
-from bless.backends.bluezdbus.characteristic import (
+from .characteristic import (
         BlueZGattCharacteristic
         )
+
+if TYPE_CHECKING:
+    from bless.backends.bluezdbus.application import BlueZGattApplication
 
 
 class BlueZGattService(DBusObject):

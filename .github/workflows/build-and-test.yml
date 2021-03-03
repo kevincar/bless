@@ -49,7 +49,12 @@ jobs:
         flake8 . --count --exit-zero --statistics
     - name: Check mypy
       run: |
-        mypy .
+        mypy bless/backends/bluezdbus
+        mypy bless/backends/corebluetooth
+        mypy bless/backends/dotnet
+        mypy bless/backends/*.py
+        mypy bless/*.py
+        mypy test
     - name: Test with pytest
       run: |
         python -m pytest
