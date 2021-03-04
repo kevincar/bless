@@ -3,12 +3,14 @@ import logging
 from asyncio.events import AbstractEventLoop
 from typing import Dict, Optional, List
 
-from bleak.backends.dotnet.utils import (
+from bleak.backends.dotnet.utils import (  # type: ignore
         wrap_IAsyncOperation,
         BleakDataWriter
         )
 
-from bleak.backends.dotnet.service import BleakGATTServiceDotNet
+from bleak.backends.dotnet.service import (  # type: ignore
+        BleakGATTServiceDotNet
+        )
 
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer
