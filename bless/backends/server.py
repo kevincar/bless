@@ -5,9 +5,9 @@ import logging
 
 from asyncio import AbstractEventLoop
 from typing import Any, Optional, Dict, Callable, List, Union
-from bleak.backends.service import BleakGATTService
+from bleak.backends.service import BleakGATTService  # type: ignore
 
-from bless.backends.characteristic import (
+from bless.backends.characteristic import (  # type: ignore
         BlessGATTCharacteristic,
         GattCharacteristicsFlags
         )

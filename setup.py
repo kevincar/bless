@@ -12,6 +12,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/kevincar/bless",
+    package_data={"bless": ["py.typed"]},
     packages=setuptools.find_packages(exclude=("test", "examples")),
     include_package_data=True,
     install_requires=[

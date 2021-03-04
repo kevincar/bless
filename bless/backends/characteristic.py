@@ -2,7 +2,9 @@ import abc
 
 from enum import Flag
 
-from bleak.backends.characteristic import BleakGATTCharacteristic
+from bleak.backends.characteristic import (  # type: ignore
+        BleakGATTCharacteristic
+        )
 
 
 class GattCharacteristicsFlags(Flag):
