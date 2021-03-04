@@ -8,12 +8,14 @@ from txdbus import client  # type: ignore
 from txdbus.objects import DBusObject, DBusProperty  # type: ignore
 from txdbus.interface import DBusInterface, Property  # type: ignore
 
-from .characteristic import (
+from .characteristic import (  # type: ignore
         BlueZGattCharacteristic
         )
 
 if TYPE_CHECKING:
-    from bless.backends.bluezdbus.application import BlueZGattApplication
+    from bless.backends.bluezdbus.application import (  # type: ignore
+            BlueZGattApplication
+            )
 
 
 class BlueZGattService(DBusObject):
