@@ -13,24 +13,28 @@ from bleak.backends.dotnet.service import (  # type: ignore
         )
 
 from bless.exceptions import BlessError
-from bless.backends.server import BaseBlessServer
-from bless.backends.characteristic import GattCharacteristicsFlags
-from bless.backends.dotnet.characteristic import BlessGATTCharacteristicDotNet
-from bless.backends.dotnet.utils import sync_async_wrap
+from bless.backends.server import BaseBlessServer  # type: ignore
+from bless.backends.characteristic import (  # type: ignore
+        GattCharacteristicsFlags
+        )
+from bless.backends.dotnet.characteristic import (  # type: ignore
+        BlessGATTCharacteristicDotNet
+        )
+from bless.backends.dotnet.utils import sync_async_wrap  # type: ignore
 
 # CLR imports
 # Import of Bleak CLR->UWP Bridge.
 # from BleakBridge import Bridge
 
 # Import of other CLR components needed.
-from Windows.Foundation import (
+from Windows.Foundation import (  # type: ignore
         IAsyncOperation,
         Deferral
         )
 
-from Windows.Storage.Streams import DataReader, DataWriter
+from Windows.Storage.Streams import DataReader, DataWriter  # type: ignore
 
-from Windows.Devices.Bluetooth.GenericAttributeProfile import (
+from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
     GattWriteOption,
     GattServiceProviderResult,
     GattServiceProvider,
@@ -46,7 +50,7 @@ from Windows.Devices.Bluetooth.GenericAttributeProfile import (
     GattSubscribedClient
 )
 
-from System import (
+from System import (  # type: ignore
         Guid,
         Object
         )
