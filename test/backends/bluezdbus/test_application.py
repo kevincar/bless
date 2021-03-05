@@ -2,7 +2,7 @@ import sys
 import uuid
 import pytest
 import asyncio
-import aioconsole
+import aioconsole  # type: ignore
 
 import numpy as np
 
@@ -11,15 +11,15 @@ if sys.platform.lower() != "linux":
 
 from typing import List  # noqa: E402
 
-from txdbus import client  # noqa: E402
-from txdbus.objects import RemoteDBusObject  # noqa: E402
+from txdbus import client  # type: ignore # noqa: E402
+from txdbus.objects import RemoteDBusObject  # type: ignore # noqa: E402
 
-from bless.backends.bluezdbus.characteristic import Flags  # noqa: E402
-from bless.backends.bluezdbus.utils import get_adapter  # noqa: E402
-from bless.backends.bluezdbus.application import BlueZGattApplication  # noqa: E402 E501
-from bless.backends.bluezdbus.characteristic import BlueZGattCharacteristic  # noqa: E402 E501
+from bless.backends.bluezdbus.characteristic import Flags  # type: ignore # noqa: E402 E501
+from bless.backends.bluezdbus.utils import get_adapter  # type: ignore # noqa: E402 E501
+from bless.backends.bluezdbus.application import BlueZGattApplication  #type: ignore # noqa: E402 E501
+from bless.backends.bluezdbus.characteristic import BlueZGattCharacteristic  #type: ignore # noqa: E402 E501
 
-from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # noqa: E402 E501
+from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # type: ignore # noqa: E402 E501
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
