@@ -2,12 +2,13 @@ import asyncio
 
 import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, cast
 
 from asyncio import AbstractEventLoop
 from twisted.internet.asyncioreactor import (  # type: ignore
         AsyncioSelectorReactor
         )
+from twisted.inernet.posixbase import PosixReactorBase  # type: ignore
 from txdbus import client  # type: ignore
 from txdbus.objects import RemoteDBusObject  # type: ignore
 
@@ -48,7 +49,9 @@ class BlessServerBlueZDBus(BaseBlessServer):
     def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
         super(BlessServerBlueZDBus, self).__init__(loop=loop, **kwargs)
         self.name: str = name
-        self.reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(loop)
+        self.reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(
+                cast(PosixReactorBase, loop)
+                )
 
         self.services: Dict[str, BleakGATTServiceBlueZDBus] = {}
 
