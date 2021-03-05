@@ -1,10 +1,10 @@
 from enum import Flag
 
-from bleak.backends.corebluetooth.characteristic import (
+from bleak.backends.corebluetooth.characteristic import (  # type: ignore
         BleakGATTCharacteristicCoreBluetooth
         )
 
-from CoreBluetooth import CBMutableCharacteristic
+from CoreBluetooth import CBMutableCharacteristic  # type: ignore
 
 
 class CBAttributePermissions(Flag):

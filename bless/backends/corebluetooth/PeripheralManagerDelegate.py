@@ -1,4 +1,4 @@
-import objc
+import objc  # type: ignore
 import logging
 import asyncio
 
@@ -11,7 +11,7 @@ from typing import (
         )
 
 
-from CoreBluetooth import (
+from CoreBluetooth import (  # type: ignore
         CBManagerStateUnknown,
         CBManagerStateResetting,
         CBManagerStateUnsupported,
@@ -20,7 +20,7 @@ from CoreBluetooth import (
         CBManagerStatePoweredOn
         )
 
-from Foundation import (
+from Foundation import (  # type: ignore
         NSObject,
         CBPeripheralManager,
         CBCentral,
@@ -31,10 +31,12 @@ from Foundation import (
         NSError
         )
 
-from libdispatch import dispatch_queue_create, DISPATCH_QUEUE_SERIAL
+from libdispatch import (  # type: ignore
+        dispatch_queue_create, DISPATCH_QUEUE_SERIAL
+        )
 
 from bless.exceptions import BlessError
-from bless.backends.corebluetooth.error import CBATTError
+from bless.backends.corebluetooth.error import CBATTError  # type: ignore
 
 
 logger = logging.getLogger(name=__name__)
