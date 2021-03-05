@@ -26,7 +26,7 @@ from bless.backends.corebluetooth.PeripheralManagerDelegate import (  # type: ig
         CBMutableService,
         )
 
-from bless.backends.corebluetooth.characteristic import (  # type: ignore # noqa: E402
+from bless.backends.corebluetooth.characteristic import (  # type: ignore # noqa: E402 E501
         CBAttributePermissions
         )
 
@@ -143,7 +143,7 @@ class TestPeripheralManagerDelegate:
         assert pmd.is_connected() is True
 
         # Read Test
-        rng: np.random._generator.Generator = np.random.default_rng()  # type: ignore
+        rng: np.random._generator.Generator = np.random.default_rng()  # type: ignore # noqa E501
         hex_val: str = ''.join(rng.choice(self.hex_words, 2, replace=False))
         self.val = bytearray(
                 int(f"0x{hex_val}", 16).to_bytes(
