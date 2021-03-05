@@ -8,7 +8,7 @@ from asyncio import AbstractEventLoop
 from twisted.internet.asyncioreactor import (  # type: ignore
         AsyncioSelectorReactor
         )
-from twisted.inernet.posixbase import PosixReactorBase  # type: ignore
+from twisted.internet.posixbase import PosixReactorBase  # type: ignore
 from txdbus import client  # type: ignore
 from txdbus.objects import RemoteDBusObject  # type: ignore
 

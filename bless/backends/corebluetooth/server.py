@@ -5,7 +5,7 @@ from typing import Optional, Dict, List
 from asyncio import TimeoutError
 from asyncio.events import AbstractEventLoop
 
-from Foundation import (  # type: ignore
+from CoreBluetooth import (  # type: ignore
         CBUUID,
         CBService,
         CBMutableService,
