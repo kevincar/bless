@@ -5,7 +5,7 @@ import logging
 import asyncio  # type: ignore
 import aioconsole  # type: ignore
 
-import numpy as np
+import numpy as np  # type: ignore
 
 from typing import Dict, Any, List, Optional
 

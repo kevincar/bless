@@ -4,7 +4,7 @@ import pytest
 import asyncio
 import aioconsole  # type: ignore
 
-import numpy as np
+import numpy as np  # type: ignore
 
 if sys.platform.lower() != "linux":
     pytest.skip("Only for linux", allow_module_level=True)
