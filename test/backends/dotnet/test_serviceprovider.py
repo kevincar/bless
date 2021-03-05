@@ -3,7 +3,7 @@ import uuid
 import pytest
 import aioconsole  # type: ignore
 
-import numpy as np
+import numpy as np  # type: ignore
 
 if sys.platform.lower() != "win32":
     pytest.skip("Only for windows", allow_module_level=True)
