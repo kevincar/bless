@@ -8,7 +8,6 @@ from asyncio import AbstractEventLoop
 from twisted.internet.asyncioreactor import (  # type: ignore
         AsyncioSelectorReactor
         )
-from twisted.internet.posixbase import PosixReactorBase  # type: ignore
 from txdbus import client  # type: ignore
 from txdbus.objects import RemoteDBusObject  # type: ignore
 
@@ -50,7 +49,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
         super(BlessServerBlueZDBus, self).__init__(loop=loop, **kwargs)
         self.name: str = name
         self.reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(
-                cast(PosixReactorBase, loop)
+                cast(asyncio.unix_events._UnixSelectorEventLoop, loop)
                 )
 
         self.services: Dict[str, BleakGATTServiceBlueZDBus] = {}
