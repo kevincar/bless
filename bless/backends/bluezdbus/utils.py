@@ -1,11 +1,11 @@
 import asyncio
 
-import bleak.backends.bluezdbus.defs as defs
+import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import Dict, Optional
 
-from txdbus import client
-from txdbus.objects import RemoteDBusObject
+from txdbus import client  # type: ignore
+from txdbus.objects import RemoteDBusObject  # type: ignore
 
 
 async def find_adapter(

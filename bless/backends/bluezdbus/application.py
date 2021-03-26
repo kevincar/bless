@@ -1,18 +1,18 @@
 import asyncio
 
-import bleak.backends.bluezdbus.defs as defs
+import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import List, Any, Callable, Optional
 
-from txdbus import client
-from txdbus.objects import DBusObject, RemoteDBusObject
+from txdbus import client  # type: ignore
+from txdbus.objects import DBusObject, RemoteDBusObject  # type: ignore
 
-from bless.backends.bluezdbus.advertisement import (
+from bless.backends.bluezdbus.advertisement import (  # type: ignore
         Type,
         BlueZLEAdvertisement
         )
-from bless.backends.bluezdbus.service import BlueZGattService
-from bless.backends.bluezdbus.characteristic import (
+from bless.backends.bluezdbus.service import BlueZGattService  # type: ignore
+from bless.backends.bluezdbus.characteristic import (  # type: ignore
         Flags,
         BlueZGattCharacteristic
         )

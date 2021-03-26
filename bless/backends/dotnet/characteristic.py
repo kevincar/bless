@@ -1,6 +1,6 @@
 from enum import Flag
 
-from bleak.backends.dotnet.characteristic import (
+from bleak.backends.dotnet.characteristic import (  # type: ignore
         BleakGATTCharacteristicDotNet
         )
 

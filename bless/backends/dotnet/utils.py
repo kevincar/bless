@@ -1,8 +1,8 @@
 import asyncio
 from typing import Any, Dict
 
-from Windows.Foundation import IAsyncOperation
-from bleak.backends.dotnet.utils import wrap_IAsyncOperation
+from Windows.Foundation import IAsyncOperation  # type: ignore
+from bleak.backends.dotnet.utils import wrap_IAsyncOperation  # type: ignore
 
 
 async def async_wrap(ref_obj: Dict, ret_type: Any, fn: Any, *args):

@@ -15,5 +15,18 @@
 
 ### Pull Requests
 
+- If you haven't already, fork this repository
+- Where appropriate, and if possible, please ensure that any new files or functions that are added have an associated test to validate it
 - All Pull requests must pass tests
-- If possible, please ensure that any new files or functions that are added have an associated test to validate it
+  - The tests include both automated test using GitHub Actions for continuous integration as well as hardware tests that cannot be automated.
+  - To run the hardware tests you can run the following command from the root of the project and use a Bluetooth interrogating app such as LightBlue to validate that the server and its functions work
+
+**bash**
+```bash
+TEST_HARDWARE=True python -m pytest -s
+```
+**powershell**
+```powershell
+$env:TEST_HARDWARE="True"
+python -m pytest -s
+```

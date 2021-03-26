@@ -1,29 +1,35 @@
 import asyncio
 
-import bleak.backends.bluezdbus.defs as defs
+import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, cast
 
 from asyncio import AbstractEventLoop
-from twisted.internet.asyncioreactor import AsyncioSelectorReactor
-from txdbus import client
-from txdbus.objects import RemoteDBusObject
+from twisted.internet.asyncioreactor import (  # type: ignore
+        AsyncioSelectorReactor
+        )
+from txdbus import client  # type: ignore
+from txdbus.objects import RemoteDBusObject  # type: ignore
 
-from bleak.backends.bluezdbus.service import BleakGATTServiceBlueZDBus
-from bleak.backends.bluezdbus.characteristic import (
+from bleak.backends.bluezdbus.service import (  # type: ignore
+        BleakGATTServiceBlueZDBus
+        )
+from bleak.backends.bluezdbus.characteristic import (  # type: ignore
         BleakGATTCharacteristicBlueZDBus
         )
 
-from bless.backends.server import BaseBlessServer
-from bless.backends.bluezdbus.utils import get_adapter
-from bless.backends.bluezdbus.application import BlueZGattApplication
-from bless.backends.bluezdbus.service import BlueZGattService
-from bless.backends.bluezdbus.characteristic import (
+from bless.backends.server import BaseBlessServer  # type: ignore
+from bless.backends.bluezdbus.utils import get_adapter  # type: ignore
+from bless.backends.bluezdbus.application import (  # type: ignore
+        BlueZGattApplication
+        )
+from bless.backends.bluezdbus.service import BlueZGattService  # type: ignore
+from bless.backends.bluezdbus.characteristic import (  # type: ignore
         BlueZGattCharacteristic,
         Flags
         )
 
-from bless.backends.characteristic import (
+from bless.backends.characteristic import (  # type: ignore
         GattCharacteristicsFlags
         )
 
@@ -42,7 +48,9 @@ class BlessServerBlueZDBus(BaseBlessServer):
     def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
         super(BlessServerBlueZDBus, self).__init__(loop=loop, **kwargs)
         self.name: str = name
-        self.reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(loop)
+        self.reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(
+                cast(asyncio.unix_events._UnixSelectorEventLoop, loop)
+                )
 
         self.services: Dict[str, BleakGATTServiceBlueZDBus] = {}
 
@@ -256,6 +264,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
             if char.uuid == char_uuid
             ]))
         characteristic.value = cur_value
+        return True
 
     def read(self, char: BlueZGattCharacteristic) -> bytearray:
         """

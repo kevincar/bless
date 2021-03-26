@@ -5,27 +5,29 @@ from typing import Optional, Dict, List
 from asyncio import TimeoutError
 from asyncio.events import AbstractEventLoop
 
-from Foundation import (
+from CoreBluetooth import (  # type: ignore
         CBUUID,
         CBService,
         CBMutableService,
         CBMutableCharacteristic
         )
 
-from bleak.backends.service import BleakGATTService
-from bleak.backends.corebluetooth.service import (
+from bleak.backends.service import BleakGATTService  # type: ignore
+from bleak.backends.corebluetooth.service import (  # type: ignore
         BleakGATTServiceCoreBluetooth
         )
 
-from .PeripheralManagerDelegate import (
+from .PeripheralManagerDelegate import (  # type: ignore
         PeripheralManagerDelegate
         )
 from bless.exceptions import BlessError
-from bless.backends.server import BaseBlessServer
-from bless.backends.corebluetooth.characteristic import (
+from bless.backends.server import BaseBlessServer  # type: ignore
+from bless.backends.corebluetooth.characteristic import (  # type: ignore
         BlessGATTCharacteristicCoreBluetooth
         )
-from bless.backends.characteristic import GattCharacteristicsFlags
+from bless.backends.characteristic import (  # type: ignore
+        GattCharacteristicsFlags
+        )
 
 
 logger = logging.getLogger(name=__name__)

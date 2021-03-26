@@ -2,13 +2,15 @@ import sys
 import uuid
 import pytest
 import asyncio
-import aioconsole
+import aioconsole  # type: ignore
 
-import numpy as np
+import numpy as np  # type: ignore
 
 from typing import Optional, List
 
-from bless.backends.characteristic import BlessGATTCharacteristic
+from bless.backends.characteristic import (  # type: ignore
+        BlessGATTCharacteristic
+        )
 
 # Eventually should be removed when MacOS, Windows, and Linux are added
 if sys.platform not in ['darwin', 'linux', 'win32']:
@@ -17,7 +19,7 @@ if sys.platform not in ['darwin', 'linux', 'win32']:
             allow_module_level=True
             )
 
-from bless import BlessServer  # noqa: E402
+from bless import BlessServer  # type: ignore  # noqa: E402
 from bless.backends.characteristic import (  # noqa: E402
         GattCharacteristicsFlags,
         GATTAttributePermissions
@@ -41,7 +43,9 @@ class TestBlessServer:
                 'CAFE', 'FADE', 'BAD',
                 'DAD', 'ACE', 'BED'
                 ]
-        rng: np.random._generator.Generator = np.random.default_rng()
+        rng: np.random._generator.Generator = (  # type: ignore
+                np.random.default_rng()
+                )
         return ''.join(rng.choice(hex_words, 2, replace=False))
 
     def hex_to_byte(self, hexstr: str) -> bytearray:

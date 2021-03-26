@@ -1,9 +1,9 @@
 import sys
 import uuid
 import pytest
-import aioconsole
+import aioconsole  # type: ignore
 
-import numpy as np
+import numpy as np  # type: ignore
 
 if sys.platform.lower() != "win32":
     pytest.skip("Only for windows", allow_module_level=True)
@@ -12,25 +12,29 @@ from typing import List  # noqa: E402
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
-from bleak.backends.dotnet.utils import (  # noqa: E402
+from bleak.backends.dotnet.utils import (  # type: ignore # noqa: E402
         wrap_IAsyncOperation,
         BleakDataWriter
         )
 
-from bless.backends.characteristic import (  # noqa: E402
+from bless.backends.characteristic import (  # type: ignore # noqa: E402
         GattCharacteristicsFlags,
         GATTAttributePermissions
         )
-from bless.backends.dotnet.utils import sync_async_wrap  # noqa: E402
+from bless.backends.dotnet.utils import (  # type: ignore # noqa: E402
+        sync_async_wrap
+        )
 
-from Windows.Foundation import (  # noqa: E402
+from Windows.Foundation import (  # type: ignore # noqa: E402
         IAsyncOperation,
         Deferral
         )
 
-from Windows.Storage.Streams import DataReader, DataWriter  # noqa: E402
+from Windows.Storage.Streams import (  # type: ignore # noqa: E40#
+        DataReader, DataWriter
+        )
 
-from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # noqa: E402 F401 E501
+from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore # noqa: E402 F401 E501
     GattWriteOption,
     GattServiceProviderResult,
     GattServiceProvider,
@@ -46,7 +50,7 @@ from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # noqa: E402 F4
     GattSubscribedClient
 )
 
-from System import (  # noqa: E402
+from System import (  # type: ignore # noqa: E402
     Guid,
     Object
 )
