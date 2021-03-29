@@ -1,5 +1,6 @@
 import logging
 
+from threading import Event
 from asyncio.events import AbstractEventLoop
 from typing import Dict, Optional, List
 
@@ -43,6 +44,7 @@ from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
     GattLocalCharacteristic,
     GattLocalCharacteristicParameters,
     GattServiceProviderAdvertisingParameters,
+    GattServiceProviderAdvertisementStatusChangedEventArgs as StatusChangeEvent,  # noqa: E501
     GattReadRequestedEventArgs,
     GattReadRequest,
     GattWriteRequestedEventArgs,
@@ -84,6 +86,9 @@ class BlessServerDotNet(BaseBlessServer):
         self._service_provider: Optional[GattServiceProvider] = None
         self._subscribed_clients: List[GattSubscribedClient] = []
 
+        self._advertising: bool = False
+        self._advertising_started: Event = Event()
+
     async def start(self, **kwargs):
         """
         Start the server
@@ -102,6 +107,8 @@ class BlessServerDotNet(BaseBlessServer):
         adv_parameters.IsConnectable = True
 
         self.service_provider.StartAdvertising(adv_parameters)
+        self._advertising = True
+        self._advertising_started.wait()
 
     async def stop(self):
         """
@@ -109,6 +116,7 @@ class BlessServerDotNet(BaseBlessServer):
         """
 
         self.service_provider.StopAdvertising()
+        self._advertising = False
 
     @property
     def service_provider(self) -> GattServiceProvider:
@@ -142,7 +150,31 @@ class BlessServerDotNet(BaseBlessServer):
         bool
             True if advertising
         """
-        return self.service_provider.AdvertisementStatus == 2
+        return (
+            self._advertising and
+            (self.service_provider.AdvertisementStatus == 2)
+        )
+
+    def _status_update(
+                       self,
+                       service_provider: GattServiceProvider,
+                       args: StatusChangeEvent):
+        """
+        Callback function for the service provider to trigger when the
+        advertizing status changes
+
+        Parameters
+        ----------
+        service_provider : GattServiceProvider
+            The service provider whose advertising status changed
+
+        args : GattServiceProviderAdvertisementStatusChangedEventArgs
+            The arguments associated with the status change
+            See
+            [here](https://docs.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattserviceprovideradvertisementstatuschangedeventargs.status?view=winrt-19041)
+        """
+        if args.Status == 2:
+            self._advertising_started.set()
 
     async def add_new_service(self, uuid: str):
         """
@@ -161,6 +193,7 @@ class BlessServerDotNet(BaseBlessServer):
                     ),
                 return_type=GattServiceProviderResult)
         self.service_provider: GattServiceProvider = spr.ServiceProvider
+        self.service_provider.AdvertisementStatusChanged += self._status_update
         new_service: GattLocalService = self.service_provider.Service
         bleak_service = BleakGATTServiceDotNet(obj=new_service)
         logger.debug("Adding service to server with uuid {}".format(uuid))
