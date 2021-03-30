@@ -64,7 +64,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
                 self.write_request
                 )
 
-    async def start(self, timeout: float = 10):
+    async def start(self, timeout: float = 10, **kwargs):
         """
         Start the server
 

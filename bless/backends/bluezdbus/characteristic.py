@@ -57,7 +57,7 @@ class Flags(Enum):
         result: List[Flags] = []
         # Apparently, the tests and examples are passing in integers, these
         # should be th Gatt Flags
-        flag_value: int = flags
+        flag_value: GattCharacteristicsFlags = flags
         for i, int_flag in enumerate(_GattCharacteristicsFlagsEnum.keys()):
             included: bool = int_flag & flag_value > 0
             if included:
