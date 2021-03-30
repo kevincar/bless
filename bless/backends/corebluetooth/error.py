@@ -3,6 +3,7 @@ from enum import Enum
 
 class CBATTError(Enum):
     """CBATTError enumeration"""
+
     Success = 0x0
     InvalidHandle = 0x1
     ReadNotPermitted = 0x2

@@ -28,9 +28,7 @@ class BaseBlessServer(abc.ABC):
     """
 
     def __init__(self, loop: AbstractEventLoop = None, **kwargs):
-        self.loop: AbstractEventLoop = (
-                loop if loop else asyncio.get_event_loop()
-                )
+        self.loop: AbstractEventLoop = loop if loop else asyncio.get_event_loop()
 
         self._callbacks: Dict[str, Callable[[Any], Any]] = {}
 
@@ -161,9 +159,7 @@ class BaseBlessServer(abc.ABC):
         """
         raise NotImplementedError()
 
-    def get_characteristic(
-            self,
-            uuid: str) -> Union[BlessGATTCharacteristic, None]:
+    def get_characteristic(self, uuid: str) -> Union[BlessGATTCharacteristic, None]:
         """
         Retrieves the characteristic whose UUID matches the string given.
         Comparable to BleakGATTServiceCollection
@@ -212,9 +208,9 @@ class BaseBlessServer(abc.ABC):
             A bytearray value that represents the value for the characteristic
             requested
         """
-        characteristic: Optional[BlessGATTCharacteristic] = (
-                self.get_characteristic(uuid)
-                )
+        characteristic: Optional[BlessGATTCharacteristic] = self.get_characteristic(
+            uuid
+        )
 
         if not characteristic:
             raise BlessError("Invalid characteristic: {}".format(uuid))
@@ -228,9 +224,9 @@ class BaseBlessServer(abc.ABC):
 
         Note: write_request_func must be defined on the child class
         """
-        characteristic: Optional[BlessGATTCharacteristic] = (
-                self.get_characteristic(uuid)
-                )
+        characteristic: Optional[BlessGATTCharacteristic] = self.get_characteristic(
+            uuid
+        )
 
         self.write_request_func(characteristic, value)
 

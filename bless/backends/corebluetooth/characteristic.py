@@ -1,8 +1,8 @@
 from enum import Flag
 
 from bleak.backends.corebluetooth.characteristic import (  # type: ignore
-        BleakGATTCharacteristicCoreBluetooth
-        )
+    BleakGATTCharacteristicCoreBluetooth,
+)
 
 from CoreBluetooth import CBMutableCharacteristic  # type: ignore
 
@@ -14,9 +14,7 @@ class CBAttributePermissions(Flag):
     write_encryption_required = 0x8
 
 
-class BlessGATTCharacteristicCoreBluetooth(
-        BleakGATTCharacteristicCoreBluetooth
-        ):
+class BlessGATTCharacteristicCoreBluetooth(BleakGATTCharacteristicCoreBluetooth):
     """
     CoreBluetooth implementation of the BlessGATTCharacteristic
     """
