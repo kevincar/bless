@@ -8,17 +8,15 @@ from txdbus.objects import DBusObject, DBusProperty, dbusMethod  # type: ignore
 from txdbus.interface import DBusInterface, Method, Property  # type: ignore
 
 from bleak.backends.bluezdbus.characteristic import (  # type: ignore
-        _GattCharacteristicsFlagsEnum
-        )
-from bless.backends.characteristic import (  # type: ignore
-        GattCharacteristicsFlags
-        )
+    _GattCharacteristicsFlagsEnum,
+)
+from bless.backends.characteristic import GattCharacteristicsFlags  # type: ignore
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.service import (  # type: ignore
-            BlueZGattService,
-            BlueZGattDescriptor
-            )
+        BlueZGattService,
+        BlueZGattDescriptor,
+    )
 
 
 class Flags(Enum):
@@ -37,10 +35,7 @@ class Flags(Enum):
     ENCRYPT_AUTHENTICATED_WRITE = "encrypt-authenticated-write"
 
     @classmethod
-    def from_bless(
-            cls,
-            flags: GattCharacteristicsFlags
-            ) -> List['Flags']:
+    def from_bless(cls, flags: GattCharacteristicsFlags) -> List["Flags"]:
         """
         Convert Bleak/Bless flags
 
@@ -57,15 +52,20 @@ class Flags(Enum):
         result: List[Flags] = []
         # Apparently, the tests and examples are passing in integers, these
         # should be th Gatt Flags
-        flag_value: int = flags
+        flag_value: GattCharacteristicsFlags = flags
         for i, int_flag in enumerate(_GattCharacteristicsFlagsEnum.keys()):
             included: bool = int_flag & flag_value > 0
             if included:
                 flag_enum_val: str = _GattCharacteristicsFlagsEnum[int_flag]
-                flag: Flags = next(iter([
-                    Flags.__members__[x] for x in list(Flags.__members__)
-                    if Flags.__members__[x].value == flag_enum_val
-                    ]))
+                flag: Flags = next(
+                    iter(
+                        [
+                            Flags.__members__[x]
+                            for x in list(Flags.__members__)
+                            if Flags.__members__[x].value == flag_enum_val
+                        ]
+                    )
+                )
                 result.append(flag)
 
         return result
@@ -79,17 +79,17 @@ class BlueZGattCharacteristic(DBusObject):
     interface_name: str = defs.GATT_CHARACTERISTIC_INTERFACE
 
     iface: DBusInterface = DBusInterface(
-            interface_name,
-            Method("ReadValue", arguments="a{sv}", returns="ay"),
-            Method("WriteValue", arguments="aya{sv}"),
-            Method("StartNotify"),
-            Method("StopNotify"),
-            Property("UUID", "s"),
-            Property("Service", "o"),
-            Property("Value", "ay"),
-            Property("Notifying", "b"),
-            Property("Flags", "as")
-            )
+        interface_name,
+        Method("ReadValue", arguments="a{sv}", returns="ay"),
+        Method("WriteValue", arguments="aya{sv}"),
+        Method("StartNotify"),
+        Method("StopNotify"),
+        Property("UUID", "s"),
+        Property("Service", "o"),
+        Property("Value", "ay"),
+        Property("Notifying", "b"),
+        Property("Flags", "as"),
+    )
 
     dbusInterfaces: List[DBusInterface] = [iface]
 
@@ -100,12 +100,12 @@ class BlueZGattCharacteristic(DBusObject):
     notifying: DBusProperty = DBusProperty("Notifying")
 
     def __init__(
-            self,
-            uuid: str,
-            flags: List[Flags],
-            index: int,
-            service: 'BlueZGattService',  # noqa: F821
-            ):
+        self,
+        uuid: str,
+        flags: List[Flags],
+        index: int,
+        service: "BlueZGattService",  # noqa: F821
+    ):
         """
         Create a BlueZ Gatt Characteristic
 
@@ -125,11 +125,11 @@ class BlueZGattCharacteristic(DBusObject):
         self.uuid: str = uuid
         self.flags: List[str] = [x.value for x in flags]
         self.service: str = service.path  # noqa: F821
-        self._service: 'BlueZGattService' = service  # noqa: F821
+        self._service: "BlueZGattService" = service  # noqa: F821
 
-        self.value: bytes = b''
+        self.value: bytes = b""
         self.notifying: bool = False
-        self.descriptors: List['BlueZGattDescriptor'] = []  # noqa: F821
+        self.descriptors: List["BlueZGattDescriptor"] = []  # noqa: F821
 
         super(BlueZGattCharacteristic, self).__init__(self.path)
 

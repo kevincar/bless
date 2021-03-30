@@ -8,9 +8,9 @@ from typing import Any, Optional, Dict, Callable, List, Union
 from bleak.backends.service import BleakGATTService  # type: ignore
 
 from bless.backends.characteristic import (  # type: ignore
-        BlessGATTCharacteristic,
-        GattCharacteristicsFlags
-        )
+    BlessGATTCharacteristic,
+    GattCharacteristicsFlags,
+)
 
 from bless.exceptions import BlessError
 
@@ -28,9 +28,7 @@ class BaseBlessServer(abc.ABC):
     """
 
     def __init__(self, loop: AbstractEventLoop = None, **kwargs):
-        self.loop: AbstractEventLoop = (
-                loop if loop else asyncio.get_event_loop()
-                )
+        self.loop: AbstractEventLoop = loop if loop else asyncio.get_event_loop()
 
         self._callbacks: Dict[str, Callable[[Any], Any]] = {}
 
@@ -109,13 +107,13 @@ class BaseBlessServer(abc.ABC):
 
     @abc.abstractmethod
     async def add_new_characteristic(
-            self,
-            service_uuid: str,
-            char_uuid: str,
-            properties: GattCharacteristicsFlags,
-            value: Optional[bytearray],
-            permissions: int
-            ):
+        self,
+        service_uuid: str,
+        char_uuid: str,
+        properties: GattCharacteristicsFlags,
+        value: Optional[bytearray],
+        permissions: int,
+    ):
         """
         Add a new characteristic to be associated with the server
 
@@ -161,10 +159,7 @@ class BaseBlessServer(abc.ABC):
         """
         raise NotImplementedError()
 
-    def get_characteristic(self, uuid: str) -> Union[
-            BlessGATTCharacteristic,
-            None
-            ]:
+    def get_characteristic(self, uuid: str) -> Union[BlessGATTCharacteristic, None]:
         """
         Retrieves the characteristic whose UUID matches the string given.
         Comparable to BleakGATTServiceCollection
@@ -182,11 +177,10 @@ class BaseBlessServer(abc.ABC):
         """
         uuid = uuid.lower()
         potentials: List[BlessGATTCharacteristic] = [
-                self.services[service_uuid].get_characteristic(uuid)
-                for service_uuid in self.services
-                if self.services[service_uuid].get_characteristic(uuid)
-                is not None
-                ]
+            self.services[service_uuid].get_characteristic(uuid)
+            for service_uuid in self.services
+            if self.services[service_uuid].get_characteristic(uuid) is not None
+        ]
         try:
             return potentials[0]
         except KeyError:
@@ -214,9 +208,9 @@ class BaseBlessServer(abc.ABC):
             A bytearray value that represents the value for the characteristic
             requested
         """
-        characteristic: BlessGATTCharacteristic = self.get_characteristic(
-                uuid
-                )
+        characteristic: Optional[BlessGATTCharacteristic] = self.get_characteristic(
+            uuid
+        )
 
         if not characteristic:
             raise BlessError("Invalid characteristic: {}".format(uuid))
@@ -230,9 +224,9 @@ class BaseBlessServer(abc.ABC):
 
         Note: write_request_func must be defined on the child class
         """
-        characteristic: BlessGATTCharacteristic = self.get_characteristic(
-                uuid
-                )
+        characteristic: Optional[BlessGATTCharacteristic] = self.get_characteristic(
+            uuid
+        )
 
         self.write_request_func(characteristic, value)
 
@@ -241,7 +235,7 @@ class BaseBlessServer(abc.ABC):
         """
         Return an instance of the function to handle incoming read requests
         """
-        func: Optional[Callable[[Any], Any]] = self._callbacks.get('read')
+        func: Optional[Callable[[Any], Any]] = self._callbacks.get("read")
         if func is not None:
             return func
         else:
@@ -252,14 +246,14 @@ class BaseBlessServer(abc.ABC):
         """
         Set the function to handle incoming read requests
         """
-        self._callbacks['read'] = func
+        self._callbacks["read"] = func
 
     @property
     def write_request_func(self) -> Callable:
         """
         Return an instance of the function to handle incoming write requests
         """
-        func: Optional[Callable[[Any], Any]] = self._callbacks.get('write')
+        func: Optional[Callable[[Any], Any]] = self._callbacks.get("write")
         if func is not None:
             return func
         else:
@@ -270,4 +264,4 @@ class BaseBlessServer(abc.ABC):
         """
         Set the function to handle incoming write requests
         """
-        self._callbacks['write'] = func
+        self._callbacks["write"] = func

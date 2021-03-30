@@ -26,7 +26,7 @@ async def async_wrap(ref_obj: Dict, ret_type: Any, fn: Any, *args):
     op: IAsyncOperation = IAsyncOperation[ret_type](fn(*args))
 
     # Wrap and await
-    ref_obj['value'] = await wrap_IAsyncOperation(op, ret_type)
+    ref_obj["value"] = await wrap_IAsyncOperation(op, ret_type)
 
 
 def sync_async_wrap(ret_type: Any, fn: Any, *args) -> Any:
@@ -42,10 +42,7 @@ def sync_async_wrap(ret_type: Any, fn: Any, *args) -> Any:
         that of ret_type
     """
     reference_obj: Dict = {}
-    asyncio.new_event_loop().run_until_complete(async_wrap(
-        reference_obj,
-        ret_type,
-        fn,
-        *args
-        ))
-    return reference_obj['value']
+    asyncio.new_event_loop().run_until_complete(
+        async_wrap(reference_obj, ret_type, fn, *args)
+    )
+    return reference_obj["value"]
