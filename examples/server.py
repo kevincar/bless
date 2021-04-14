@@ -5,6 +5,7 @@ Example for a BLE 4.0 Server
 
 import logging
 import asyncio
+import threading
 
 from typing import Any
 
@@ -18,6 +19,7 @@ from bless import (
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(name=__name__)
+trigger: threading.Event = threading.Event()
 
 
 def read_request(
@@ -35,11 +37,15 @@ def write_request(
         ):
     characteristic.value = value
     logger.debug(f"Char value set to {characteristic.value}")
+    if characteristic.value == b'\x0f':
+        logger.debug("NICE")
+        trigger.set()
 
 
 async def run(loop):
+    trigger.clear()
     # Instantiate the server
-    my_service_name = "ECoGLink"
+    my_service_name = "Test Service"
     server = BlessServer(name=my_service_name, loop=loop)
     server.read_request_func = read_request
     server.write_request_func = write_request
@@ -73,12 +79,15 @@ async def run(loop):
             )
     await server.start()
     logger.debug("Advertising")
-    await asyncio.sleep(20)
+    logger.info(f"Write '0xF' to the advertised characteristic: {my_char_uuid}")
+    trigger.wait()
+    await asyncio.sleep(2)
     logger.debug("Updating")
+    server.services[my_service_uuid].characteristics[0].value = b'WOW'
     server.update_value(
             my_service_uuid, "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
             )
-    await asyncio.sleep(20)
+    await asyncio.sleep(5)
     await server.stop()
 
 loop = asyncio.get_event_loop()
