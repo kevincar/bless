@@ -22,7 +22,6 @@ from bless.backends.corebluetooth.service import BlessGATTServiceCoreBluetooth
 from bless.backends.corebluetooth.characteristic import (  # type: ignore
     BlessGATTCharacteristicCoreBluetooth,
 )
-from bless.backends.corebluetooth.service import BlessGATTServiceCoreBluetooth
 from bless.backends.characteristic import GattCharacteristicsFlags  # type: ignore
 
 
