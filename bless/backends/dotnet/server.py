@@ -219,12 +219,11 @@ class BlessServerDotNet(BaseBlessServer):
         ReadParameters.CharacteristicProperties = properties
         ReadParameters.ReadProtectionLevel = permissions
 
+        service: GattLocalService = self.services[str(serverguid)]
         characteristic_result: GattLocalCharacteristicResult = (
             await wrap_IAsyncOperation(
                 IAsyncOperation[GattLocalCharacteristicResult](
-                    self.services.get(
-                        str(serverguid), None
-                    ).obj.CreateCharacteristicAsync(charguid, ReadParameters)
+                    service.obj.CreateCharacteristicAsync(charguid, ReadParameters)
                 ),
                 return_type=GattLocalCharacteristicResult,
             )
@@ -237,7 +236,6 @@ class BlessServerDotNet(BaseBlessServer):
             BlessGATTCharacteristicDotNet(obj=newChar)
         )
 
-        service: BlessGATTServiceDotNet = self.services.get(str(serverguid), None)
         service.add_characteristic(bleak_characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
