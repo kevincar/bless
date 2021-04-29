@@ -9,11 +9,10 @@ from bleak.backends.dotnet.utils import (  # type: ignore
     BleakDataWriter,
 )
 
-from bleak.backends.dotnet.service import BleakGATTServiceDotNet  # type: ignore
-
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.characteristic import GattCharacteristicsFlags  # type: ignore
+from bless.backends.dotnet.service import BlessGATTServiceDotNet
 from bless.backends.dotnet.characteristic import (  # type: ignore
     BlessGATTCharacteristicDotNet,
 )
@@ -63,7 +62,7 @@ class BlessServerDotNet(BaseBlessServer):
     ----------
     name : str
         The name of the server to advertise
-    services : Dict[str, BleakGATTServiceDotNet]
+    services : Dict[str, BlessGATTServiceDotNet]
         A dictionary of services to be advertised by this server
     """
 
@@ -71,7 +70,7 @@ class BlessServerDotNet(BaseBlessServer):
         super(BlessServerDotNet, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
-        self.services: Dict[str, BleakGATTServiceDotNet] = {}
+        self.services: Dict[str, BlessGATTServiceDotNet] = {}
 
         self._service_provider: Optional[GattServiceProvider] = None
         self._subscribed_clients: List[GattSubscribedClient] = []
@@ -182,7 +181,7 @@ class BlessServerDotNet(BaseBlessServer):
         self.service_provider: GattServiceProvider = spr.ServiceProvider
         self.service_provider.AdvertisementStatusChanged += self._status_update
         new_service: GattLocalService = self.service_provider.Service
-        bleak_service = BleakGATTServiceDotNet(obj=new_service)
+        bleak_service = BlessGATTServiceDotNet(obj=new_service)
         logger.debug("Adding service to server with uuid {}".format(uuid))
         self.services[uuid] = bleak_service
 
@@ -220,12 +219,11 @@ class BlessServerDotNet(BaseBlessServer):
         ReadParameters.CharacteristicProperties = properties
         ReadParameters.ReadProtectionLevel = permissions
 
+        service: GattLocalService = self.services[str(serverguid)]
         characteristic_result: GattLocalCharacteristicResult = (
             await wrap_IAsyncOperation(
                 IAsyncOperation[GattLocalCharacteristicResult](
-                    self.services.get(
-                        str(serverguid), None
-                    ).obj.CreateCharacteristicAsync(charguid, ReadParameters)
+                    service.obj.CreateCharacteristicAsync(charguid, ReadParameters)
                 ),
                 return_type=GattLocalCharacteristicResult,
             )
@@ -238,7 +236,6 @@ class BlessServerDotNet(BaseBlessServer):
             BlessGATTCharacteristicDotNet(obj=newChar)
         )
 
-        service: BleakGATTServiceDotNet = self.services.get(str(serverguid))
         service.add_characteristic(bleak_characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
@@ -262,7 +259,7 @@ class BlessServerDotNet(BaseBlessServer):
             Whether the value was successfully updated
         """
 
-        service: BleakGATTServiceDotNet = self.services[service_uuid.lower()]
+        service: BlessGATTServiceDotNet = self.services[service_uuid.lower()]
         characteristic: BlessGATTCharacteristicDotNet = next(
             iter(
                 [

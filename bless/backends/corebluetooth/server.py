@@ -14,13 +14,11 @@ from CoreBluetooth import (  # type: ignore
 )
 
 from bleak.backends.service import BleakGATTService  # type: ignore
-from bleak.backends.corebluetooth.service import (  # type: ignore
-    BleakGATTServiceCoreBluetooth,
-)
 
 from .PeripheralManagerDelegate import PeripheralManagerDelegate  # type: ignore
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
+from bless.backends.corebluetooth.service import BlessGATTServiceCoreBluetooth
 from bless.backends.corebluetooth.characteristic import (  # type: ignore
     BlessGATTCharacteristicCoreBluetooth,
 )
@@ -51,7 +49,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         super(BlessServerCoreBluetooth, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
-        self.services: Dict[str, BleakGATTServiceCoreBluetooth] = {}
+        self.services: Dict[str, BlessGATTServiceCoreBluetooth] = {}
 
         self.peripheral_manager_delegate: PeripheralManagerDelegate = (
             PeripheralManagerDelegate.alloc().init()
@@ -141,7 +139,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             service_uuid, True
         )
 
-        bleak_service: BleakGATTServiceCoreBluetooth = BleakGATTServiceCoreBluetooth(
+        bleak_service: BlessGATTServiceCoreBluetooth = BlessGATTServiceCoreBluetooth(
             obj=cb_service
         )
 
@@ -180,12 +178,12 @@ class BlessServerCoreBluetooth(BaseBlessServer):
                 cb_uuid, properties, value, permissions
             )
         )
-        bleak_characteristic: BlessGATTCharacteristicCoreBluetooth = (
+        bless_characteristic: BlessGATTCharacteristicCoreBluetooth = (
             BlessGATTCharacteristicCoreBluetooth(obj=cb_characteristic)
         )
 
-        service: BleakGATTService = self.services[service_uuid]
-        service.add_characteristic(bleak_characteristic)
+        service: BlessGATTServiceCoreBluetooth = self.services[service_uuid]
+        service.add_characteristic(bless_characteristic)
         characteristics: List[CBMutableCharacteristic] = [
             characteristic.obj for characteristic in service.characteristics
         ]
