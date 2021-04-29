@@ -16,7 +16,7 @@ class BlessGATTServiceCoreBluetooth(BleakGATTService):
 
     def __init__(self, obj: CBMutableService):
         super().__init__(obj)
-        self.__characteristics = []
+        self.__characteristics: List[BlessGATTCharacteristicCoreBluetooth] = []
         self.__handle = 0
 
     @property
@@ -35,8 +35,7 @@ class BlessGATTServiceCoreBluetooth(BleakGATTService):
         return self.__characteristics
 
     def add_characteristic(self, characteristic: BlessGATTCharacteristicCoreBluetooth):
-        """Add a :py:class:`~BleakGATTCharacteristicDotNet` to the service.
-
+        """
         Should not be used by end user, but rather by `bleak` itself.
         """
         self.__characteristics.append(characteristic)
