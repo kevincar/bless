@@ -1,12 +1,12 @@
-from bleak.backends.corebluetooth.utils import cb_uuid_to_str
+from bleak.backends.corebluetooth.utils import cb_uuid_to_str  # type: ignore
 from typing import List
 
-from CoreBluetooth import CBMutableService
+from CoreBluetooth import CBMutableService  # type: ignore
 
 from bless.backends.corebluetooth.characteristic import (
     BlessGATTCharacteristicCoreBluetooth,
 )
-from bleak.backends.service import BleakGATTService
+from bleak.backends.service import BleakGATTService  # type: ignore
 
 
 class BlessGATTServiceCoreBluetooth(BleakGATTService):

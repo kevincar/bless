@@ -1,8 +1,10 @@
 from typing import List
 
-from Windows.Devices.Bluetooth.GenericAttributeProfile import GattLocalCharacteristic
+from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
+        GattLocalCharacteristic
+        )
 
-from bleak.backends.service import BleakGATTService
+from bleak.backends.service import BleakGATTService  # type: ignore
 
 from bless.backends.dotnet.characteristic import BlessGATTCharacteristicDotNet
 
