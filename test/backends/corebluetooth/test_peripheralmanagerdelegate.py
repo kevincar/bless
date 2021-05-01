@@ -98,7 +98,8 @@ class TestPeripheralManagerDelegate:
                 CBAttributePermissions.readable | CBAttributePermissions.writeable
             )
             cb_char_id: CBUUID = CBUUID.alloc().initWithString_(char_id)
-            cb_char = CBMutableCharacteristic.alloc().initWithType_properties_value_permissions_(
+            cb_char = CBMutableCharacteristic.alloc(
+                    ).initWithType_properties_value_permissions_(
                 cb_char_id, props.value, None, permissions.value
             )
             service.setCharacteristics_([cb_char])
