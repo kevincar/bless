@@ -82,9 +82,7 @@ class TestServiceProvider:
             if args.Status == 2:
                 start_event.set()
 
-        def read(
-                sender: GattLocalCharacteristic,
-                args: GattReadRequestedEventArgs):
+        def read(sender: GattLocalCharacteristic, args: GattReadRequestedEventArgs):
             deferral: Deferral = args.GetDeferral()
             value = self.val
             writer: DataWriter = DataWriter()
@@ -95,9 +93,7 @@ class TestServiceProvider:
             request.RespondWithValue(writer.DetachBuffer())
             deferral.Complete()
 
-        def write(
-                sender: GattLocalCharacteristic,
-                args: GattWriteRequestedEventArgs):
+        def write(sender: GattLocalCharacteristic, args: GattWriteRequestedEventArgs):
             deferral: Deferral = args.GetDeferral()
             request: GattWriteRequest = sync_async_wrap(
                 GattWriteRequest, args.GetRequestAsync
@@ -121,19 +117,14 @@ class TestServiceProvider:
         # Create service
         service_uuid: str = str(uuid.uuid4())
         service_guid: Guid = Guid.Parse(service_uuid)
-        ServiceProviderResult: GattServiceProviderResult = (
-                await wrap_IAsyncOperation(
-                        IAsyncOperation[GattServiceProviderResult](
-                                GattServiceProvider.CreateAsync(service_guid)
-                                ),
-                        return_type=GattServiceProviderResult)
-                        )
-        service_provider: GattServiceProvider = (
-                ServiceProviderResult.ServiceProvider
-                )
-        service_provider.AdvertisementStatusChanged += (
-                advertisement_status_changed
-                )
+        ServiceProviderResult: GattServiceProviderResult = await wrap_IAsyncOperation(
+            IAsyncOperation[GattServiceProviderResult](
+                GattServiceProvider.CreateAsync(service_guid)
+            ),
+            return_type=GattServiceProviderResult,
+        )
+        service_provider: GattServiceProvider = ServiceProviderResult.ServiceProvider
+        service_provider.AdvertisementStatusChanged += advertisement_status_changed
 
         new_service: GattLocalService = service_provider.Service
 
@@ -148,8 +139,7 @@ class TestServiceProvider:
         )
 
         permissions: GATTAttributePermissions = (
-            GATTAttributePermissions.readable |
-            GATTAttributePermissions.writeable
+            GATTAttributePermissions.readable | GATTAttributePermissions.writeable
         )
 
         ReadParameters: GattLocalCharacteristicParameters = (
@@ -161,8 +151,7 @@ class TestServiceProvider:
         characteristic_result: GattLocalCharacteristicResult = (
             await wrap_IAsyncOperation(
                 IAsyncOperation[GattLocalCharacteristicResult](
-                    new_service.CreateCharacteristicAsync(
-                        char_guid, ReadParameters)
+                    new_service.CreateCharacteristicAsync(char_guid, ReadParameters)
                 ),
                 return_type=GattLocalCharacteristicResult,
             )
