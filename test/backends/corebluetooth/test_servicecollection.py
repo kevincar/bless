@@ -43,7 +43,7 @@ class TestBlessGATTServiceCollection:
 
         # Get the service
         observed_service: BlessGATTServiceCoreBluetooth = (
-            service_collection.get_service(service_uuuid)
+            service_collection.get_service(service_uuid)
         )
 
         # Test uuid equipvlance

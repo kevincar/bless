@@ -8,10 +8,16 @@ if sys.platform == "darwin":
         BlessServerCoreBluetooth as BlessServer,
     )
 
+    # Service Classes
+    from bless.backends.corebluetooth.service import (  # noqa: F401
+        BlessGATTServiceCoreBluetooth as BlessGATTService
+    )
+
     # Characteristic Classes
     from bless.backends.corebluetooth.characteristic import (  # noqa: F401
         BlessGATTCharacteristicCoreBluetooth as BlessGATTCharacteristic,
     )
+
 elif sys.platform == "linux":
 
     # Server
@@ -31,22 +37,13 @@ elif sys.platform == "win32":
         BlessGATTCharacteristicDotNet as BlessGATTCharacteristic,
     )
 
-elif sys.platform == "win32":
-
-    # Server
-    from bless.backends.dotnet.server import BlessServerDotNet as BlessServer
-
-    BlessServer
-    # Characteristic Classes
-    from bless.backends.dotnet.characteristic import (  # noqa: F401
-        BlessGATTCharacteristicDotNet as BlessGATTCharacteristic,
-    )
-
 # type: ignore
 from bless.backends.characteristic import (  # noqa: E402 F401
     GattCharacteristicsFlags,
     GATTAttributePermissions,
 )
+
+BlessGATTService
 
 
 def check_test() -> bool:
