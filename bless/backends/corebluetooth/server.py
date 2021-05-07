@@ -1,6 +1,6 @@
 import logging
 
-from typing import Optional, Dict, List
+from typing import Optional, List
 
 from asyncio import TimeoutError
 from asyncio.events import AbstractEventLoop
@@ -23,6 +23,8 @@ from bless.backends.corebluetooth.characteristic import (  # type: ignore
     BlessGATTCharacteristicCoreBluetooth,
 )
 from bless.backends.characteristic import GattCharacteristicsFlags  # type: ignore
+
+from bless.backends.service import BlessGATTServiceCollection
 
 
 logger = logging.getLogger(name=__name__)
@@ -49,7 +51,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         super(BlessServerCoreBluetooth, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
-        self.services: Dict[str, BlessGATTServiceCoreBluetooth] = {}
+        self.services: BlessGATTServiceCollection = BlessGATTServiceCollection()
 
         self.peripheral_manager_delegate: PeripheralManagerDelegate = (
             PeripheralManagerDelegate.alloc().init()
@@ -69,8 +71,8 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         """
         await self.peripheral_manager_delegate.wait_for_powered_on(timeout)
 
-        for service_uuid in self.services:
-            bleak_service: BleakGATTService = self.services[service_uuid]
+        for service_uuid in self.services.services:
+            bleak_service: BleakGATTService = self.services.get_service(service_uuid)
             service_obj: CBService = bleak_service.obj
             logger.debug("Adding service: {}".format(bleak_service.uuid))
             await self.peripheral_manager_delegate.addService(service_obj)
@@ -80,7 +82,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
 
         advertisement_data = {
             "kCBAdvDataServiceUUIDs": list(
-                map(lambda x: self.services[x].obj.UUID(), self.services)
+                map(lambda x: x.obj.UUID(), self.services)
             ),
             "kCBAdvDataLocalName": self.name,
         }
@@ -139,11 +141,11 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             service_uuid, True
         )
 
-        bleak_service: BlessGATTServiceCoreBluetooth = BlessGATTServiceCoreBluetooth(
+        service: BlessGATTServiceCoreBluetooth = BlessGATTServiceCoreBluetooth(
             obj=cb_service
         )
 
-        self.services[uuid] = bleak_service
+        self.services.add_service(service)
 
     async def add_new_characteristic(
         self,
@@ -182,12 +184,13 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             BlessGATTCharacteristicCoreBluetooth(obj=cb_characteristic)
         )
 
-        service: BlessGATTServiceCoreBluetooth = self.services[service_uuid]
+        service: BlessGATTServiceCoreBluetooth = self.services.get_service(service_uuid)
         service.add_characteristic(bless_characteristic)
         characteristics: List[CBMutableCharacteristic] = [
             characteristic.obj for characteristic in service.characteristics
         ]
         service.obj.setCharacteristics_(characteristics)
+        self.services.add_characteristic(bless_characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
