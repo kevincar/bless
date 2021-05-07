@@ -4,8 +4,8 @@ import logging
 
 
 from asyncio import AbstractEventLoop
-from typing import Any, Optional, Dict, Callable, List, Union
-from bleak.backends.service import BleakGATTService  # type: ignore
+from typing import Any, Optional, Dict, Callable, Union
+from bless.backends.service import BlessGATTServiceCollection
 
 from bless.backends.characteristic import (  # type: ignore
     BlessGATTCharacteristic,
@@ -32,7 +32,7 @@ class BaseBlessServer(abc.ABC):
 
         self._callbacks: Dict[str, Callable[[Any], Any]] = {}
 
-        self.services: Dict[str, BleakGATTService] = {}
+        self.services: BlessGATTServiceCollection = BlessGATTServiceCollection()
 
     # Async Context managers
 
@@ -176,15 +176,7 @@ class BaseBlessServer(abc.ABC):
             The characteristic object
         """
         uuid = uuid.lower()
-        potentials: List[BlessGATTCharacteristic] = [
-            self.services[service_uuid].get_characteristic(uuid)
-            for service_uuid in self.services
-            if self.services[service_uuid].get_characteristic(uuid) is not None
-        ]
-        try:
-            return potentials[0]
-        except KeyError:
-            return None
+        return self.services.get_characteristic(uuid)
 
     def read_request(self, uuid: str) -> bytearray:
         """
