@@ -95,7 +95,7 @@ class TestBlessServer:
             return characteristic.value
 
         def write(characteristic: BlessGATTCharacteristic, value: bytearray):
-            characteristic.value = value
+            characteristic.value = value  # type: ignore
 
         server.read_request_func = read
         server.write_request_func = write
