@@ -23,7 +23,7 @@ from bless.backends.bluezdbus.characteristic import (  # type: ignore
     Flags,
 )
 
-from bless.backends.characteristic import GattCharacteristicsFlags  # type: ignore
+from bless.backends.characteristic import GATTCharacteristicProperties  # type: ignore
 
 
 class BlessServerBlueZDBus(BaseBlessServer):
@@ -159,7 +159,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
         self,
         service_uuid: str,
         char_uuid: str,
-        properties: GattCharacteristicsFlags,
+        properties: GATTCharacteristicProperties,
         value: Optional[bytearray],
         permissions: int,
     ):
@@ -173,7 +173,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
             this new characteristic should belong
         char_uuid : str
             The string representation of the UUID of the characteristic
-        properties : GattCharacteristicsFlags
+        properties : GATTCharacteristicProperties
             GATT Characteristic Flags that define the characteristic
         value : Optional[bytearray]
             A byterray representation of the value to be associated with the

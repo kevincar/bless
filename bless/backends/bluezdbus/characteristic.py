@@ -10,7 +10,7 @@ from txdbus.interface import DBusInterface, Method, Property  # type: ignore
 from bleak.backends.bluezdbus.characteristic import (  # type: ignore
     _GattCharacteristicsFlagsEnum,
 )
-from bless.backends.characteristic import GattCharacteristicsFlags  # type: ignore
+from bless.backends.characteristic import GATTCharacteristicProperties  # type: ignore
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.service import (  # type: ignore
@@ -35,13 +35,13 @@ class Flags(Enum):
     ENCRYPT_AUTHENTICATED_WRITE = "encrypt-authenticated-write"
 
     @classmethod
-    def from_bless(cls, flags: GattCharacteristicsFlags) -> List["Flags"]:
+    def from_bless(cls, flags: GATTCharacteristicProperties) -> List["Flags"]:
         """
         Convert Bleak/Bless flags
 
         Parameters
         ----------
-        flags : GattCharacteristicFlags
+        flags : GATTCharacteristicProperties
             The numerical enumeration for the combined flags
 
         Returns
@@ -50,9 +50,7 @@ class Flags(Enum):
             A list fo Flags for use in BlueZDBus
         """
         result: List[Flags] = []
-        # Apparently, the tests and examples are passing in integers, these
-        # should be th Gatt Flags
-        flag_value: GattCharacteristicsFlags = flags
+        flag_value: int = flags.value
         for i, int_flag in enumerate(_GattCharacteristicsFlagsEnum.keys()):
             included: bool = int_flag & flag_value > 0
             if included:
