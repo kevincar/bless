@@ -9,7 +9,8 @@ from bleak.backends.service import BleakGATTService  # type: ignore
 
 from bless.backends.characteristic import (  # type: ignore
     BlessGATTCharacteristic,
-    GattCharacteristicsFlags,
+    GATTCharacteristicProperties,
+    GATTAttributePermissions
 )
 
 from bless.exceptions import BlessError
@@ -110,9 +111,9 @@ class BaseBlessServer(abc.ABC):
         self,
         service_uuid: str,
         char_uuid: str,
-        properties: GattCharacteristicsFlags,
+        properties: GATTCharacteristicProperties,
         value: Optional[bytearray],
-        permissions: int,
+        permissions: GATTAttributePermissions,
     ):
         """
         Add a new characteristic to be associated with the server
@@ -124,14 +125,13 @@ class BaseBlessServer(abc.ABC):
             this new characteristic should belong
         char_uuid : str
             The string representation of the UUID of the characteristic
-        properties : GattCharacteristicsFlags
+        properties : GATTCharacteristicProperties
             GATT Characteristic Flags that define the characteristic
         value : Optional[bytearray]
             A byterray representation of the value to be associated with the
             characteristic. Can be None if the characteristic is writable
-        permissions : int
-            GATT Characteristic flags that define the permissions for the
-            characteristic
+        permissions : GATTAttributePermissions
+            GATT flags that define the permissions for the characteristic
         """
         raise NotImplementedError()
 

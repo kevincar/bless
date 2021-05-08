@@ -44,7 +44,7 @@ elif sys.platform == "win32":
 
 # type: ignore
 from bless.backends.characteristic import (  # noqa: E402 F401
-    GattCharacteristicsFlags,
+    GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
 

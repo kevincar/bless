@@ -5,7 +5,7 @@ from enum import Flag
 from bleak.backends.characteristic import BleakGATTCharacteristic  # type: ignore
 
 
-class GattCharacteristicsFlags(Flag):
+class GATTCharacteristicProperties(Flag):
     broadcast = 0x0001
     read = 0x0002
     write_without_response = 0x0004

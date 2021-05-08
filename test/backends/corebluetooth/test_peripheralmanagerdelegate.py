@@ -18,7 +18,7 @@ from CoreBluetooth import (  # type: ignore # noqa: E402
         )
 
 from bless.backends.characteristic import (  # type: ignore # noqa: E402
-        GattCharacteristicsFlags
+        GATTCharacteristicProperties
         )
 
 from bless.backends.corebluetooth.PeripheralManagerDelegate import (  # type: ignore # noqa: E402 E501
@@ -87,10 +87,10 @@ class TestPeripheralManagerDelegate:
                     )
 
             # Add a subscribable Characteristic
-            props: GattCharacteristicsFlags = (
-                    GattCharacteristicsFlags.read |
-                    GattCharacteristicsFlags.write |
-                    GattCharacteristicsFlags.notify
+            props: GATTCharacteristicProperties = (
+                    GATTCharacteristicProperties.read |
+                    GATTCharacteristicProperties.write |
+                    GATTCharacteristicProperties.notify
                     )
             permissions: CBAttributePermissions = (
                     CBAttributePermissions.readable |

@@ -21,7 +21,7 @@ if sys.platform not in ['darwin', 'linux', 'win32']:
 
 from bless import BlessServer  # type: ignore  # noqa: E402
 from bless.backends.characteristic import (  # noqa: E402
-        GattCharacteristicsFlags,
+        GATTCharacteristicProperties,
         GATTAttributePermissions
         )
 
@@ -73,10 +73,10 @@ class TestBlessServer:
 
         # setup a characteristic for the service
         char_uuid: str = str(uuid.uuid4())
-        char_flags: GattCharacteristicsFlags = (
-                GattCharacteristicsFlags.read |
-                GattCharacteristicsFlags.write |
-                GattCharacteristicsFlags.notify
+        char_flags: GATTCharacteristicProperties = (
+                GATTCharacteristicProperties.read |
+                GATTCharacteristicProperties.write |
+                GATTCharacteristicProperties.notify
                 )
         value: Optional[bytearray] = None
         permissions: GATTAttributePermissions = (
@@ -87,9 +87,9 @@ class TestBlessServer:
         await server.add_new_characteristic(
                 service_uuid,
                 char_uuid,
-                char_flags.value,
+                char_flags,
                 value,
-                permissions.value
+                permissions
                 )
 
         assert server.services[service_uuid].get_characteristic(char_uuid)
@@ -99,7 +99,7 @@ class TestBlessServer:
             return characteristic.value
 
         def write(characteristic: BlessGATTCharacteristic, value: bytearray):
-            characteristic.value = value
+            characteristic.value = value  # type: ignore
 
         server.read_request_func = read
         server.write_request_func = write
