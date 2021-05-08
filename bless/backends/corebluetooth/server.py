@@ -22,7 +22,10 @@ from bless.backends.corebluetooth.service import BlessGATTServiceCoreBluetooth
 from bless.backends.corebluetooth.characteristic import (  # type: ignore
     BlessGATTCharacteristicCoreBluetooth,
 )
-from bless.backends.characteristic import GattCharacteristicsFlags  # type: ignore
+from bless.backends.characteristic import (
+        GATTCharacteristicProperties,
+        GATTAttributePermissions
+        )
 
 
 logger = logging.getLogger(name=__name__)
@@ -149,9 +152,9 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         self,
         service_uuid: str,
         char_uuid: str,
-        properties: GattCharacteristicsFlags,
+        properties: GATTCharacteristicProperties,
         value: Optional[bytearray],
-        permissions: int,
+        permissions: GATTAttributePermissions,
     ):
         """
         Generate a new characteristic to be associated with the server
@@ -164,18 +167,20 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         char_uuid : str
             The string representation of the UUID for the characteristic to be
             added
-        properties : GattCharacteristicsFlags
+        properties : GATTCharacteristicProperties
             The flags for the characteristic
         value : Optional[bytearray]
             The initial value for the characteristic
-        permissions : int
+        permissions : GATTAttributePermissions
             The permissions for the characteristic
         """
         logger.debug("Craeting a new characteristic with uuid: {}".format(char_uuid))
+        properties_value: int = properties.value
+        permissions_value: int = permissions.value
         cb_uuid: CBUUID = CBUUID.alloc().initWithString_(char_uuid)
         cb_characteristic: CBMutableCharacteristic = (
             CBMutableCharacteristic.alloc().initWithType_properties_value_permissions_(
-                cb_uuid, properties, value, permissions
+                cb_uuid, properties_value, value, permissions_value
             )
         )
         bless_characteristic: BlessGATTCharacteristicCoreBluetooth = (
