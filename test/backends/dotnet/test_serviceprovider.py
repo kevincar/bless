@@ -19,7 +19,7 @@ from bleak.backends.dotnet.utils import (  # type: ignore # noqa: E402
 )
 
 from bless.backends.characteristic import (  # type: ignore # noqa: E402
-    GattCharacteristicsFlags,
+    GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
 from bless.backends.dotnet.utils import sync_async_wrap  # type: ignore # noqa: E402 E501
@@ -141,10 +141,10 @@ class TestServiceProvider:
         char_uuid: str = str(uuid.uuid4())
         char_guid: Guid = Guid.Parse(char_uuid)
 
-        properties: GattCharacteristicsFlags = (
-            GattCharacteristicsFlags.read
-            | GattCharacteristicsFlags.write
-            | GattCharacteristicsFlags.notify
+        properties: GATTCharacteristicProperties = (
+            GATTCharacteristicProperties.read
+            | GATTCharacteristicProperties.write
+            | GATTCharacteristicProperties.notify
         )
 
         permissions: GATTAttributePermissions = (

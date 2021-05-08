@@ -11,7 +11,7 @@ from bleak.backends.dotnet.utils import (  # type: ignore
 
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
-from bless.backends.characteristic import GattCharacteristicsFlags  # type: ignore
+from bless.backends.characteristic import GATTCharacteristicProperties  # type: ignore
 from bless.backends.dotnet.service import BlessGATTServiceDotNet
 from bless.backends.dotnet.characteristic import (  # type: ignore
     BlessGATTCharacteristicDotNet,
@@ -189,7 +189,7 @@ class BlessServerDotNet(BaseBlessServer):
         self,
         service_uuid: str,
         char_uuid: str,
-        properties: GattCharacteristicsFlags,
+        properties: GATTCharacteristicProperties,
         value: Optional[bytearray],
         permissions: int,
     ):
@@ -203,7 +203,7 @@ class BlessServerDotNet(BaseBlessServer):
             the new characteristic with
         char_uuid : str
             The string representation of the uuid of the new characteristic
-        properties : GattCharacteristicsFlags
+        properties : GATTCharacteristicProperties
             The flags for the characteristic
         value : Optional[bytearray]
             The initial value for the characteristic
@@ -216,8 +216,8 @@ class BlessServerDotNet(BaseBlessServer):
         ReadParameters: GattLocalCharacteristicParameters = (
             GattLocalCharacteristicParameters()
         )
-        ReadParameters.CharacteristicProperties = properties
-        ReadParameters.ReadProtectionLevel = permissions
+        ReadParameters.CharacteristicProperties = properties.value
+        ReadParameters.ReadProtectionLevel = permissions.value
 
         service: GattLocalService = self.services[str(serverguid)]
         characteristic_result: GattLocalCharacteristicResult = (
