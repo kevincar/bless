@@ -1,12 +1,13 @@
-from enum import Flag
-
 from bleak.backends.dotnet.characteristic import (  # type: ignore
     BleakGATTCharacteristicDotNet,
 )
 
-from Windows.Devices.Bluetooth.GenericAttributeProfile import GattProtectionLevel
+from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
+    GattProtectionLevel
+)
 
 from bless.backends.characteristic import GATTAttributePermissions
+
 
 class BlessGATTCharacteristicDotNet(BleakGATTCharacteristicDotNet):
     """
@@ -18,7 +19,9 @@ class BlessGATTCharacteristicDotNet(BleakGATTCharacteristicDotNet):
         self._value: bytearray = bytearray(b"")
 
     @staticmethod
-    def permissions_to_protection_level(permissions: GATTAttributePermissions, read: bool) -> GattProtectionLevel:
+    def permissions_to_protection_level(
+        permissions: GATTAttributePermissions, read: bool
+    ) -> GattProtectionLevel:
         """
         Convert the GATTAttributePermissions into a GattProtectionLevel
         GATTAttributePermissions currently only consider Encryption or Plain
@@ -29,7 +32,7 @@ class BlessGATTCharacteristicDotNet(BleakGATTCharacteristicDotNet):
             The permission flags for the characteristic
         read : bool
             If True, processes the permissions for Reading, else process for Writing
-        
+
         Returns
         -------
         GattProtectionLevel
@@ -41,7 +44,6 @@ class BlessGATTCharacteristicDotNet(BleakGATTCharacteristicDotNet):
         if permission_value & 1:
             result |= GattProtectionLevel.EncryptionRequired
         return result
-
 
     @property
     def value(self) -> bytearray:
