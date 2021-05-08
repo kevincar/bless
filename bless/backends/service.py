@@ -1,4 +1,4 @@
-from bleak.backends.service import BleakGATTService
+from bleak.backends.service import BleakGATTService  # type: ignore
 
 
 class BlessGATTService(BleakGATTService):

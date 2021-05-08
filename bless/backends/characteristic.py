@@ -2,11 +2,9 @@ import abc
 
 from enum import Flag
 from uuid import UUID
-from typing import Union, cast
+from typing import Union, Optional, cast
 
 from bleak.backends.characteristic import BleakGATTCharacteristic  # type: ignore
-
-from bless.backends.service import BlessGATTService
 
 
 class GATTCharacteristicProperties(Flag):
@@ -39,6 +37,8 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
         uuid: Union[str, UUID],
         properties: GATTCharacteristicProperties,
         permissions: GATTAttributePermissions,
+        value: Optional[bytearray],
+        init: bool = True
     ):
         """
         Instantiates a new GATT Characteristic but is not yet assigned to any
@@ -53,13 +53,18 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
             The properties that define the characteristics behavior
         permissions : GATTAttributePermissions
             Permissions that define the protection levels of the properties
+        value : Optional[bytearray]
+            The binary value of the characteristic
+        init: bool
+            Whether to immediately attempt to initalize the os-specific object
         """
         if type(uuid) is str:
             uuid_str: str = cast(str, uuid)
             uuid = UUID(uuid_str)
-        self.__uuid: str = str(uuid)
-        self.__properties: GATTCharacteristicProperties = properties
-        self.__permissions: GATTAttributePermissions = permissions
+        self._uuid: str = str(uuid)
+        self._properties: GATTCharacteristicProperties = properties
+        self._permissions: GATTAttributePermissions = permissions
+        self._initial_value: Optional[bytearray] = value
 
     def __str__(self):
         """
@@ -68,15 +73,12 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
         return f"{self.uuid}: {self.description}"
 
     @abc.abstractmethod
-    def init(service: BlessGATTService):
+    def init(self):
         """
         Initializes the backend-specific characteristic object and stores it in
         self.obj
-
-        Parameters
-        ----------
-        service : BlessGATTService
         """
+        raise NotImplementedError()
 
     @property  # type: ignore
     @abc.abstractmethod
