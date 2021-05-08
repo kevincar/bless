@@ -12,9 +12,9 @@ from bleak.backends.dotnet.utils import (  # type: ignore
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.characteristic import (  # type: ignore
-        GATTCharacteristicProperties,
-        GATTAttributePermissions
-        )
+    GATTCharacteristicProperties,
+    GATTAttributePermissions,
+)
 from bless.backends.dotnet.service import BlessGATTServiceDotNet
 from bless.backends.dotnet.characteristic import (  # type: ignore
     BlessGATTCharacteristicDotNet,
@@ -220,7 +220,16 @@ class BlessServerDotNet(BaseBlessServer):
             GattLocalCharacteristicParameters()
         )
         ReadParameters.CharacteristicProperties = properties.value
-        ReadParameters.ReadProtectionLevel = permissions.value
+        ReadParameters.ReadProtectionLevel = (
+            BlessGATTCharacteristicDotNet.permissions_to_protection_level(
+                permissions, True
+            )
+        )
+        ReadParameters.WriteProtectionLevel = (
+            BlessGATTCharacteristicDotNet.permissions_to_protection_level(
+                permissions, False
+            )
+        )
 
         service: GattLocalService = self.services[str(serverguid)]
         characteristic_result: GattLocalCharacteristicResult = (
