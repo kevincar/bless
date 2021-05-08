@@ -23,7 +23,10 @@ from bless.backends.bluezdbus.characteristic import (  # type: ignore
     Flags,
 )
 
-from bless.backends.characteristic import GATTCharacteristicProperties  # type: ignore
+from bless.backends.characteristic import (  # type: ignore
+        GATTCharacteristicProperties,
+        GATTAttributePermissions
+        )
 
 
 class BlessServerBlueZDBus(BaseBlessServer):
@@ -161,7 +164,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
         char_uuid: str,
         properties: GATTCharacteristicProperties,
         value: Optional[bytearray],
-        permissions: int,
+        permissions: GATTAttributePermissions,
     ):
         """
         Add a new characteristic to be associated with the server

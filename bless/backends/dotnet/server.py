@@ -11,7 +11,10 @@ from bleak.backends.dotnet.utils import (  # type: ignore
 
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
-from bless.backends.characteristic import GATTCharacteristicProperties  # type: ignore
+from bless.backends.characteristic import (  # type: ignore
+        GATTCharacteristicProperties,
+        GATTAttributePermissions
+        )
 from bless.backends.dotnet.service import BlessGATTServiceDotNet
 from bless.backends.dotnet.characteristic import (  # type: ignore
     BlessGATTCharacteristicDotNet,
@@ -191,7 +194,7 @@ class BlessServerDotNet(BaseBlessServer):
         char_uuid: str,
         properties: GATTCharacteristicProperties,
         value: Optional[bytearray],
-        permissions: int,
+        permissions: GATTAttributePermissions,
     ):
         """
         Generate a new characteristic to be associated with the server
