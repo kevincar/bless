@@ -37,8 +37,7 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
         uuid: Union[str, UUID],
         properties: GATTCharacteristicProperties,
         permissions: GATTAttributePermissions,
-        value: Optional[bytearray],
-        init: bool = True
+        value: Optional[bytearray]
     ):
         """
         Instantiates a new GATT Characteristic but is not yet assigned to any
@@ -55,8 +54,6 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
             Permissions that define the protection levels of the properties
         value : Optional[bytearray]
             The binary value of the characteristic
-        init: bool
-            Whether to immediately attempt to initalize the os-specific object
         """
         if type(uuid) is str:
             uuid_str: str = cast(str, uuid)
@@ -73,7 +70,7 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
         return f"{self.uuid}: {self.description}"
 
     @abc.abstractmethod
-    def init(self):
+    async def init(self):
         """
         Initializes the backend-specific characteristic object and stores it in
         self.obj

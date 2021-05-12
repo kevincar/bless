@@ -37,8 +37,7 @@ class BlessGATTCharacteristicCoreBluetooth(
         uuid: Union[str, UUID],
         properties: GATTCharacteristicProperties,
         permissions: GATTAttributePermissions,
-        value: Optional[bytearray],
-        init: bool = True
+        value: Optional[bytearray]
     ):
         """
         Instantiates a new GATT Characteristic but is not yet assigned to any
@@ -55,17 +54,12 @@ class BlessGATTCharacteristicCoreBluetooth(
             Permissions that define the protection levels of the properties
         value : Optional[bytearray]
             The binary value of the characteristic
-        init : bool
-            Whether to immediately initalize the os-specific object
         """
         super(BlessGATTCharacteristicCoreBluetooth, self).__init__(
             uuid, properties, permissions, value
         )
 
-        if init:
-            self.init()
-
-    def init(self):
+    async def init(self):
         """
         Initializes the backend-specific characteristic object and stores it in
         self.obj

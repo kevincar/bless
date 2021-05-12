@@ -180,6 +180,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
                 char_uuid, properties, permissions, value
             )
         )
+        await characteristic.init()
 
         service: BlessGATTServiceCoreBluetooth = self.services[service_uuid]
         service.add_characteristic(characteristic)

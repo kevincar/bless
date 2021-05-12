@@ -1,5 +1,6 @@
 import logging
 
+from uuid import UUID
 from threading import Event
 from asyncio.events import AbstractEventLoop
 from typing import Dict, Optional, List
@@ -210,45 +211,17 @@ class BlessServerDotNet(BaseBlessServer):
             The flags for the characteristic
         value : Optional[bytearray]
             The initial value for the characteristic
-        permissions : int
+        permissions : GATTAttributePermissions
             The permissions for the characteristic
         """
-        charguid: Guid = Guid.Parse(char_uuid)
-        serverguid: Guid = Guid.Parse(service_uuid)
 
-        ReadParameters: GattLocalCharacteristicParameters = (
-            GattLocalCharacteristicParameters()
-        )
-        ReadParameters.CharacteristicProperties = properties.value
-        ReadParameters.ReadProtectionLevel = (
-            BlessGATTCharacteristicDotNet.permissions_to_protection_level(
-                permissions, True
-            )
-        )
-        ReadParameters.WriteProtectionLevel = (
-            BlessGATTCharacteristicDotNet.permissions_to_protection_level(
-                permissions, False
-            )
-        )
-
-        service: GattLocalService = self.services[str(serverguid)]
-        characteristic_result: GattLocalCharacteristicResult = (
-            await wrap_IAsyncOperation(
-                IAsyncOperation[GattLocalCharacteristicResult](
-                    service.obj.CreateCharacteristicAsync(charguid, ReadParameters)
-                ),
-                return_type=GattLocalCharacteristicResult,
-            )
-        )
-        newChar: GattLocalCharacteristic = characteristic_result.Characteristic
-        newChar.ReadRequested += self.read_characteristic
-        newChar.WriteRequested += self.write_characteristic
-        newChar.SubscribedClientsChanged += self.subscribe_characteristic
-        bleak_characteristic: BlessGATTCharacteristicDotNet = (
-            BlessGATTCharacteristicDotNet(obj=newChar)
-        )
-
-        service.add_characteristic(bleak_characteristic)
+        service: BlessGATTServiceDotNet = self.services[str(UUID(service_uuid))]
+        characteristic: BlessGATTCharacteristicDotNet = BlessGATTCharacteristicDotNet(char_uuid, properties, permissions, value)
+        await characteristic.init(service)
+        characteristic.obj.ReadRequested += self.read_characteristic
+        characteristic.obj.WriteRequested += self.write_characteristic
+        characteristic.obj.SubscribedClientsChanged += self.subscribe_characteristic
+        service.add_characteristic(characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
