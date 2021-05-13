@@ -65,7 +65,6 @@ class BlessGATTCharacteristicDotNet(BlessGATTCharacteristic, BleakGATTCharacteri
             The service to assign the characteristic to
         """
         charguid: Guid = Guid.Parse(self._uuid)
-        serverguid: Guid = Guid.Parse(service.uuid)
 
         char_parameters: GattLocalCharacteristicParameters = (
             GattLocalCharacteristicParameters()

@@ -215,7 +215,8 @@ class BlessServerDotNet(BaseBlessServer):
             The permissions for the characteristic
         """
 
-        service: BlessGATTServiceDotNet = self.services[str(UUID(service_uuid))]
+        serverguid: Guid = Guid.Parse(service_uuid)
+        service: BlessGATTServiceDotNet = self.services[str(serverguid)]
         characteristic: BlessGATTCharacteristicDotNet = BlessGATTCharacteristicDotNet(char_uuid, properties, permissions, value)
         await characteristic.init(service)
         characteristic.obj.ReadRequested += self.read_characteristic
