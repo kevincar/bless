@@ -74,7 +74,7 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
         return f"{self.uuid}: {self.description}"
 
     @abc.abstractmethod
-    async def init(self, service: BlessGATTService):
+    async def init(self, service: "BlessGATTService"):
         """
         Initializes the backend-specific characteristic object and stores it in
         self.obj
