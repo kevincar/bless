@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import abc
 
 from enum import Flag
@@ -5,6 +7,10 @@ from uuid import UUID
 from typing import Union, Optional, cast
 
 from bleak.backends.characteristic import BleakGATTCharacteristic  # type: ignore
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from bless.backends.service import BlessGATTService
 
 
 class GATTCharacteristicProperties(Flag):
@@ -70,7 +76,7 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
         return f"{self.uuid}: {self.description}"
 
     @abc.abstractmethod
-    async def init(self):
+    async def init(self, service: BlessGATTService):
         """
         Initializes the backend-specific characteristic object and stores it in
         self.obj

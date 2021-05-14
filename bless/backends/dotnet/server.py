@@ -1,6 +1,5 @@
 import logging
 
-from uuid import UUID
 from threading import Event
 from asyncio.events import AbstractEventLoop
 from typing import Dict, Optional, List
@@ -36,9 +35,7 @@ from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
     GattServiceProviderResult,
     GattServiceProvider,
     GattLocalService,
-    GattLocalCharacteristicResult,
     GattLocalCharacteristic,
-    GattLocalCharacteristicParameters,
     GattServiceProviderAdvertisingParameters,
     GattServiceProviderAdvertisementStatusChangedEventArgs as StatusChangeEvent,  # noqa: E501
     GattReadRequestedEventArgs,
@@ -217,7 +214,9 @@ class BlessServerDotNet(BaseBlessServer):
 
         serverguid: Guid = Guid.Parse(service_uuid)
         service: BlessGATTServiceDotNet = self.services[str(serverguid)]
-        characteristic: BlessGATTCharacteristicDotNet = BlessGATTCharacteristicDotNet(char_uuid, properties, permissions, value)
+        characteristic: BlessGATTCharacteristicDotNet = BlessGATTCharacteristicDotNet(
+            char_uuid, properties, permissions, value
+        )
         await characteristic.init(service)
         characteristic.obj.ReadRequested += self.read_characteristic
         characteristic.obj.WriteRequested += self.write_characteristic

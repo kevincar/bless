@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from uuid import UUID
 from typing import Union, Optional
 
@@ -6,57 +8,61 @@ from bleak.backends.dotnet.characteristic import (  # type: ignore
 )
 from bleak.backends.dotnet.utils import (  # type: ignore
     wrap_IAsyncOperation,
-    BleakDataWriter,
 )
 
-from System import Guid
-from Windows.Foundation import IAsyncOperation, Deferral  # type: ignore
+from System import Guid  # type: ignore
+from Windows.Foundation import IAsyncOperation  # type: ignore
 from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
     GattProtectionLevel,
     GattLocalCharacteristicParameters,
-    GattLocalCharacteristicResult
+    GattLocalCharacteristic,
+    GattLocalCharacteristicResult,
 )
+
+from bless.backends.service import BlessGATTService
 
 from bless.backends.characteristic import (
     BlessGATTCharacteristic,
     GATTCharacteristicProperties,
-    GATTAttributePermissions
+    GATTAttributePermissions,
 )
 
 
-class BlessGATTCharacteristicDotNet(BlessGATTCharacteristic, BleakGATTCharacteristicDotNet):
+class BlessGATTCharacteristicDotNet(
+    BlessGATTCharacteristic, BleakGATTCharacteristicDotNet
+):
     """
     DotNet implementation of the BlessGATTCharacteristic
     """
 
     def __init__(
-            self,
-            uuid: Union[str, UUID],
-            properties: GATTCharacteristicProperties,
-            permissions: GATTAttributePermissions,
-            value: Optional[bytearray]
-        ):
-            """
-            Instantiates a new GATT Characteristic but is not yet assigned to any
-            service or application
+        self,
+        uuid: Union[str, UUID],
+        properties: GATTCharacteristicProperties,
+        permissions: GATTAttributePermissions,
+        value: Optional[bytearray],
+    ):
+        """
+        Instantiates a new GATT Characteristic but is not yet assigned to any
+        service or application
 
-            Parameters
-            ----------
-            uuid : Union[str, UUID]
-                The string representation of the universal unique identifier for
-                the characteristic or the actual UUID object
-            properties : GATTCharacteristicProperties
-                The properties that define the characteristics behavior
-            permissions : GATTAttributePermissions
-                Permissions that define the protection levels of the properties
-            value : Optional[bytearray]
-                The binary value of the characteristic
-            """
-            value = value if value is not None else bytearray(b"")
-            super().__init__(uuid, properties, permissions, value)
-            self.value = value
+        Parameters
+        ----------
+        uuid : Union[str, UUID]
+            The string representation of the universal unique identifier for
+            the characteristic or the actual UUID object
+        properties : GATTCharacteristicProperties
+            The properties that define the characteristics behavior
+        permissions : GATTAttributePermissions
+            Permissions that define the protection levels of the properties
+        value : Optional[bytearray]
+            The binary value of the characteristic
+        """
+        value = value if value is not None else bytearray(b"")
+        super().__init__(uuid, properties, permissions, value)
+        self.value = value
 
-    async def init(self, service: "BlessGATTServiceDotNet"):
+    async def init(self, service: BlessGATTService):
         """
         Initialize the DotNet GattLocalCharacteristic object
 
