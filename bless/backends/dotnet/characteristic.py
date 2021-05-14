@@ -54,6 +54,7 @@ class BlessGATTCharacteristicDotNet(BlessGATTCharacteristic, BleakGATTCharacteri
             """
             value = value if value is not None else bytearray(b"")
             super().__init__(uuid, properties, permissions, value)
+            self.value = value
 
     async def init(self, service: "BlessGATTServiceDotNet"):
         """
