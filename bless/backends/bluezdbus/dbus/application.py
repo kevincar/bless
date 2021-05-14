@@ -7,7 +7,7 @@ from typing import List, Any, Callable, Optional
 from txdbus import client  # type: ignore
 from txdbus.objects import DBusObject, RemoteDBusObject  # type: ignore
 
-from bless.backends.bluezdbus.advertisement import (  # type: ignore
+from bless.backends.bluezdbus.dbus.advertisement import (  # type: ignore
     Type,
     BlueZLEAdvertisement,
 )
