@@ -14,10 +14,10 @@ from typing import List  # noqa: E402
 from txdbus import client  # type: ignore # noqa: E402
 from txdbus.objects import RemoteDBusObject  # type: ignore # noqa: E402
 
-from bless.backends.bluezdbus.characteristic import Flags  # type: ignore # noqa: E402 E501
-from bless.backends.bluezdbus.utils import get_adapter  # type: ignore # noqa: E402 E501
+from bless.backends.bluezdbus.dbus.characteristic import Flags  # type: ignore # noqa: E402 E501
+from bless.backends.bluezdbus.dbus.utils import get_adapter  # type: ignore # noqa: E402 E501
 from bless.backends.bluezdbus.application import BlueZGattApplication  # type: ignore # noqa: E402 E501
-from bless.backends.bluezdbus.characteristic import BlueZGattCharacteristic  # type: ignore # noqa: E402 E501
+from bless.backends.bluezdbus.dbus.characteristic import BlueZGattCharacteristic  # type: ignore # noqa: E402 E501
 
 from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # type: ignore # noqa: E402 E501
 

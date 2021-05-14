@@ -12,7 +12,7 @@ from bless.backends.bluezdbus.advertisement import (  # type: ignore
     BlueZLEAdvertisement,
 )
 from bless.backends.bluezdbus.service import BlueZGattService  # type: ignore
-from bless.backends.bluezdbus.characteristic import (  # type: ignore
+from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
     Flags,
     BlueZGattCharacteristic,
 )

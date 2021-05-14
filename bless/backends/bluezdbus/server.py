@@ -15,10 +15,11 @@ from bleak.backends.bluezdbus.characteristic import (  # type: ignore
 )
 
 from bless.backends.server import BaseBlessServer  # type: ignore
-from bless.backends.bluezdbus.utils import get_adapter  # type: ignore
 from bless.backends.bluezdbus.application import BlueZGattApplication  # type: ignore
 from bless.backends.bluezdbus.service import BlueZGattService  # type: ignore
-from bless.backends.bluezdbus.characteristic import (  # type: ignore
+from bless.backends.bluezdbus.characteristic import flags_to_dbus
+from bless.backends.bluezdbus.dbus.utils import get_adapter  # type: ignore
+from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
     BlueZGattCharacteristic,
     Flags,
 )
@@ -186,7 +187,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
             characteristic
         """
         await self.setup_task
-        flags: List[Flags] = Flags.from_bless(properties)
+        flags: List[Flags] = flags_to_dbus(properties)
 
         # DBus can't handle None values
         if value is None:
