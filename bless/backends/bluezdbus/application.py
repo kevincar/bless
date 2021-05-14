@@ -11,7 +11,7 @@ from bless.backends.bluezdbus.advertisement import (  # type: ignore
     Type,
     BlueZLEAdvertisement,
 )
-from bless.backends.bluezdbus.service import BlueZGattService  # type: ignore
+from bless.backends.bluezdbus.dbus.service import BlueZGattService  # type: ignore
 from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
     Flags,
     BlueZGattCharacteristic,

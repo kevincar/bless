@@ -8,7 +8,7 @@ from txdbus.objects import DBusObject, DBusProperty, dbusMethod  # type: ignore
 from txdbus.interface import DBusInterface, Method, Property  # type: ignore
 
 if TYPE_CHECKING:
-    from bless.backends.bluezdbus.service import (  # type: ignore
+    from bless.backends.bluezdbus.dbus.service import (  # type: ignore
         BlueZGattService,
         BlueZGattDescriptor,
     )
