@@ -1,14 +1,14 @@
 import asyncio
 
-import bleak.backends.bluezdbus.defs as defs  # type: ignore
-
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Any
 
 from txdbus import client  # type: ignore
 from txdbus.objects import DBusObject, DBusProperty  # type: ignore
 from txdbus.interface import DBusInterface, Property  # type: ignore
 
-from .characteristic import BlueZGattCharacteristic  # type: ignore
+from bleak.backends.bluezdbus import defs
+
+from .characteristic import BlueZGattCharacteristic, Flags  # type: ignore
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.dbus.application import (  # type: ignore
@@ -67,3 +67,27 @@ class BlueZGattService(DBusObject):
 
         self.characteristics: List[BlueZGattCharacteristic] = []
         super(BlueZGattService, self).__init__(self.path)
+
+    async def add_characteristic(
+        self, uuid: str, flags: List[Flags], value: Any
+    ) -> BlueZGattCharacteristic:
+        """
+        Adds a BlueZGattCharacteristic to the service.
+
+        Parameters
+        ----------
+        uuid : str
+            The string representation of the UUID for the characteristic
+        flags : List[Flags],
+            A list of flags to apply to the characteristic
+        value : Any
+            The characteristic's value
+        """
+        index: int = len(self.characteristics) + 1
+        characteristic: BlueZGattCharacteristic = BlueZGattCharacteristic(
+            uuid, flags, index, self
+        )
+        characteristic.value = value
+        self.characteristics.append(characteristic)
+        await self.app._register_object(characteristic)
+        return characteristic

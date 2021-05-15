@@ -4,7 +4,12 @@ import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import List, Dict, TYPE_CHECKING
 
-from txdbus.objects import DBusObject, DBusProperty, dbusMethod  # type: ignore
+from txdbus.objects import (  # type: ignore
+        DBusObject,
+        DBusProperty,
+        dbusMethod,
+        RemoteDBusObject
+        )
 from txdbus.interface import DBusInterface, Method, Property  # type: ignore
 
 if TYPE_CHECKING:
@@ -152,3 +157,23 @@ class BlueZGattCharacteristic(DBusObject):
             raise NotImplementedError()
         f(None)
         self._service.app.subscribed_characteristics.remove(self.uuid)
+
+    async def get_obj(self) -> Dict:
+        """
+        Obtain the underlying dictionary within the BlueZ API that describes
+        the characteristic
+
+        Returns
+        -------
+        Dict
+            The dictionary that describes the characteristic
+        """
+        dbus_obj: RemoteDBusObject = await self._service.app.bus.getRemoteObject(
+            self._service.app.destination, self.path
+        ).asFuture(self._service.app.loop)
+        dict_obj: Dict = await dbus_obj.callRemote(
+            "GetAll",
+            defs.GATT_CHARACTERISTIC_INTERFACE,
+            interface=defs.PROPERTIES_INTERFACE,
+        ).asFuture(self._service.app.loop)
+        return dict_obj
