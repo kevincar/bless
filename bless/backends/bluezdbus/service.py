@@ -1,69 +1,43 @@
-import asyncio
+from typing import List, Dict
 
-import bleak.backends.bluezdbus.defs as defs  # type: ignore
-
-from typing import List, TYPE_CHECKING
-
-from txdbus import client  # type: ignore
-from txdbus.objects import DBusObject, DBusProperty  # type: ignore
-from txdbus.interface import DBusInterface, Property  # type: ignore
-
-from .characteristic import BlueZGattCharacteristic  # type: ignore
-
-if TYPE_CHECKING:
-    from bless.backends.bluezdbus.application import (  # type: ignore
-        BlueZGattApplication,
-    )
+from bleak.backends.bluezdbus.service import BleakGATTServiceBlueZDBus  # type: ignore
+from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
+from bless.backends.bluezdbus.dbus.service import BlueZGattService
 
 
-class BlueZGattService(DBusObject):
-    """
-    org.bluez.GattService1 interface implementation
+class BlessGATTServiceBlueZDBus(BleakGATTServiceBlueZDBus):
+    """"
+    GATT service implementation for the BlueZ backend
     """
 
-    interface_name: str = defs.GATT_SERVICE_INTERFACE
+    def __init__(self, obj: Dict, path: str, gatt: BlueZGattService):
+        super().__init__(obj, path)
+        self.__characteristics: List[BlessGATTCharacteristicBlueZDBus] = []
+        self.__path = path
+        self.__handle = 0
+        self.gatt = gatt
 
-    iface: DBusInterface = DBusInterface(
-        interface_name,
-        Property("UUID", "s"),
-        Property("Primary", "b"),
-    )
+    @property
+    def handle(self) -> int:
+        """The integer handle of the service"""
+        return self.__handle
 
-    dbusInterfaces: List[DBusInterface] = [iface]
+    @property
+    def uuid(self) -> str:
+        """UUID for this service"""
+        return self.obj["UUID"]
 
-    uuid: DBusProperty = DBusProperty("UUID")
-    primary: DBusProperty = DBusProperty("Primary")
+    @property
+    def characteristics(self) -> List[BlessGATTCharacteristicBlueZDBus]:
+        """List of characteristics for this service"""
+        return self.__characteristics
 
-    def __init__(
-        self,
-        uuid: str,
-        primary: bool,
-        index: int,
-        app: "BlueZGattApplication",  # noqa: F821
-    ):
+    def add_characteristic(self, characteristic: BlessGATTCharacteristicBlueZDBus):
         """
-        Initialize the DBusObject
-
-        Parameters
-        ----------
-        uuid : str
-            A string representation of the unique identifier
-        primary : bool
-            Whether the service is the primary service for the application it
-            belongs to
-        index : int
-            The index of the service amongst the other service of the
-            application
-        app : BlueZApp
-            A BlueZApp object that owns this service
+        Should not be used by end user, but rather by `bleak` itself.
         """
-        self.path: str = app.base_path + "/service" + str(index)
-        self.bus: client = app.bus
-        self.destination: str = app.destination
-        self.uuid: str = uuid
-        self.primary: bool = primary
-        self.loop: asyncio.AbstractEventLoop = app.loop
-        self.app: "BlueZGattApplication" = app  # noqa: F821
+        self.__characteristics.append(characteristic)
 
-        self.characteristics: List[BlueZGattCharacteristic] = []
-        super(BlueZGattService, self).__init__(self.path)
+    @property
+    def path(self):
+        return self.__path

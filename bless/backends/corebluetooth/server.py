@@ -23,9 +23,9 @@ from bless.backends.corebluetooth.characteristic import (  # type: ignore
     BlessGATTCharacteristicCoreBluetooth,
 )
 from bless.backends.characteristic import (
-        GATTCharacteristicProperties,
-        GATTAttributePermissions
-        )
+    GATTCharacteristicProperties,
+    GATTAttributePermissions,
+)
 
 
 logger = logging.getLogger(name=__name__)
@@ -175,20 +175,15 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             The permissions for the characteristic
         """
         logger.debug("Craeting a new characteristic with uuid: {}".format(char_uuid))
-        properties_value: int = properties.value
-        permissions_value: int = permissions.value
-        cb_uuid: CBUUID = CBUUID.alloc().initWithString_(char_uuid)
-        cb_characteristic: CBMutableCharacteristic = (
-            CBMutableCharacteristic.alloc().initWithType_properties_value_permissions_(
-                cb_uuid, properties_value, value, permissions_value
+        characteristic: BlessGATTCharacteristicCoreBluetooth = (
+            BlessGATTCharacteristicCoreBluetooth(
+                char_uuid, properties, permissions, value
             )
         )
-        bless_characteristic: BlessGATTCharacteristicCoreBluetooth = (
-            BlessGATTCharacteristicCoreBluetooth(obj=cb_characteristic)
-        )
+        await characteristic.init()
 
         service: BlessGATTServiceCoreBluetooth = self.services[service_uuid]
-        service.add_characteristic(bless_characteristic)
+        service.add_characteristic(characteristic)
         characteristics: List[CBMutableCharacteristic] = [
             characteristic.obj for characteristic in service.characteristics
         ]

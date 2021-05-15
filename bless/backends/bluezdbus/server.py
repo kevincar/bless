@@ -2,7 +2,9 @@ import asyncio
 
 import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
-from typing import Optional, Dict, List, Any, cast
+from uuid import UUID
+
+from typing import Optional, Dict, Any, cast
 
 from asyncio import AbstractEventLoop
 from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # type: ignore
@@ -15,18 +17,24 @@ from bleak.backends.bluezdbus.characteristic import (  # type: ignore
 )
 
 from bless.backends.server import BaseBlessServer  # type: ignore
-from bless.backends.bluezdbus.utils import get_adapter  # type: ignore
-from bless.backends.bluezdbus.application import BlueZGattApplication  # type: ignore
-from bless.backends.bluezdbus.service import BlueZGattService  # type: ignore
-from bless.backends.bluezdbus.characteristic import (  # type: ignore
+from bless.backends.bluezdbus.characteristic import (
+        BlessGATTCharacteristicBlueZDBus
+        )
+from bless.backends.bluezdbus.dbus.application import (  # type: ignore
+    BlueZGattApplication,
+)
+from bless.backends.bluezdbus.dbus.service import BlueZGattService  # type: ignore
+from bless.backends.bluezdbus.dbus.utils import get_adapter  # type: ignore
+from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
     BlueZGattCharacteristic,
-    Flags,
 )
 
+from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
+
 from bless.backends.characteristic import (  # type: ignore
-        GATTCharacteristicProperties,
-        GATTAttributePermissions
-        )
+    GATTCharacteristicProperties,
+    GATTAttributePermissions,
+)
 
 
 class BlessServerBlueZDBus(BaseBlessServer):
@@ -47,7 +55,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
             cast(asyncio.unix_events._UnixSelectorEventLoop, loop)
         )
 
-        self.services: Dict[str, BleakGATTServiceBlueZDBus] = {}
+        self.services: Dict[str, BlessGATTServiceBlueZDBus] = {}
 
         self.setup_task: asyncio.Task = self.loop.create_task(self.setup())
 
@@ -153,8 +161,8 @@ class BlessServerBlueZDBus(BaseBlessServer):
         dict_obj: Dict = await dbus_obj.callRemote(
             "GetAll", defs.GATT_SERVICE_INTERFACE, interface=defs.PROPERTIES_INTERFACE
         ).asFuture(self.loop)
-        service: BleakGATTServiceBlueZDBus = BleakGATTServiceBlueZDBus(
-            dict_obj, gatt_service.path
+        service: BlessGATTServiceBlueZDBus = BlessGATTServiceBlueZDBus(
+            dict_obj, gatt_service.path, gatt_service
         )
         self.services[uuid] = service
 
@@ -186,32 +194,14 @@ class BlessServerBlueZDBus(BaseBlessServer):
             characteristic
         """
         await self.setup_task
-        flags: List[Flags] = Flags.from_bless(properties)
-
-        # DBus can't handle None values
-        if value is None:
-            value = bytearray(b"")
-
-        # Add to our BlueZDBus app
-        gatt_char: BlueZGattCharacteristic = await self.app.add_characteristic(
-            service_uuid, char_uuid, value, flags
+        service: BlessGATTServiceBlueZDBus = self.services[str(UUID(service_uuid))]
+        characteristic: BlessGATTCharacteristicBlueZDBus = (
+            BlessGATTCharacteristicBlueZDBus(char_uuid, properties, permissions, value)
         )
-        dbus_obj: RemoteDBusObject = await self.bus.getRemoteObject(
-            self.app.destination, gatt_char.path
-        ).asFuture(self.loop)
-        dict_obj: Dict = await dbus_obj.callRemote(
-            "GetAll",
-            defs.GATT_CHARACTERISTIC_INTERFACE,
-            interface=defs.PROPERTIES_INTERFACE,
-        ).asFuture(self.loop)
-
-        # Create a Bleak Characteristic
-        char: BleakGATTCharacteristicBlueZDBus = BleakGATTCharacteristicBlueZDBus(
-            dict_obj, gatt_char.path, service_uuid
-        )
+        await characteristic.init(service)
 
         # Add it to the service
-        self.services[service_uuid].add_characteristic(char)
+        self.services[service_uuid].add_characteristic(characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """

@@ -2,17 +2,17 @@ import asyncio
 
 import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
-from typing import List, Any, Callable, Optional
+from typing import List, Any, Callable, Optional, Union
 
 from txdbus import client  # type: ignore
 from txdbus.objects import DBusObject, RemoteDBusObject  # type: ignore
 
-from bless.backends.bluezdbus.advertisement import (  # type: ignore
+from bless.backends.bluezdbus.dbus.advertisement import (  # type: ignore
     Type,
     BlueZLEAdvertisement,
 )
-from bless.backends.bluezdbus.service import BlueZGattService  # type: ignore
-from bless.backends.bluezdbus.characteristic import (  # type: ignore
+from bless.backends.bluezdbus.dbus.service import BlueZGattService  # type: ignore
+from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
     Flags,
     BlueZGattCharacteristic,
 )
@@ -112,17 +112,7 @@ class BlueZGattApplication(DBusObject):
         service: BlueZGattService = next(
             iter([x for x in self.services if x.uuid == service_uuid])
         )
-        index: int = len(service.characteristics) + 1
-        characteristic: BlueZGattCharacteristic = BlueZGattCharacteristic(
-            uuid, flags, index, service
-        )
-        characteristic.value = value
-
-        service.characteristics.append(characteristic)
-        self.bus.exportObject(characteristic)
-        await self.bus.requestBusName(self.destination).asFuture(self.loop)
-
-        return characteristic
+        return await service.add_characteristic(uuid, flags, value)
 
     async def register(self, adapter: RemoteDBusObject):
         """
@@ -223,3 +213,16 @@ class BlueZGattApplication(DBusObject):
             characteristics
         """
         return len(self.subscribed_characteristics) > 0
+
+    async def _register_object(
+        self, o: Union[BlueZGattService, BlueZGattCharacteristic]
+    ):
+        """
+        Register a service or characteristic object on the bus
+
+        Parameters
+        ----------
+        o : A service or characteristic to register
+        """
+        self.bus.exportObject(o)
+        await self.bus.requestBusName(self.destination).asFuture(self.loop)

@@ -12,9 +12,9 @@ from bleak.backends.dotnet.utils import (  # type: ignore
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.characteristic import (  # type: ignore
-        GATTCharacteristicProperties,
-        GATTAttributePermissions
-        )
+    GATTCharacteristicProperties,
+    GATTAttributePermissions,
+)
 from bless.backends.dotnet.service import BlessGATTServiceDotNet
 from bless.backends.dotnet.characteristic import (  # type: ignore
     BlessGATTCharacteristicDotNet,
@@ -35,9 +35,7 @@ from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
     GattServiceProviderResult,
     GattServiceProvider,
     GattLocalService,
-    GattLocalCharacteristicResult,
     GattLocalCharacteristic,
-    GattLocalCharacteristicParameters,
     GattServiceProviderAdvertisingParameters,
     GattServiceProviderAdvertisementStatusChangedEventArgs as StatusChangeEvent,  # noqa: E501
     GattReadRequestedEventArgs,
@@ -210,36 +208,20 @@ class BlessServerDotNet(BaseBlessServer):
             The flags for the characteristic
         value : Optional[bytearray]
             The initial value for the characteristic
-        permissions : int
+        permissions : GATTAttributePermissions
             The permissions for the characteristic
         """
-        charguid: Guid = Guid.Parse(char_uuid)
+
         serverguid: Guid = Guid.Parse(service_uuid)
-
-        ReadParameters: GattLocalCharacteristicParameters = (
-            GattLocalCharacteristicParameters()
+        service: BlessGATTServiceDotNet = self.services[str(serverguid)]
+        characteristic: BlessGATTCharacteristicDotNet = BlessGATTCharacteristicDotNet(
+            char_uuid, properties, permissions, value
         )
-        ReadParameters.CharacteristicProperties = properties.value
-        ReadParameters.ReadProtectionLevel = permissions.value
-
-        service: GattLocalService = self.services[str(serverguid)]
-        characteristic_result: GattLocalCharacteristicResult = (
-            await wrap_IAsyncOperation(
-                IAsyncOperation[GattLocalCharacteristicResult](
-                    service.obj.CreateCharacteristicAsync(charguid, ReadParameters)
-                ),
-                return_type=GattLocalCharacteristicResult,
-            )
-        )
-        newChar: GattLocalCharacteristic = characteristic_result.Characteristic
-        newChar.ReadRequested += self.read_characteristic
-        newChar.WriteRequested += self.write_characteristic
-        newChar.SubscribedClientsChanged += self.subscribe_characteristic
-        bleak_characteristic: BlessGATTCharacteristicDotNet = (
-            BlessGATTCharacteristicDotNet(obj=newChar)
-        )
-
-        service.add_characteristic(bleak_characteristic)
+        await characteristic.init(service)
+        characteristic.obj.ReadRequested += self.read_characteristic
+        characteristic.obj.WriteRequested += self.write_characteristic
+        characteristic.obj.SubscribedClientsChanged += self.subscribe_characteristic
+        service.add_characteristic(characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
