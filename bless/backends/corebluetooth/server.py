@@ -134,15 +134,6 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             The string representation of the UUID of the service to be added
         """
         logger.debug("Creating a new service with uuid: {}".format(uuid))
-
-        # service_uuid: CBUUID = CBUUID.alloc().initWithString_(uuid)
-        # cb_service: CBMutableService = CBMutableService.alloc().initWithType_primary_(
-        # service_uuid, True
-        # )
-
-        # bleak_service: BlessGATTServiceCoreBluetooth = BlessGATTServiceCoreBluetooth(
-        # obj=cb_service
-        # )
         service: BlessGATTServiceCoreBluetooth = BlessGATTServiceCoreBluetooth(uuid)
         await service.init()
         self.services[service.uuid] = service
