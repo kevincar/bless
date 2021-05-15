@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from bleak.backends.bluezdbus.service import BleakGATTServiceBlueZDBus
+from bleak.backends.bluezdbus.service import BleakGATTServiceBlueZDBus  # type: ignore
 from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
 from bless.backends.bluezdbus.dbus.service import BlueZGattService
 

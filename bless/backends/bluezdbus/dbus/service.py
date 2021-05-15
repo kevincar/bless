@@ -6,7 +6,7 @@ from txdbus import client  # type: ignore
 from txdbus.objects import DBusObject, DBusProperty  # type: ignore
 from txdbus.interface import DBusInterface, Property  # type: ignore
 
-from bleak.backends.bluezdbus import defs
+from bleak.backends.bluezdbus import defs  # type: ignore
 
 from .characteristic import BlueZGattCharacteristic, Flags  # type: ignore
 
