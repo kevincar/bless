@@ -11,7 +11,7 @@ from txdbus.interface import DBusInterface, Property  # type: ignore
 from .characteristic import BlueZGattCharacteristic  # type: ignore
 
 if TYPE_CHECKING:
-    from bless.backends.bluezdbus.application import (  # type: ignore
+    from bless.backends.bluezdbus.dbus.application import (  # type: ignore
         BlueZGattApplication,
     )
 
