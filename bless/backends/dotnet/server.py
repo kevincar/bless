@@ -4,12 +4,8 @@ from threading import Event
 from asyncio.events import AbstractEventLoop
 from typing import Dict, Optional, List
 
-from bleak.backends.dotnet.utils import (  # type: ignore
-    wrap_IAsyncOperation,
-    BleakDataWriter,
-)
+from bleak.backends.dotnet.utils import BleakDataWriter  # type: ignore
 
-from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.characteristic import (  # type: ignore
     GATTCharacteristicProperties,
@@ -26,15 +22,13 @@ from bless.backends.dotnet.utils import sync_async_wrap  # type: ignore
 # from BleakBridge import Bridge
 
 # Import of other CLR components needed.
-from Windows.Foundation import IAsyncOperation, Deferral  # type: ignore
+from Windows.Foundation import Deferral  # type: ignore
 
 from Windows.Storage.Streams import DataReader, DataWriter  # type: ignore
 
 from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
     GattWriteOption,
-    GattServiceProviderResult,
     GattServiceProvider,
-    GattLocalService,
     GattLocalCharacteristic,
     GattServiceProviderAdvertisingParameters,
     GattServiceProviderAdvertisementStatusChangedEventArgs as StatusChangeEvent,  # noqa: E501
@@ -132,8 +126,12 @@ class BlessServerDotNet(BaseBlessServer):
         """
         all_services_advertising: bool = True
         for uuid, service in self.services.items():
-            service_is_advertising: bool = service.service_provider.AdvertisementStatus == 2
-            all_services_advertising = all_services_advertising and service_is_advertising
+            service_is_advertising: bool = (
+                service.service_provider.AdvertisementStatus == 2
+            )
+            all_services_advertising = (
+                all_services_advertising and service_is_advertising
+            )
 
         return self._advertising and all_services_advertising
 

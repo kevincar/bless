@@ -2,6 +2,7 @@ import abc
 
 from uuid import UUID
 from typing import Union, cast
+from bless.backends.server import BaseBlessServer
 from bleak.backends.service import BleakGATTService  # type: ignore
 
 
@@ -26,8 +27,13 @@ class BlessGATTService(BleakGATTService):
         self._uuid: str = str(uuid)
 
     @abc.abstractmethod
-    async def init(self):
+    async def init(self, server: BaseBlessServer):
         """
         Initialize the backend specific service object
+
+        Parameteres
+        -----------
+        server: BlessServer
+            The server to assign the service to
         """
         raise NotImplementedError()
