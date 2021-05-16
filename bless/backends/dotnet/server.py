@@ -4,12 +4,8 @@ from threading import Event
 from asyncio.events import AbstractEventLoop
 from typing import Dict, Optional, List
 
-from bleak.backends.dotnet.utils import (  # type: ignore
-    wrap_IAsyncOperation,
-    BleakDataWriter,
-)
+from bleak.backends.dotnet.utils import BleakDataWriter  # type: ignore
 
-from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.characteristic import (  # type: ignore
     GATTCharacteristicProperties,
@@ -26,15 +22,13 @@ from bless.backends.dotnet.utils import sync_async_wrap  # type: ignore
 # from BleakBridge import Bridge
 
 # Import of other CLR components needed.
-from Windows.Foundation import IAsyncOperation, Deferral  # type: ignore
+from Windows.Foundation import Deferral  # type: ignore
 
 from Windows.Storage.Streams import DataReader, DataWriter  # type: ignore
 
 from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
     GattWriteOption,
-    GattServiceProviderResult,
     GattServiceProvider,
-    GattLocalService,
     GattLocalCharacteristic,
     GattServiceProviderAdvertisingParameters,
     GattServiceProviderAdvertisementStatusChangedEventArgs as StatusChangeEvent,  # noqa: E501
@@ -96,7 +90,8 @@ class BlessServerDotNet(BaseBlessServer):
         adv_parameters.IsDiscoverable = True
         adv_parameters.IsConnectable = True
 
-        self.service_provider.StartAdvertising(adv_parameters)
+        for uuid, service in self.services.items():
+            service.service_provider.StartAdvertising(adv_parameters)
         self._advertising = True
         self._advertising_started.wait()
 
@@ -104,20 +99,9 @@ class BlessServerDotNet(BaseBlessServer):
         """
         Stop the server
         """
-
-        self.service_provider.StopAdvertising()
+        for uuid, service in self.services.items():
+            service.service_provider.StopAdvertising()
         self._advertising = False
-
-    @property
-    def service_provider(self) -> GattServiceProvider:
-        if self._service_provider is not None:
-            return self._service_provider
-
-        raise BlessError("DotNet Service provider has not been initialized")
-
-    @service_provider.setter
-    def service_provider(self, value: GattServiceProvider):
-        self._service_provider = value
 
     async def is_connected(self) -> bool:
         """
@@ -140,7 +124,16 @@ class BlessServerDotNet(BaseBlessServer):
         bool
             True if advertising
         """
-        return self._advertising and (self.service_provider.AdvertisementStatus == 2)
+        all_services_advertising: bool = True
+        for uuid, service in self.services.items():
+            service_is_advertising: bool = (
+                service.service_provider.AdvertisementStatus == 2
+            )
+            all_services_advertising = (
+                all_services_advertising and service_is_advertising
+            )
+
+        return self._advertising and all_services_advertising
 
     def _status_update(
         self, service_provider: GattServiceProvider, args: StatusChangeEvent
@@ -172,19 +165,10 @@ class BlessServerDotNet(BaseBlessServer):
             The string representation of the UUID of the service to be added
         """
         logger.debug("Creating a new service with uuid: {}".format(uuid))
-        guid: Guid = Guid.Parse(uuid)
-        spr: GattServiceProviderResult = await wrap_IAsyncOperation(
-            IAsyncOperation[GattServiceProviderResult](
-                GattServiceProvider.CreateAsync(guid)
-            ),
-            return_type=GattServiceProviderResult,
-        )
-        self.service_provider: GattServiceProvider = spr.ServiceProvider
-        self.service_provider.AdvertisementStatusChanged += self._status_update
-        new_service: GattLocalService = self.service_provider.Service
-        bleak_service = BlessGATTServiceDotNet(obj=new_service)
         logger.debug("Adding service to server with uuid {}".format(uuid))
-        self.services[uuid] = bleak_service
+        service: BlessGATTServiceDotNet = BlessGATTServiceDotNet(uuid)
+        await service.init(self)
+        self.services[service.uuid] = service
 
     async def add_new_characteristic(
         self,
