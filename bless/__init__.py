@@ -19,6 +19,11 @@ elif sys.platform == "linux":
         BlessServerBlueZDBus as BlessServer,
     )
 
+    # Characteristic Classes
+    from bless.backends.bluezdbus.characteristic import (  # noqa: F401
+        BlessGATTCharacteristicBlueZDBus as BlessGATTCharacteristic,
+    )
+
 elif sys.platform == "win32":
 
     # Server
@@ -31,16 +36,6 @@ elif sys.platform == "win32":
         BlessGATTCharacteristicDotNet as BlessGATTCharacteristic,
     )
 
-elif sys.platform == "win32":
-
-    # Server
-    from bless.backends.dotnet.server import BlessServerDotNet as BlessServer
-
-    BlessServer
-    # Characteristic Classes
-    from bless.backends.dotnet.characteristic import (  # noqa: F401
-        BlessGATTCharacteristicDotNet as BlessGATTCharacteristic,
-    )
 
 # type: ignore
 from bless.backends.characteristic import (  # noqa: E402 F401
