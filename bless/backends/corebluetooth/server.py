@@ -1,6 +1,7 @@
 import logging
 
-from typing import Optional, Dict, List
+from uuid import UUID
+from typing import Optional, Dict, List, cast
 
 from asyncio import TimeoutError
 from asyncio.events import AbstractEventLoop
@@ -164,6 +165,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         permissions : GATTAttributePermissions
             The permissions for the characteristic
         """
+        service_uuid = str(UUID(service_uuid))
         logger.debug("Craeting a new characteristic with uuid: {}".format(char_uuid))
         characteristic: BlessGATTCharacteristicCoreBluetooth = (
             BlessGATTCharacteristicCoreBluetooth(
@@ -199,9 +201,11 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         bool
             Whether the value was successfully updated
         """
-        characteristic: BlessGATTCharacteristicCoreBluetooth = self.services[
-            service_uuid
-        ].get_characteristic(char_uuid.lower())
+        service_uuid = str(UUID(service_uuid))
+        char_uuid = str(UUID(char_uuid))
+        characteristic: BlessGATTCharacteristicCoreBluetooth = cast(
+            BlessGATTCharacteristicCoreBluetooth, self.get_characteristic(char_uuid)
+        )
 
         value: bytes = characteristic.value
         value = value if value is not None else b"\x00"

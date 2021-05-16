@@ -9,11 +9,10 @@ import threading
 
 from typing import Any
 
-
 from bless import (
         BlessServer,
         BlessGATTCharacteristic,
-        GattCharacteristicsFlags,
+        GATTCharacteristicProperties,
         GATTAttributePermissions
         )
 
@@ -57,9 +56,9 @@ async def run(loop):
     # Add a Characteristic to the service
     my_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
     char_flags = (
-            GattCharacteristicsFlags.read |
-            GattCharacteristicsFlags.write |
-            GattCharacteristicsFlags.indicate
+            GATTCharacteristicProperties.read |
+            GATTCharacteristicProperties.write |
+            GATTCharacteristicProperties.indicate
             )
     permissions = (
             GATTAttributePermissions.readable |
@@ -68,13 +67,13 @@ async def run(loop):
     await server.add_new_characteristic(
             my_service_uuid,
             my_char_uuid,
-            char_flags.value,
+            char_flags,
             None,
-            permissions.value)
+            permissions)
 
     logger.debug(
-            server.services[my_service_uuid].get_characteristic(
-                my_char_uuid.lower()
+            server.get_characteristic(
+                my_char_uuid
                 )
             )
     await server.start()
@@ -83,7 +82,7 @@ async def run(loop):
     trigger.wait()
     await asyncio.sleep(2)
     logger.debug("Updating")
-    server.services[my_service_uuid].characteristics[0].value = b'WOW'
+    server.get_characteristic(my_char_uuid)
     server.update_value(
             my_service_uuid, "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
             )
