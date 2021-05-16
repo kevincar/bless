@@ -9,19 +9,11 @@ from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # type: igno
 from txdbus import client  # type: ignore
 from txdbus.objects import RemoteDBusObject  # type: ignore
 
-from bleak.backends.bluezdbus.service import BleakGATTServiceBlueZDBus  # type: ignore
-from bleak.backends.bluezdbus.characteristic import (  # type: ignore
-    BleakGATTCharacteristicBlueZDBus,
-)
-
 from bless.backends.server import BaseBlessServer  # type: ignore
-from bless.backends.bluezdbus.characteristic import (
-        BlessGATTCharacteristicBlueZDBus
-        )
+from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
 from bless.backends.bluezdbus.dbus.application import (  # type: ignore
     BlueZGattApplication,
 )
-from bless.backends.bluezdbus.dbus.service import BlueZGattService  # type: ignore
 from bless.backends.bluezdbus.dbus.utils import get_adapter  # type: ignore
 from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
     BlueZGattCharacteristic,
@@ -191,7 +183,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
         await characteristic.init(service)
 
         # Add it to the service
-        self.services[service_uuid].add_characteristic(characteristic)
+        self.services[service.uuid].add_characteristic(characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
@@ -214,30 +206,20 @@ class BlessServerBlueZDBus(BaseBlessServer):
         bool
             Whether the characteristic value was successfully updated
         """
-        bless_service: BleakGATTServiceBlueZDBus = self.services[service_uuid]
-        bless_char: BleakGATTCharacteristicBlueZDBus = next(
-            iter(
-                [
-                    char
-                    for char in bless_service.characteristics
-                    if char.uuid == char_uuid
-                ]
-            )
+        service_uuid = str(UUID(service_uuid))
+        char_uuid = str(UUID(char_uuid))
+        bless_service: Optional[BlessGATTServiceBlueZDBus] = self.get_service(
+            service_uuid
+        )
+        if bless_service is None:
+            return False
+
+        bless_char: BlessGATTCharacteristicBlueZDBus = bless_service.get_characteristic(
+            char_uuid
         )
         cur_value: Any = bless_char.value
 
-        service: BlueZGattService = next(
-            iter(
-                [
-                    service
-                    for service in self.app.services
-                    if service.uuid == service_uuid
-                ]
-            )
-        )
-        characteristic: BlueZGattCharacteristic = next(
-            iter([char for char in service.characteristics if char.uuid == char_uuid])
-        )
+        characteristic: BlueZGattCharacteristic = bless_char.gatt
         characteristic.value = cur_value
         return True
 

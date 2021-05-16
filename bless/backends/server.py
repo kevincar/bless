@@ -2,11 +2,12 @@ import abc
 import asyncio
 import logging
 
-
+from uuid import UUID
 from asyncio import AbstractEventLoop
-from typing import Any, Optional, Dict, Callable, List, Union
+from typing import Any, Optional, Dict, Callable, List
 from bleak.backends.service import BleakGATTService  # type: ignore
 
+from bless.backends.service import BlessGATTService
 from bless.backends.characteristic import (  # type: ignore
     BlessGATTCharacteristic,
     GATTCharacteristicProperties,
@@ -159,10 +160,32 @@ class BaseBlessServer(abc.ABC):
         """
         raise NotImplementedError()
 
-    def get_characteristic(self, uuid: str) -> Union[BlessGATTCharacteristic, None]:
+    def get_service(self, uuid: str) -> Optional[BlessGATTService]:
+        """
+        Retrieves the service whose UUID matches the string given
+
+        Parameters
+        ----------
+        uuid : str
+            The String representation of the uuid for the service
+
+        Returns
+        -------
+        Optional[BlessGATTService]
+            The service that matches the UUID. None if not found
+        """
+        uuid = str(UUID(uuid))
+        potential_services: List[BlessGATTService] = [
+            service
+            for uuid_str, service in self.services.items()
+            if service.uuid == uuid
+        ]
+
+        return potential_services[0] if len(potential_services) > 0 else None
+
+    def get_characteristic(self, uuid: str) -> Optional[BlessGATTCharacteristic]:
         """
         Retrieves the characteristic whose UUID matches the string given.
-        Comparable to BleakGATTServiceCollection
 
         Parameters
         ----------
@@ -175,7 +198,7 @@ class BaseBlessServer(abc.ABC):
         BlessGATTCharacteristic
             The characteristic object
         """
-        uuid = uuid.lower()
+        uuid = str(UUID(uuid))
         potentials: List[BlessGATTCharacteristic] = [
             self.services[service_uuid].get_characteristic(uuid)
             for service_uuid in self.services
