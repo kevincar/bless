@@ -9,19 +9,11 @@ from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # type: igno
 from txdbus import client  # type: ignore
 from txdbus.objects import RemoteDBusObject  # type: ignore
 
-from bleak.backends.bluezdbus.service import BleakGATTServiceBlueZDBus  # type: ignore
-from bleak.backends.bluezdbus.characteristic import (  # type: ignore
-    BleakGATTCharacteristicBlueZDBus,
-)
-
 from bless.backends.server import BaseBlessServer  # type: ignore
-from bless.backends.bluezdbus.characteristic import (
-        BlessGATTCharacteristicBlueZDBus
-        )
+from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
 from bless.backends.bluezdbus.dbus.application import (  # type: ignore
     BlueZGattApplication,
 )
-from bless.backends.bluezdbus.dbus.service import BlueZGattService  # type: ignore
 from bless.backends.bluezdbus.dbus.utils import get_adapter  # type: ignore
 from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
     BlueZGattCharacteristic,
@@ -216,11 +208,15 @@ class BlessServerBlueZDBus(BaseBlessServer):
         """
         service_uuid = str(UUID(service_uuid))
         char_uuid = str(UUID(char_uuid))
-        bless_service: Optional[BlessGATTServiceBlueZDBus] = self.get_service(service_uuid)
+        bless_service: Optional[BlessGATTServiceBlueZDBus] = self.get_service(
+            service_uuid
+        )
         if bless_service is None:
             return False
 
-        bless_char: BlessGATTCharacteristicBlueZDBus = bless_service.get_characteristic(char_uuid)
+        bless_char: BlessGATTCharacteristicBlueZDBus = bless_service.get_characteristic(
+            char_uuid
+        )
         cur_value: Any = bless_char.value
 
         characteristic: BlueZGattCharacteristic = bless_char.gatt
