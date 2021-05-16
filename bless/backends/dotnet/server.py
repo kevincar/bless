@@ -1,5 +1,6 @@
 import logging
 
+from uuid import UUID
 from threading import Event
 from asyncio.events import AbstractEventLoop
 from typing import Dict, Optional, List
@@ -227,16 +228,13 @@ class BlessServerDotNet(BaseBlessServer):
         bool
             Whether the value was successfully updated
         """
-
-        service: BlessGATTServiceDotNet = self.services[service_uuid.lower()]
-        characteristic: BlessGATTCharacteristicDotNet = next(
-            iter(
-                [
-                    char
-                    for char in service.characteristics
-                    if char.uuid == char_uuid.lower()
-                ]
-            )
+        service_uuid = str(UUID(service_uuid))
+        char_uuid = str(UUID(char_uuid))
+        service: Optional[BlessGATTServiceDotNet] = self.get_service(service_uuid)
+        if service is None:
+            return False
+        characteristic: BlessGATTCharacteristicDotNet = service.get_characteristic(
+            char_uuid
         )
         value: bytes = characteristic.value
         value = value if value is not None else b"\x00"
