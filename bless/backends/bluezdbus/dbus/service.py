@@ -1,9 +1,13 @@
 import asyncio
 
-from typing import List, TYPE_CHECKING, Any
+from typing import List, TYPE_CHECKING, Any, Dict
 
 from txdbus import client  # type: ignore
-from txdbus.objects import DBusObject, DBusProperty  # type: ignore
+from txdbus.objects import (  # type: ignore
+        DBusObject,
+        DBusProperty,
+        RemoteDBusObject
+        )
 from txdbus.interface import DBusInterface, Property  # type: ignore
 
 from bleak.backends.bluezdbus import defs  # type: ignore
@@ -91,3 +95,23 @@ class BlueZGattService(DBusObject):
         self.characteristics.append(characteristic)
         await self.app._register_object(characteristic)
         return characteristic
+
+    async def get_obj(self) -> Dict:
+        """
+        Obtain the underlying dictionary within the BlueZ API that describes
+        the service
+
+        Returns
+        -------
+        Dict
+            The dictionary that describes the service
+        """
+        dbus_obj: RemoteDBusObject = await self.app.bus.getRemoteObject(
+            self.app.destination, self.path
+        ).asFuture(self.app.loop)
+        dict_obj: Dict = await dbus_obj.callRemote(
+            "GetAll",
+            defs.GATT_SERVICE_INTERFACE,
+            interface=defs.PROPERTIES_INTERFACE,
+        ).asFuture(self.app.loop)
+        return dict_obj

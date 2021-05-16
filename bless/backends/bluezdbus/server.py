@@ -1,7 +1,5 @@
 import asyncio
 
-import bleak.backends.bluezdbus.defs as defs  # type: ignore
-
 from uuid import UUID
 
 from typing import Optional, Dict, Any, cast
@@ -154,17 +152,9 @@ class BlessServerBlueZDBus(BaseBlessServer):
             The UUID for the service to add
         """
         await self.setup_task
-        gatt_service: BlueZGattService = await self.app.add_service(uuid)
-        dbus_obj: RemoteDBusObject = await self.bus.getRemoteObject(
-            self.app.destination, gatt_service.path
-        ).asFuture(self.loop)
-        dict_obj: Dict = await dbus_obj.callRemote(
-            "GetAll", defs.GATT_SERVICE_INTERFACE, interface=defs.PROPERTIES_INTERFACE
-        ).asFuture(self.loop)
-        service: BlessGATTServiceBlueZDBus = BlessGATTServiceBlueZDBus(
-            dict_obj, gatt_service.path, gatt_service
-        )
-        self.services[uuid] = service
+        service: BlessGATTServiceBlueZDBus = BlessGATTServiceBlueZDBus(uuid)
+        await service.init(self)
+        self.services[service.uuid] = service
 
     async def add_new_characteristic(
         self,
