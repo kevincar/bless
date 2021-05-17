@@ -1,31 +1,30 @@
 import logging
 
-from typing import Optional, Dict, List
+from uuid import UUID
+from typing import Optional, Dict, List, cast
 
 from asyncio import TimeoutError
 from asyncio.events import AbstractEventLoop
 
-from Foundation import (
-        CBUUID,
-        CBService,
-        CBMutableService,
-        CBMutableCharacteristic
-        )
+from CoreBluetooth import (  # type: ignore
+    CBService,
+    CBPeripheralManager,
+    CBMutableCharacteristic,
+)
 
-from bleak.backends.service import BleakGATTService
-from bleak.backends.corebluetooth.service import (
-        BleakGATTServiceCoreBluetooth
-        )
+from bleak.backends.service import BleakGATTService  # type: ignore
 
-from .PeripheralManagerDelegate import (
-        PeripheralManagerDelegate
-        )
+from .PeripheralManagerDelegate import PeripheralManagerDelegate  # type: ignore
 from bless.exceptions import BlessError
-from bless.backends.server import BaseBlessServer
-from bless.backends.corebluetooth.characteristic import (
-        BlessGATTCharacteristicCoreBluetooth
-        )
-from bless.backends.characteristic import GattCharacteristicsFlags
+from bless.backends.server import BaseBlessServer  # type: ignore
+from bless.backends.corebluetooth.service import BlessGATTServiceCoreBluetooth
+from bless.backends.corebluetooth.characteristic import (  # type: ignore
+    BlessGATTCharacteristicCoreBluetooth,
+)
+from bless.backends.characteristic import (
+    GATTCharacteristicProperties,
+    GATTAttributePermissions,
+)
 
 
 logger = logging.getLogger(name=__name__)
@@ -52,17 +51,15 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         super(BlessServerCoreBluetooth, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
-        self.services: Dict[str, BleakGATTServiceCoreBluetooth] = {}
+        self.services: Dict[str, BlessGATTServiceCoreBluetooth] = {}
 
         self.peripheral_manager_delegate: PeripheralManagerDelegate = (
-                PeripheralManagerDelegate.alloc().init()
-                )
+            PeripheralManagerDelegate.alloc().init()
+        )
         self.peripheral_manager_delegate.read_request_func = self.read_request
-        self.peripheral_manager_delegate.write_request_func = (
-                self.write_request
-                )
+        self.peripheral_manager_delegate.write_request_func = self.write_request
 
-    async def start(self, timeout: float = 10):
+    async def start(self, timeout: float = 10, **kwargs):
         """
         Start the server
 
@@ -86,14 +83,12 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         advertisement_data = {
             "kCBAdvDataServiceUUIDs": list(
                 map(lambda x: self.services[x].obj.UUID(), self.services)
-                ),
-            "kCBAdvDataLocalName": self.name
-            }
+            ),
+            "kCBAdvDataLocalName": self.name,
+        }
         logger.debug("Advertisement Data: {}".format(advertisement_data))
         try:
-            await self.peripheral_manager_delegate.startAdvertising_(
-                    advertisement_data
-                    )
+            await self.peripheral_manager_delegate.startAdvertising_(advertisement_data)
         except TimeoutError:
             # If advertising fails as a result of bluetooth module power
             # cycling or advertisement failure, attempt to start again
@@ -116,9 +111,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         bool
             True if there are central devices that are connected
         """
-        n_subscriptions = len(
-                self.peripheral_manager_delegate._central_subscriptions
-                )
+        n_subscriptions = len(self.peripheral_manager_delegate._central_subscriptions)
         return n_subscriptions > 0
 
     async def is_advertising(self) -> bool:
@@ -142,29 +135,18 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             The string representation of the UUID of the service to be added
         """
         logger.debug("Creating a new service with uuid: {}".format(uuid))
-
-        service_uuid: CBUUID = CBUUID.alloc().initWithString_(uuid)
-        cb_service: CBMutableService = (
-                CBMutableService.alloc().initWithType_primary_(
-                    service_uuid,
-                    True
-                    )
-                )
-
-        bleak_service: BleakGATTServiceCoreBluetooth = (
-                BleakGATTServiceCoreBluetooth(obj=cb_service)
-                )
-
-        self.services[uuid] = bleak_service
+        service: BlessGATTServiceCoreBluetooth = BlessGATTServiceCoreBluetooth(uuid)
+        await service.init()
+        self.services[service.uuid] = service
 
     async def add_new_characteristic(
-            self,
-            service_uuid: str,
-            char_uuid: str,
-            properties: GattCharacteristicsFlags,
-            value: Optional[bytearray],
-            permissions: int
-            ):
+        self,
+        service_uuid: str,
+        char_uuid: str,
+        properties: GATTCharacteristicProperties,
+        value: Optional[bytearray],
+        permissions: GATTAttributePermissions,
+    ):
         """
         Generate a new characteristic to be associated with the server
 
@@ -176,36 +158,27 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         char_uuid : str
             The string representation of the UUID for the characteristic to be
             added
-        properties : GattCharacteristicsFlags
+        properties : GATTCharacteristicProperties
             The flags for the characteristic
         value : Optional[bytearray]
             The initial value for the characteristic
-        permissions : int
+        permissions : GATTAttributePermissions
             The permissions for the characteristic
         """
-        logger.debug(
-                "Craeting a new characteristic with uuid: {}".format(char_uuid)
-                )
-        cb_uuid: CBUUID = CBUUID.alloc().initWithString_(char_uuid)
-        cb_characteristic: CBMutableCharacteristic = (
-                CBMutableCharacteristic.alloc()
-                .initWithType_properties_value_permissions_(
-                    cb_uuid,
-                    properties,
-                    value,
-                    permissions
-                    )
-                )
-        bleak_characteristic: BlessGATTCharacteristicCoreBluetooth = (
-                BlessGATTCharacteristicCoreBluetooth(obj=cb_characteristic)
-                )
+        service_uuid = str(UUID(service_uuid))
+        logger.debug("Craeting a new characteristic with uuid: {}".format(char_uuid))
+        characteristic: BlessGATTCharacteristicCoreBluetooth = (
+            BlessGATTCharacteristicCoreBluetooth(
+                char_uuid, properties, permissions, value
+            )
+        )
+        await characteristic.init()
 
-        service: BleakGATTService = self.services[service_uuid]
-        service.add_characteristic(bleak_characteristic)
+        service: BlessGATTServiceCoreBluetooth = self.services[service_uuid]
+        service.add_characteristic(characteristic)
         characteristics: List[CBMutableCharacteristic] = [
-                characteristic.obj
-                for characteristic in service.characteristics
-                ]
+            characteristic.obj for characteristic in service.characteristics
+        ]
         service.obj.setCharacteristics_(characteristics)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
@@ -228,22 +201,21 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         bool
             Whether the value was successfully updated
         """
-        characteristic: BlessGATTCharacteristicCoreBluetooth = (
-                self.services[service_uuid].get_characteristic(
-                    char_uuid.lower()
-                    )
-                )
+        service_uuid = str(UUID(service_uuid))
+        char_uuid = str(UUID(char_uuid))
+        characteristic: BlessGATTCharacteristicCoreBluetooth = cast(
+            BlessGATTCharacteristicCoreBluetooth, self.get_characteristic(char_uuid)
+        )
 
         value: bytes = characteristic.value
-        value = value if value is not None else b'\x00'
+        value = value if value is not None else b"\x00"
+        peripheral_manager: CBPeripheralManager = (
+            self.peripheral_manager_delegate.peripheral_manager
+        )
         result: bool = (
-                self.peripheral_manager_delegate
-                    .peripheral_manager
-                    .updateValue_forCharacteristic_onSubscribedCentrals_(
-                        value,
-                        characteristic.obj,
-                        None
-                        )
-                    )
+            peripheral_manager.updateValue_forCharacteristic_onSubscribedCentrals_(
+                value, characteristic.obj, None
+            )
+        )
 
         return result

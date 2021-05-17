@@ -1,31 +1,30 @@
 import asyncio
 
-import bleak.backends.bluezdbus.defs as defs
+from uuid import UUID
 
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, Any, cast, List
 
 from asyncio import AbstractEventLoop
-from twisted.internet.asyncioreactor import AsyncioSelectorReactor
-from txdbus import client
-from txdbus.objects import RemoteDBusObject
+from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # type: ignore
+from txdbus import client  # type: ignore
+from txdbus.objects import RemoteDBusObject  # type: ignore
 
-from bleak.backends.bluezdbus.service import BleakGATTServiceBlueZDBus
-from bleak.backends.bluezdbus.characteristic import (
-        BleakGATTCharacteristicBlueZDBus
-        )
+from bless.backends.server import BaseBlessServer  # type: ignore
+from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
+from bless.backends.bluezdbus.dbus.application import (  # type: ignore
+    BlueZGattApplication,
+)
+from bless.backends.bluezdbus.dbus.utils import get_adapter  # type: ignore
+from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
+    BlueZGattCharacteristic,
+)
 
-from bless.backends.server import BaseBlessServer
-from bless.backends.bluezdbus.utils import get_adapter
-from bless.backends.bluezdbus.application import BlueZGattApplication
-from bless.backends.bluezdbus.service import BlueZGattService
-from bless.backends.bluezdbus.characteristic import (
-        BlueZGattCharacteristic,
-        Flags
-        )
+from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
 
-from bless.backends.characteristic import (
-        GattCharacteristicsFlags
-        )
+from bless.backends.characteristic import (  # type: ignore
+    GATTCharacteristicProperties,
+    GATTAttributePermissions,
+)
 
 
 class BlessServerBlueZDBus(BaseBlessServer):
@@ -42,9 +41,11 @@ class BlessServerBlueZDBus(BaseBlessServer):
     def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
         super(BlessServerBlueZDBus, self).__init__(loop=loop, **kwargs)
         self.name: str = name
-        self.reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(loop)
+        self.reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(
+            cast(asyncio.unix_events._UnixSelectorEventLoop, loop)
+        )
 
-        self.services: Dict[str, BleakGATTServiceBlueZDBus] = {}
+        self.services: Dict[str, BlessGATTServiceBlueZDBus] = {}
 
         self.setup_task: asyncio.Task = self.loop.create_task(self.setup())
 
@@ -52,14 +53,14 @@ class BlessServerBlueZDBus(BaseBlessServer):
         """
         Asyncronous side of init
         """
-        self.bus: client = await client.connect(
-                self.reactor, "system"
-                ).asFuture(self.loop)
+        self.bus: client = await client.connect(self.reactor, "system").asFuture(
+            self.loop
+        )
 
         gatt_name: str = self.name.replace(" ", "")
         self.app: BlueZGattApplication = BlueZGattApplication(
-                gatt_name, "org.bluez."+gatt_name, self.bus, self.loop
-                )
+            gatt_name, "org.bluez." + gatt_name, self.bus, self.loop
+        )
 
         self.app.Read = self.read
         self.app.Write = self.write
@@ -143,30 +144,18 @@ class BlessServerBlueZDBus(BaseBlessServer):
             The UUID for the service to add
         """
         await self.setup_task
-        gatt_service: BlueZGattService = await self.app.add_service(uuid)
-        dbus_obj: RemoteDBusObject = await self.bus.getRemoteObject(
-                self.app.destination,
-                gatt_service.path
-                ).asFuture(self.loop)
-        dict_obj: Dict = await dbus_obj.callRemote(
-                "GetAll",
-                defs.GATT_SERVICE_INTERFACE,
-                interface=defs.PROPERTIES_INTERFACE
-                ).asFuture(self.loop)
-        service: BleakGATTServiceBlueZDBus = BleakGATTServiceBlueZDBus(
-                dict_obj,
-                gatt_service.path
-                )
-        self.services[uuid] = service
+        service: BlessGATTServiceBlueZDBus = BlessGATTServiceBlueZDBus(uuid)
+        await service.init(self)
+        self.services[service.uuid] = service
 
     async def add_new_characteristic(
-            self,
-            service_uuid: str,
-            char_uuid: str,
-            properties: GattCharacteristicsFlags,
-            value: Optional[bytearray],
-            permissions: int
-            ):
+        self,
+        service_uuid: str,
+        char_uuid: str,
+        properties: GATTCharacteristicProperties,
+        value: Optional[bytearray],
+        permissions: GATTAttributePermissions,
+    ):
         """
         Add a new characteristic to be associated with the server
 
@@ -177,7 +166,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
             this new characteristic should belong
         char_uuid : str
             The string representation of the UUID of the characteristic
-        properties : GattCharacteristicsFlags
+        properties : GATTCharacteristicProperties
             GATT Characteristic Flags that define the characteristic
         value : Optional[bytearray]
             A byterray representation of the value to be associated with the
@@ -187,37 +176,14 @@ class BlessServerBlueZDBus(BaseBlessServer):
             characteristic
         """
         await self.setup_task
-        flags: List[Flags] = Flags.from_bless(properties)
-
-        # DBus can't handle None values
-        if value is None:
-            value = bytearray(b'')
-
-        # Add to our BlueZDBus app
-        gatt_char: BlueZGattCharacteristic = await self.app.add_characteristic(
-                service_uuid, char_uuid, value, flags
-                )
-        dbus_obj: RemoteDBusObject = await self.bus.getRemoteObject(
-                self.app.destination,
-                gatt_char.path
-                ).asFuture(self.loop)
-        dict_obj: Dict = await dbus_obj.callRemote(
-                "GetAll",
-                defs.GATT_CHARACTERISTIC_INTERFACE,
-                interface=defs.PROPERTIES_INTERFACE
-                ).asFuture(self.loop)
-
-        # Create a Bleak Characteristic
-        char: BleakGATTCharacteristicBlueZDBus = (
-                BleakGATTCharacteristicBlueZDBus(
-                    dict_obj,
-                    gatt_char.path,
-                    service_uuid
-                    )
-                )
+        service: BlessGATTServiceBlueZDBus = self.services[str(UUID(service_uuid))]
+        characteristic: BlessGATTCharacteristicBlueZDBus = (
+            BlessGATTCharacteristicBlueZDBus(char_uuid, properties, permissions, value)
+        )
+        await characteristic.init(service)
 
         # Add it to the service
-        self.services[service_uuid].add_characteristic(char)
+        self.services[service.uuid].add_characteristic(characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
@@ -240,28 +206,30 @@ class BlessServerBlueZDBus(BaseBlessServer):
         bool
             Whether the characteristic value was successfully updated
         """
-        bless_service: BleakGATTServiceBlueZDBus = self.services[service_uuid]
-        bless_char: BleakGATTCharacteristicBlueZDBus = next(iter([
-            char for char in bless_service.characteristics
-            if char.uuid == char_uuid
-            ]))
+        service_uuid = str(UUID(service_uuid))
+        char_uuid = str(UUID(char_uuid))
+        bless_service: Optional[BlessGATTServiceBlueZDBus] = self.get_service(
+            service_uuid
+        )
+        if bless_service is None:
+            return False
+
+        bless_char: BlessGATTCharacteristicBlueZDBus = bless_service.get_characteristic(
+            char_uuid
+        )
         cur_value: Any = bless_char.value
 
-        service: BlueZGattService = next(iter([
-            service for service in self.app.services
-            if service.uuid == service_uuid
-            ]))
-        characteristic: BlueZGattCharacteristic = next(iter([
-            char for char in service.characteristics
-            if char.uuid == char_uuid
-            ]))
+        characteristic: BlueZGattCharacteristic = bless_char.gatt
         characteristic.value = cur_value
+        return True
 
-    def read(self, char: BlueZGattCharacteristic) -> bytearray:
+    def read(self, char: BlueZGattCharacteristic) -> List[int]:
         """
         Read request.
         This re-routes the the request incomming on the dbus to the server to
         be re-routed to the user defined handler
+
+        Note: the BlueZ App handles the data as a list of ints
 
         Parameters
         ----------
@@ -270,10 +238,10 @@ class BlessServerBlueZDBus(BaseBlessServer):
 
         Returns
         -------
-        bytearray
+        List[int]
             The value of the characteristic
         """
-        return self.read_request(char.uuid)
+        return list(self.read_request(char.uuid))
 
     def write(self, char: BlueZGattCharacteristic, value: bytearray):
         """

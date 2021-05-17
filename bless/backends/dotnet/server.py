@@ -1,58 +1,51 @@
 import logging
 
+from uuid import UUID
+from threading import Event
 from asyncio.events import AbstractEventLoop
 from typing import Dict, Optional, List
 
-from bleak.backends.dotnet.utils import (
-        wrap_IAsyncOperation,
-        BleakDataWriter
-        )
+from bleak.backends.dotnet.utils import BleakDataWriter  # type: ignore
 
-from bleak.backends.dotnet.service import BleakGATTServiceDotNet
-
-from bless.exceptions import BlessError
-from bless.backends.server import BaseBlessServer
-from bless.backends.characteristic import GattCharacteristicsFlags
-from bless.backends.dotnet.characteristic import BlessGATTCharacteristicDotNet
-from bless.backends.dotnet.utils import sync_async_wrap
+from bless.backends.server import BaseBlessServer  # type: ignore
+from bless.backends.characteristic import (  # type: ignore
+    GATTCharacteristicProperties,
+    GATTAttributePermissions,
+)
+from bless.backends.dotnet.service import BlessGATTServiceDotNet
+from bless.backends.dotnet.characteristic import (  # type: ignore
+    BlessGATTCharacteristicDotNet,
+)
+from bless.backends.dotnet.utils import sync_async_wrap  # type: ignore
 
 # CLR imports
 # Import of Bleak CLR->UWP Bridge.
 # from BleakBridge import Bridge
 
 # Import of other CLR components needed.
-from Windows.Foundation import (
-        IAsyncOperation,
-        Deferral
-        )
+from Windows.Foundation import Deferral  # type: ignore
 
-from Windows.Storage.Streams import DataReader, DataWriter
+from Windows.Storage.Streams import DataReader, DataWriter  # type: ignore
 
-from Windows.Devices.Bluetooth.GenericAttributeProfile import (
+from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
     GattWriteOption,
-    GattServiceProviderResult,
     GattServiceProvider,
-    GattLocalService,
-    GattLocalCharacteristicResult,
     GattLocalCharacteristic,
-    GattLocalCharacteristicParameters,
     GattServiceProviderAdvertisingParameters,
+    GattServiceProviderAdvertisementStatusChangedEventArgs as StatusChangeEvent,  # noqa: E501
     GattReadRequestedEventArgs,
     GattReadRequest,
     GattWriteRequestedEventArgs,
     GattWriteRequest,
-    GattSubscribedClient
+    GattSubscribedClient,
 )
 
-from System import (
-        Guid,
-        Object
-        )
+from System import Guid, Object  # type: ignore
 
 logger = logging.getLogger(__name__)
 
 
-class Request():
+class Request:
     def __init__(self):
         self._obj = None
 
@@ -65,7 +58,7 @@ class BlessServerDotNet(BaseBlessServer):
     ----------
     name : str
         The name of the server to advertise
-    services : Dict[str, BleakGATTServiceDotNet]
+    services : Dict[str, BlessGATTServiceDotNet]
         A dictionary of services to be advertised by this server
     """
 
@@ -73,10 +66,13 @@ class BlessServerDotNet(BaseBlessServer):
         super(BlessServerDotNet, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
-        self.services: Dict[str, BleakGATTServiceDotNet] = {}
+        self.services: Dict[str, BlessGATTServiceDotNet] = {}
 
         self._service_provider: Optional[GattServiceProvider] = None
         self._subscribed_clients: List[GattSubscribedClient] = []
+
+        self._advertising: bool = False
+        self._advertising_started: Event = Event()
 
     async def start(self, **kwargs):
         """
@@ -90,30 +86,23 @@ class BlessServerDotNet(BaseBlessServer):
         """
 
         adv_parameters: GattServiceProviderAdvertisingParameters = (
-                GattServiceProviderAdvertisingParameters()
-                )
+            GattServiceProviderAdvertisingParameters()
+        )
         adv_parameters.IsDiscoverable = True
         adv_parameters.IsConnectable = True
 
-        self.service_provider.StartAdvertising(adv_parameters)
+        for uuid, service in self.services.items():
+            service.service_provider.StartAdvertising(adv_parameters)
+        self._advertising = True
+        self._advertising_started.wait()
 
     async def stop(self):
         """
         Stop the server
         """
-
-        self.service_provider.StopAdvertising()
-
-    @property
-    def service_provider(self) -> GattServiceProvider:
-        if self._service_provider is not None:
-            return self._service_provider
-
-        raise BlessError("DotNet Service provider has not been initialized")
-
-    @service_provider.setter
-    def service_provider(self, value: GattServiceProvider):
-        self._service_provider = value
+        for uuid, service in self.services.items():
+            service.service_provider.StopAdvertising()
+        self._advertising = False
 
     async def is_connected(self) -> bool:
         """
@@ -136,7 +125,36 @@ class BlessServerDotNet(BaseBlessServer):
         bool
             True if advertising
         """
-        return self.service_provider.AdvertisementStatus == 2
+        all_services_advertising: bool = True
+        for uuid, service in self.services.items():
+            service_is_advertising: bool = (
+                service.service_provider.AdvertisementStatus == 2
+            )
+            all_services_advertising = (
+                all_services_advertising and service_is_advertising
+            )
+
+        return self._advertising and all_services_advertising
+
+    def _status_update(
+        self, service_provider: GattServiceProvider, args: StatusChangeEvent
+    ):
+        """
+        Callback function for the service provider to trigger when the
+        advertizing status changes
+
+        Parameters
+        ----------
+        service_provider : GattServiceProvider
+            The service provider whose advertising status changed
+
+        args : GattServiceProviderAdvertisementStatusChangedEventArgs
+            The arguments associated with the status change
+            See
+            [here](https://docs.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattserviceprovideradvertisementstatuschangedeventargs.status?view=winrt-19041)
+        """
+        if args.Status == 2:
+            self._advertising_started.set()
 
     async def add_new_service(self, uuid: str):
         """
@@ -148,22 +166,19 @@ class BlessServerDotNet(BaseBlessServer):
             The string representation of the UUID of the service to be added
         """
         logger.debug("Creating a new service with uuid: {}".format(uuid))
-        guid: Guid = Guid.Parse(uuid)
-        spr: GattServiceProviderResult = await wrap_IAsyncOperation(
-                IAsyncOperation[GattServiceProviderResult](
-                        GattServiceProvider.CreateAsync(guid)
-                    ),
-                return_type=GattServiceProviderResult)
-        self.service_provider: GattServiceProvider = spr.ServiceProvider
-        new_service: GattLocalService = self.service_provider.Service
-        bleak_service = BleakGATTServiceDotNet(obj=new_service)
         logger.debug("Adding service to server with uuid {}".format(uuid))
-        self.services[uuid] = bleak_service
+        service: BlessGATTServiceDotNet = BlessGATTServiceDotNet(uuid)
+        await service.init(self)
+        self.services[service.uuid] = service
 
-    async def add_new_characteristic(self, service_uuid: str, char_uuid: str,
-                                     properties: GattCharacteristicsFlags,
-                                     value: Optional[bytearray],
-                                     permissions: int):
+    async def add_new_characteristic(
+        self,
+        service_uuid: str,
+        char_uuid: str,
+        properties: GATTCharacteristicProperties,
+        value: Optional[bytearray],
+        permissions: GATTAttributePermissions,
+    ):
         """
         Generate a new characteristic to be associated with the server
 
@@ -174,41 +189,24 @@ class BlessServerDotNet(BaseBlessServer):
             the new characteristic with
         char_uuid : str
             The string representation of the uuid of the new characteristic
-        properties : GattCharacteristicsFlags
+        properties : GATTCharacteristicProperties
             The flags for the characteristic
         value : Optional[bytearray]
             The initial value for the characteristic
-        permissions : int
+        permissions : GATTAttributePermissions
             The permissions for the characteristic
         """
-        charguid: Guid = Guid.Parse(char_uuid)
+
         serverguid: Guid = Guid.Parse(service_uuid)
-
-        ReadParameters: GattLocalCharacteristicParameters = (
-                GattLocalCharacteristicParameters()
-                )
-        ReadParameters.CharacteristicProperties = properties
-        ReadParameters.ReadProtectionLevel = permissions
-
-        characteristic_result: GattLocalCharacteristicResult = (
-                await wrap_IAsyncOperation(
-                    IAsyncOperation[GattLocalCharacteristicResult](
-                        self.services.get(str(serverguid), None)
-                        .obj.CreateCharacteristicAsync(
-                            charguid, ReadParameters)
-                        ),
-                    return_type=GattLocalCharacteristicResult)
-                )
-        newChar: GattLocalCharacteristic = characteristic_result.Characteristic
-        newChar.ReadRequested += self.read_characteristic
-        newChar.WriteRequested += self.write_characteristic
-        newChar.SubscribedClientsChanged += self.subscribe_characteristic
-        bleak_characteristic: BlessGATTCharacteristicDotNet = (
-                BlessGATTCharacteristicDotNet(obj=newChar)
-                )
-
-        service: BleakGATTServiceDotNet = self.services.get(str(serverguid))
-        service.add_characteristic(bleak_characteristic)
+        service: BlessGATTServiceDotNet = self.services[str(serverguid)]
+        characteristic: BlessGATTCharacteristicDotNet = BlessGATTCharacteristicDotNet(
+            char_uuid, properties, permissions, value
+        )
+        await characteristic.init(service)
+        characteristic.obj.ReadRequested += self.read_characteristic
+        characteristic.obj.WriteRequested += self.write_characteristic
+        characteristic.obj.SubscribedClientsChanged += self.subscribe_characteristic
+        service.add_characteristic(characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
@@ -230,29 +228,24 @@ class BlessServerDotNet(BaseBlessServer):
         bool
             Whether the value was successfully updated
         """
-
-        service: BleakGATTServiceDotNet = self.services[service_uuid.lower()]
-        characteristic: BlessGATTCharacteristicDotNet = next(
-                iter([
-                    char
-                    for char in service.characteristics
-                    if char.uuid == char_uuid.lower()
-                    ])
-                )
+        service_uuid = str(UUID(service_uuid))
+        char_uuid = str(UUID(char_uuid))
+        service: Optional[BlessGATTServiceDotNet] = self.get_service(service_uuid)
+        if service is None:
+            return False
+        characteristic: BlessGATTCharacteristicDotNet = service.get_characteristic(
+            char_uuid
+        )
         value: bytes = characteristic.value
-        value = value if value is not None else b'\x00'
+        value = value if value is not None else b"\x00"
         with BleakDataWriter(value) as writer:
-            characteristic.obj.NotifyValueAsync(
-                    writer.detach_buffer()
-                    )
+            characteristic.obj.NotifyValueAsync(writer.detach_buffer())
 
         return True
 
     def read_characteristic(
-            self,
-            sender: GattLocalCharacteristic,
-            args: GattReadRequestedEventArgs
-            ):
+        self, sender: GattLocalCharacteristic, args: GattReadRequestedEventArgs
+    ):
         """
         The is triggered by pythonnet when windows receives a read request for
         a given characteristic
@@ -268,23 +261,20 @@ class BlessServerDotNet(BaseBlessServer):
         deferral: Deferral = args.GetDeferral()
         value: bytearray = self.read_request(str(sender.Uuid))
         logger.debug(f"Current Characteristic value {value}")
-        value = value if value is not None else b'\x00'
+        value = value if value is not None else b"\x00"
         writer: DataWriter = DataWriter()
         writer.WriteBytes(value)
         logger.debug("Getting request object {}".format(self))
         request: GattReadRequest = sync_async_wrap(
-                GattReadRequest,
-                args.GetRequestAsync
-                )
+            GattReadRequest, args.GetRequestAsync
+        )
         logger.debug("Got request object {}".format(request))
         request.RespondWithValue(writer.DetachBuffer())
         deferral.Complete()
 
     def write_characteristic(
-            self,
-            sender: GattLocalCharacteristic,
-            args: GattWriteRequestedEventArgs
-            ):
+        self, sender: GattLocalCharacteristic, args: GattWriteRequestedEventArgs
+    ):
         """
         Called by pythonnet when a write request is submitted
 
@@ -299,9 +289,8 @@ class BlessServerDotNet(BaseBlessServer):
 
         deferral: Deferral = args.GetDeferral()
         request: GattWriteRequest = sync_async_wrap(
-                GattWriteRequest,
-                args.GetRequestAsync
-                )
+            GattWriteRequest, args.GetRequestAsync
+        )
         logger.debug("Request value: {}".format(request.Value))
         reader: DataReader = DataReader.FromBuffer(request.Value)
         n_bytes: int = reader.UnconsumedBufferLength
@@ -319,11 +308,7 @@ class BlessServerDotNet(BaseBlessServer):
         logger.debug("Write Complete")
         deferral.Complete()
 
-    def subscribe_characteristic(
-            self,
-            sender: GattLocalCharacteristic,
-            args: Object
-            ):
+    def subscribe_characteristic(self, sender: GattLocalCharacteristic, args: Object):
         """
         Called when a characteristic is subscribed to
 

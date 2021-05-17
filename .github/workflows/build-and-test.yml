@@ -44,12 +44,12 @@ jobs:
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --show-source --statistics
+        flake8 . --count --show-source --statistics --max-line-length 88
         # exit-zero treats all errors as warnings.
-        flake8 . --count --exit-zero --statistics
+        flake8 . --count --exit-zero --statistic --max-line-length 88
     - name: Check mypy
       run: |
-        mypy .
+          mypy bless
     - name: Test with pytest
       run: |
         python -m pytest

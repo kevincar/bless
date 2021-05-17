@@ -1,40 +1,34 @@
-import objc
+import objc  # type: ignore
 import logging
 import asyncio
 
-from typing import (
-        Any,
-        Dict,
-        List,
-        Optional,
-        Callable
-        )
+from typing import Any, Dict, List, Optional, Callable
 
 
-from CoreBluetooth import (
-        CBManagerStateUnknown,
-        CBManagerStateResetting,
-        CBManagerStateUnsupported,
-        CBManagerStateUnauthorized,
-        CBManagerStatePoweredOff,
-        CBManagerStatePoweredOn
-        )
+from CoreBluetooth import (  # type: ignore
+    CBManagerStateUnknown,
+    CBManagerStateResetting,
+    CBManagerStateUnsupported,
+    CBManagerStateUnauthorized,
+    CBManagerStatePoweredOff,
+    CBManagerStatePoweredOn,
+)
 
-from Foundation import (
-        NSObject,
-        CBPeripheralManager,
-        CBCentral,
-        CBMutableService,
-        CBService,
-        CBCharacteristic,
-        CBATTRequest,
-        NSError
-        )
+from Foundation import (  # type: ignore
+    NSObject,
+    CBPeripheralManager,
+    CBCentral,
+    CBMutableService,
+    CBService,
+    CBCharacteristic,
+    CBATTRequest,
+    NSError,
+)
 
-from libdispatch import dispatch_queue_create, DISPATCH_QUEUE_SERIAL
+from libdispatch import dispatch_queue_create, DISPATCH_QUEUE_SERIAL  # type: ignore
 
 from bless.exceptions import BlessError
-from bless.backends.corebluetooth.error import CBATTError
+from bless.backends.corebluetooth.error import CBATTError  # type: ignore
 
 
 logger = logging.getLogger(name=__name__)
@@ -54,9 +48,8 @@ class PeripheralManagerDelegate(NSObject):
         role
 
     """
-    CBPeripheralManagerDelegate = objc.protocolNamed(
-            "CBPeripheralManagerDelegate"
-            )
+
+    CBPeripheralManagerDelegate = objc.protocolNamed("CBPeripheralManagerDelegate")
     ___pyobjc_protocols__ = [CBPeripheralManagerDelegate]
 
     def init(self):
@@ -66,14 +59,11 @@ class PeripheralManagerDelegate(NSObject):
         self.event_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 
         self.peripheral_manager: CBPeripheralManager = (
-                CBPeripheralManager.alloc().initWithDelegate_queue_(
-                    self,
-                    dispatch_queue_create(
-                        b"bleak.corebluetooth",
-                        DISPATCH_QUEUE_SERIAL
-                        )
-                    )
-                )
+            CBPeripheralManager.alloc().initWithDelegate_queue_(
+                self,
+                dispatch_queue_create(b"bleak.corebluetooth", DISPATCH_QUEUE_SERIAL),
+            )
+        )
 
         self._callbacks: Dict[str, Callable] = {}
 
@@ -102,12 +92,9 @@ class PeripheralManagerDelegate(NSObject):
             Whether the class is compliant with the CBPeripheralManagerDelegate
             Protocol
         """
-        return (
-                PeripheralManagerDelegate
-                .pyobjc_classMethods.conformsToProtocol_(
-                    self.CBPeripheralManagerDelegate
-                    )
-                )
+        return PeripheralManagerDelegate.pyobjc_classMethods.conformsToProtocol_(
+            self.CBPeripheralManagerDelegate
+        )
 
     @objc.python_method
     async def wait_for_powered_on(self, timeout: float):
@@ -162,7 +149,9 @@ class PeripheralManagerDelegate(NSObject):
 
         await self._services_added_events[uuid].wait()
 
-    async def startAdvertising_(self, advertisement_data: Dict[str, Any], timeout: float = 2.0):  # noqa
+    async def startAdvertising_(
+        self, advertisement_data: Dict[str, Any], timeout: float = 2.0
+    ):  # noqa
         """
         Begin Advertising on the server
 
@@ -178,15 +167,11 @@ class PeripheralManagerDelegate(NSObject):
 
         self.peripheral_manager.startAdvertising_(advertisement_data)
 
-        await asyncio.wait_for(
-                self._advertisement_started_event.wait(),
-                timeout
-                )
+        await asyncio.wait_for(self._advertisement_started_event.wait(), timeout)
 
         logger.debug(
-            "Advertising started with the following data: {}"
-            .format(advertisement_data)
-                )
+            "Advertising started with the following data: {}".format(advertisement_data)
+        )
 
     async def stopAdvertising(self):  # noqa
         """
@@ -199,7 +184,7 @@ class PeripheralManagerDelegate(NSObject):
         """
         Returns an instance to the function for handing read requests
         """
-        func: Optional[Callable[[Any], Any]] = self._callbacks.get('read')
+        func: Optional[Callable[[Any], Any]] = self._callbacks.get("read")
         if func is not None:
             return func
         else:
@@ -210,14 +195,14 @@ class PeripheralManagerDelegate(NSObject):
         """
         Sets the callback to handle read requests
         """
-        self._callbacks['read'] = func
+        self._callbacks["read"] = func
 
     @property
     def write_request_func(self) -> Callable:
         """
         Returns an instance to the function for handling write requests
         """
-        func: Optional[Callable[[Any], Any]] = self._callbacks.get('write')
+        func: Optional[Callable[[Any], Any]] = self._callbacks.get("write")
         if func is not None:
             return func
         else:
@@ -228,15 +213,12 @@ class PeripheralManagerDelegate(NSObject):
         """
         Sets the callback to handle write requests
         """
-        self._callbacks['write'] = func
+        self._callbacks["write"] = func
 
     # Protocol functions
 
     @objc.python_method
-    def did_update_state(
-            self,
-            peripheral_manager: CBPeripheralManager
-            ):
+    def did_update_state(self, peripheral_manager: CBPeripheralManager):
         if peripheral_manager.state() == CBManagerStateUnknown:
             logger.debug("Cannot detect bluetooth device")
         elif peripheral_manager.state() == CBManagerStateResetting:
@@ -257,59 +239,49 @@ class PeripheralManagerDelegate(NSObject):
             self._advertisement_started_event.clear()
 
     def peripheralManagerDidUpdateState_(  # noqa: N802
-            self,
-            peripheral_manager: CBPeripheralManager
-            ):
-        self.event_loop.call_soon_threadsafe(
-                self.did_update_state,
-                peripheral_manager
-                )
+        self, peripheral_manager: CBPeripheralManager
+    ):
+        self.event_loop.call_soon_threadsafe(self.did_update_state, peripheral_manager)
 
     def peripheralManager_willRestoreState_(  # noqa: N802
-            self, peripheral: CBPeripheralManager, d: dict
-            ):
+        self, peripheral: CBPeripheralManager, d: dict
+    ):
         logger.debug("PeripheralManager restoring state: {}".format(d))
 
     @objc.python_method
     def peripheralManager_didAddService_error(  # noqa: N802
-            self,
-            peripheral_manager: CBPeripheralManager,
-            service: CBService,
-            error: NSError
-            ):
+        self,
+        peripheral_manager: CBPeripheralManager,
+        service: CBService,
+        error: NSError,
+    ):
         uuid: str = service.UUID().UUIDString()
         if error:
-            raise BlessError(
-                    "Failed to add service {}: {}"
-                    .format(uuid, error)
-                    )
+            raise BlessError("Failed to add service {}: {}".format(uuid, error))
 
         logger.debug("Peripheral manager did add service: {}".format(uuid))
         logger.debug(
-                "service added had characteristics: {}"
-                .format(service.characteristics())
-                )
+            "service added had characteristics: {}".format(service.characteristics())
+        )
         self._services_added_events[uuid].set()
 
     def peripheralManager_didAddService_error_(  # noqa: N802
-            self,
-            peripheral_manager: CBPeripheralManager,
-            service: CBService,
-            error: NSError
-            ):
+        self,
+        peripheral_manager: CBPeripheralManager,
+        service: CBService,
+        error: NSError,
+    ):
         self.event_loop.call_soon_threadsafe(
-                self.peripheralManager_didAddService_error,
-                peripheral_manager,
-                service,
-                error
-                )
+            self.peripheralManager_didAddService_error,
+            peripheral_manager,
+            service,
+            error,
+        )
 
     @objc.python_method
     def peripheralManagerDidStartAdvertising_error(  # noqa: N802
-            self,
-            peripheral_manager: CBPeripheralManager,
-            error: NSError
-            ):
+        self, peripheral_manager: CBPeripheralManager, error: NSError
+    ):
         if error:
             raise BlessError("Failed to start advertising: {}".format(error))
 
@@ -317,95 +289,83 @@ class PeripheralManagerDelegate(NSObject):
         self._advertisement_started_event.set()
 
     def peripheralManagerDidStartAdvertising_error_(  # noqa: N802
-            self,
-            peripheral_manager: CBPeripheralManager,
-            error: NSError
-            ):
+        self, peripheral_manager: CBPeripheralManager, error: NSError
+    ):
         logger.debug("Received DidStartAdvertising Message")
         self.event_loop.call_soon_threadsafe(
-                self.peripheralManagerDidStartAdvertising_error,
-                peripheral_manager,
-                error
-                )
+            self.peripheralManagerDidStartAdvertising_error, peripheral_manager, error
+        )
 
     def peripheralManager_central_didSubscribeToCharacteristic_(  # noqa: N802
-            self,
-            peripheral_manager: CBPeripheralManager,
-            central: CBCentral,
-            characteristic: CBCharacteristic
-            ):
+        self,
+        peripheral_manager: CBPeripheralManager,
+        central: CBCentral,
+        characteristic: CBCharacteristic,
+    ):
         central_uuid: str = central.identifier().UUIDString()
         char_uuid: str = characteristic.UUID().UUIDString()
         logger.debug(
-                "Central Device: {} is subscribing to characteristic {}"
-                .format(central_uuid, char_uuid)
-                )
+            "Central Device: {} is subscribing to characteristic {}".format(
+                central_uuid, char_uuid
+            )
+        )
         if central_uuid in self._central_subscriptions:
             subscriptions = self._central_subscriptions[central_uuid]
             if char_uuid not in subscriptions:
                 self._central_subscriptions[central_uuid].append(char_uuid)
             else:
                 logger.debug(
-                        (
-                            "Central Device {} is already " +
-                            "subscribed to characteristic {}"
-                            )
-                        .format(central_uuid, char_uuid)
-                        )
+                    (
+                        "Central Device {} is already "
+                        + "subscribed to characteristic {}"
+                    ).format(central_uuid, char_uuid)
+                )
         else:
             self._central_subscriptions[central_uuid] = [char_uuid]
 
     def peripheralManager_central_didUnsubscribeFromCharacteristic_(  # noqa: N802 E501
-            self,
-            peripheral_manager: CBPeripheralManager,
-            central: CBCentral,
-            characteristic: CBCharacteristic
-            ):
+        self,
+        peripheral_manager: CBPeripheralManager,
+        central: CBCentral,
+        characteristic: CBCharacteristic,
+    ):
         central_uuid: str = central.identifier().UUIDString()
         char_uuid: str = characteristic.UUID().UUIDString()
         logger.debug(
-                "Central device {} is unsubscribing from characteristic {}"
-                .format(central_uuid, char_uuid)
-                )
+            "Central device {} is unsubscribing from characteristic {}".format(
+                central_uuid, char_uuid
+            )
+        )
         self._central_subscriptions[central_uuid].remove(char_uuid)
         if len(self._central_subscriptions[central_uuid]) < 1:
             del self._central_subscriptions[central_uuid]
 
     def peripheralManagerIsReadyToUpdateSubscribers_(  # noqa: N802
-            self,
-            peripheral_manager: CBPeripheralManager
-            ):
+        self, peripheral_manager: CBPeripheralManager
+    ):
         logger.debug("Peripheral is ready to update subscribers")
 
     def peripheralManager_didReceiveReadRequest_(  # noqa: N802
-            self,
-            peripheral_manager: CBPeripheralManager,
-            request: CBATTRequest
-            ):
+        self, peripheral_manager: CBPeripheralManager, request: CBATTRequest
+    ):
         # This should probably be a callback to be handled by the user, to be
         # implemented or given to the BleakServer
         logger.debug(
-                "Received read request from {} for characteristic {}"
-                .format(
-                    request.central().identifier().UUIDString(),
-                    request.characteristic().UUID().UUIDString()
-                    )
-                )
+            "Received read request from {} for characteristic {}".format(
+                request.central().identifier().UUIDString(),
+                request.characteristic().UUID().UUIDString(),
+            )
+        )
         request.setValue_(
-                self.read_request_func(
-                    request.characteristic().UUID().UUIDString()
-                    )
-                )
+            self.read_request_func(request.characteristic().UUID().UUIDString())
+        )
         peripheral_manager.respondToRequest_withResult_(
-                request,
-                CBATTError.Success.value
-                )
+            request, CBATTError.Success.value
+        )
 
     def peripheralManager_didReceiveWriteRequests_(  # noqa: N802
-            self,
-            peripheral_manager: CBPeripheralManager,
-            requests: List[CBATTRequest]
-            ):
+        self, peripheral_manager: CBPeripheralManager, requests: List[CBATTRequest]
+    ):
         # Again, this should likely be moved to a callback
         logger.debug("Receving write requests...")
         for request in requests:
@@ -413,15 +373,12 @@ class PeripheralManagerDelegate(NSObject):
             char: CBCharacteristic = request.characteristic()
             value: bytearray = request.value()
             logger.debug(
-                    "Write request from {} to {} with value {}"
-                    .format(
-                        central.identifier().UUIDString(),
-                        char.UUID().UUIDString(), value
-                        )
-                    )
+                "Write request from {} to {} with value {}".format(
+                    central.identifier().UUIDString(), char.UUID().UUIDString(), value
+                )
+            )
             self.write_request_func(char.UUID().UUIDString(), value)
 
         peripheral_manager.respondToRequest_withResult_(
-                requests[0],
-                CBATTError.Success.value
-                )
+            requests[0], CBATTError.Success.value
+        )

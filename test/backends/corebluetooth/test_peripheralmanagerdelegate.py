@@ -2,31 +2,31 @@ import sys
 import uuid
 import pytest
 import logging
-import asyncio
-import aioconsole
+import asyncio  # type: ignore
+import aioconsole  # type: ignore
 
-import numpy as np
+import numpy as np  # type: ignore
 
 from typing import Dict, Any, List, Optional
 
 if sys.platform.lower() != "darwin":
     pytest.skip("Only for MacOS", allow_module_level=True)
 
-from CoreBluetooth import (  # noqa: E402
+from CoreBluetooth import (  # type: ignore # noqa: E402
         CBUUID,
         CBMutableCharacteristic
         )
 
-from bless.backends.characteristic import (  # noqa: E402
-        GattCharacteristicsFlags
+from bless.backends.characteristic import (  # type: ignore # noqa: E402
+        GATTCharacteristicProperties
         )
 
-from bless.backends.corebluetooth.PeripheralManagerDelegate import (  # noqa: E402 E501
+from bless.backends.corebluetooth.PeripheralManagerDelegate import (  # type: ignore # noqa: E402 E501
         PeripheralManagerDelegate,
         CBMutableService,
         )
 
-from bless.backends.corebluetooth.characteristic import (  # noqa: E402
+from bless.backends.corebluetooth.characteristic import (  # type: ignore # noqa: E402 E501
         CBAttributePermissions
         )
 
@@ -87,10 +87,10 @@ class TestPeripheralManagerDelegate:
                     )
 
             # Add a subscribable Characteristic
-            props: GattCharacteristicsFlags = (
-                    GattCharacteristicsFlags.read |
-                    GattCharacteristicsFlags.write |
-                    GattCharacteristicsFlags.notify
+            props: GATTCharacteristicProperties = (
+                    GATTCharacteristicProperties.read |
+                    GATTCharacteristicProperties.write |
+                    GATTCharacteristicProperties.notify
                     )
             permissions: CBAttributePermissions = (
                     CBAttributePermissions.readable |
@@ -143,7 +143,7 @@ class TestPeripheralManagerDelegate:
         assert pmd.is_connected() is True
 
         # Read Test
-        rng: np.random._generator.Generator = np.random.default_rng()
+        rng: np.random._generator.Generator = np.random.default_rng()  # type: ignore # noqa E501
         hex_val: str = ''.join(rng.choice(self.hex_words, 2, replace=False))
         self.val = bytearray(
                 int(f"0x{hex_val}", 16).to_bytes(

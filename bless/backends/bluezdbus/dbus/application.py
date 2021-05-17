@@ -1,21 +1,21 @@
 import asyncio
 
-import bleak.backends.bluezdbus.defs as defs
+import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
-from typing import List, Any, Callable, Optional
+from typing import List, Any, Callable, Optional, Union
 
-from txdbus import client
-from txdbus.objects import DBusObject, RemoteDBusObject
+from txdbus import client  # type: ignore
+from txdbus.objects import DBusObject, RemoteDBusObject  # type: ignore
 
-from bless.backends.bluezdbus.advertisement import (
-        Type,
-        BlueZLEAdvertisement
-        )
-from bless.backends.bluezdbus.service import BlueZGattService
-from bless.backends.bluezdbus.characteristic import (
-        Flags,
-        BlueZGattCharacteristic
-        )
+from bless.backends.bluezdbus.dbus.advertisement import (  # type: ignore
+    Type,
+    BlueZLEAdvertisement,
+)
+from bless.backends.bluezdbus.dbus.service import BlueZGattService  # type: ignore
+from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
+    Flags,
+    BlueZGattCharacteristic,
+)
 
 
 class BlueZGattApplication(DBusObject):
@@ -24,12 +24,8 @@ class BlueZGattApplication(DBusObject):
     """
 
     def __init__(
-            self,
-            name: str,
-            destination: str,
-            bus: client,
-            loop: asyncio.AbstractEventLoop
-            ):
+        self, name: str, destination: str, bus: client, loop: asyncio.AbstractEventLoop
+    ):
         """
         Initialize a new GattApplication1
 
@@ -54,12 +50,10 @@ class BlueZGattApplication(DBusObject):
         self.advertisements: List[BlueZLEAdvertisement] = []
         self.services: List[BlueZGattService] = []
 
-        self.Read: Optional[Callable[[BlueZGattCharacteristic], bytearray]] = (
-                None
-                )
+        self.Read: Optional[Callable[[BlueZGattCharacteristic], bytearray]] = None
         self.Write: Optional[
-                Callable[[BlueZGattCharacteristic, bytearray], None]
-                ] = None
+            Callable[[BlueZGattCharacteristic, bytearray], None]
+        ] = None
         self.StartNotify: Optional[Callable[[None], None]] = None
         self.StopNotify: Optional[Callable[[None], None]] = None
 
@@ -85,21 +79,15 @@ class BlueZGattApplication(DBusObject):
 
         index: int = len(self.services) + 1
         primary: bool = index == 1
-        service: BlueZGattService = BlueZGattService(
-                uuid, primary, index, self
-                )
+        service: BlueZGattService = BlueZGattService(uuid, primary, index, self)
         self.services.append(service)
         self.bus.exportObject(service)
         await self.bus.requestBusName(self.destination).asFuture(self.loop)
         return service
 
     async def add_characteristic(
-            self,
-            service_uuid: str,
-            uuid: str,
-            value: Any,
-            flags: List[Flags]
-            ) -> BlueZGattCharacteristic:
+        self, service_uuid: str, uuid: str, value: Any, flags: List[Flags]
+    ) -> BlueZGattCharacteristic:
         """
         Add a characteristic to the service
 
@@ -121,22 +109,10 @@ class BlueZGattApplication(DBusObject):
         BlueZGattCharacteristic
             The characteristic object
         """
-        service: BlueZGattService = next(iter([
-            x
-            for x in self.services
-            if x.uuid == service_uuid
-            ]))
-        index: int = len(service.characteristics) + 1
-        characteristic: BlueZGattCharacteristic = BlueZGattCharacteristic(
-                uuid, flags, index, service
-                )
-        characteristic.value = value
-
-        service.characteristics.append(characteristic)
-        self.bus.exportObject(characteristic)
-        await self.bus.requestBusName(self.destination).asFuture(self.loop)
-
-        return characteristic
+        service: BlueZGattService = next(
+            iter([x for x in self.services if x.uuid == service_uuid])
+        )
+        return await service.add_characteristic(uuid, flags, value)
 
     async def register(self, adapter: RemoteDBusObject):
         """
@@ -148,11 +124,8 @@ class BlueZGattApplication(DBusObject):
             The adapter to register the application with
         """
         await adapter.callRemote(
-                "RegisterApplication",
-                self.path,
-                {},
-                interface=defs.GATT_MANAGER_INTERFACE
-                ).asFuture(self.loop)
+            "RegisterApplication", self.path, {}, interface=defs.GATT_MANAGER_INTERFACE
+        ).asFuture(self.loop)
 
     async def unregister(self, adapter: RemoteDBusObject):
         """
@@ -164,10 +137,8 @@ class BlueZGattApplication(DBusObject):
             The adapter on which the current application is registered
         """
         await adapter.callRemote(
-                "UnregisterApplication",
-                self.path,
-                interface=defs.GATT_MANAGER_INTERFACE
-                ).asFuture(self.loop)
+            "UnregisterApplication", self.path, interface=defs.GATT_MANAGER_INTERFACE
+        ).asFuture(self.loop)
 
     async def start_advertising(self, adapter: RemoteDBusObject):
         """
@@ -179,8 +150,8 @@ class BlueZGattApplication(DBusObject):
             The adapter object to start advertising on
         """
         advertisement: BlueZLEAdvertisement = BlueZLEAdvertisement(
-                Type.PERIPHERAL, len(self.advertisements)+1, self
-                )
+            Type.PERIPHERAL, len(self.advertisements) + 1, self
+        )
         self.advertisements.append(advertisement)
 
         for service in self.services:
@@ -190,10 +161,8 @@ class BlueZGattApplication(DBusObject):
         await self.bus.requestBusName(self.destination).asFuture(self.loop)
 
         await adapter.callRemote(
-                "RegisterAdvertisement",
-                advertisement.path,
-                {}
-                ).asFuture(self.loop)
+            "RegisterAdvertisement", advertisement.path, {}
+        ).asFuture(self.loop)
 
     async def is_advertising(self, adapter: RemoteDBusObject) -> bool:
         """
@@ -210,11 +179,11 @@ class BlueZGattApplication(DBusObject):
             Whether the adapter is advertising anything
         """
         instances: int = await adapter.callRemote(
-                "Get",
-                "org.bluez.LEAdvertisingManager1",
-                "ActiveInstances",
-                interface=defs.PROPERTIES_INTERFACE,
-                ).asFuture(self.loop)
+            "Get",
+            "org.bluez.LEAdvertisingManager1",
+            "ActiveInstances",
+            interface=defs.PROPERTIES_INTERFACE,
+        ).asFuture(self.loop)
         return instances > 0
 
     async def stop_advertising(self, adapter: RemoteDBusObject):
@@ -228,9 +197,8 @@ class BlueZGattApplication(DBusObject):
         """
         advertisement: BlueZLEAdvertisement = self.advertisements.pop()
         await adapter.callRemote(
-                "UnregisterAdvertisement",
-                advertisement.path
-                ).asFuture(self.loop)
+            "UnregisterAdvertisement", advertisement.path
+        ).asFuture(self.loop)
 
     async def is_connected(self) -> bool:
         """
@@ -245,3 +213,16 @@ class BlueZGattApplication(DBusObject):
             characteristics
         """
         return len(self.subscribed_characteristics) > 0
+
+    async def _register_object(
+        self, o: Union[BlueZGattService, BlueZGattCharacteristic]
+    ):
+        """
+        Register a service or characteristic object on the bus
+
+        Parameters
+        ----------
+        o : A service or characteristic to register
+        """
+        self.bus.exportObject(o)
+        await self.bus.requestBusName(self.destination).asFuture(self.loop)
