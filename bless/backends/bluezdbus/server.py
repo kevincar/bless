@@ -2,7 +2,7 @@ import asyncio
 
 from uuid import UUID
 
-from typing import Optional, Dict, Any, cast
+from typing import Optional, Dict, Any, cast, List
 
 from asyncio import AbstractEventLoop
 from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # type: ignore
@@ -223,11 +223,13 @@ class BlessServerBlueZDBus(BaseBlessServer):
         characteristic.value = cur_value
         return True
 
-    def read(self, char: BlueZGattCharacteristic) -> bytearray:
+    def read(self, char: BlueZGattCharacteristic) -> List[int]:
         """
         Read request.
         This re-routes the the request incomming on the dbus to the server to
         be re-routed to the user defined handler
+
+        Note: the BlueZ App handles the data as a list of ints
 
         Parameters
         ----------
@@ -236,10 +238,10 @@ class BlessServerBlueZDBus(BaseBlessServer):
 
         Returns
         -------
-        bytearray
+        List[int]
             The value of the characteristic
         """
-        return self.read_request(char.uuid)
+        return list(self.read_request(char.uuid))
 
     def write(self, char: BlueZGattCharacteristic, value: bytearray):
         """

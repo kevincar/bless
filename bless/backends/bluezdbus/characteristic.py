@@ -78,7 +78,7 @@ class BlessGATTCharacteristicBlueZDBus(
     @property
     def value(self) -> bytearray:
         """Get the value of the characteristic"""
-        return self._value
+        return bytearray(self._value)
 
     @value.setter
     def value(self, val: bytearray):
