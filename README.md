@@ -17,7 +17,7 @@ matches across all systems.
 
 Bless's code roughly follows a similar style to
 [Bleak](https://github.com/hbldh/bleak) in order to ease development of client
-and server program.s
+and server programs.
 
 # Installation
 
