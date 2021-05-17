@@ -91,4 +91,4 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
     @abc.abstractmethod
     def value(self, val: bytearray):
         """Set the value of this characteristic"""
-        raise NotImplementedError
+        raise NotImplementedError()

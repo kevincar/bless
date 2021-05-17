@@ -209,6 +209,24 @@ class BaseBlessServer(abc.ABC):
         except KeyError:
             return None
 
+    async def add_gatt(self, gatt_tree: Dict):
+        """
+        Uses the provided dictionary add all the services and characteristics
+
+        Parameters
+        ----------
+        gatt_tree : Dict
+            A dictionary of services and characteristics where the keys are the
+            uuids and the attributes are the properties
+        """
+        for service_uuid, service_info in gatt_tree.items():
+            await self.add_new_service(service_uuid)
+            for char_uuid, char_info in service_info.items():
+                await self.add_new_characteristic(
+                        service_uuid, char_uuid, char_info.get("Properties"),
+                        char_info.get("value"), char_info.get("Permissions")
+                        )
+
     def read_request(self, uuid: str) -> bytearray:
         """
         This function should be handed off to the subsequent backend bluetooth
@@ -288,3 +306,24 @@ class BaseBlessServer(abc.ABC):
         Set the function to handle incoming write requests
         """
         self._callbacks["write"] = func
+
+    @staticmethod
+    def is_uuid(uuid: str) -> bool:
+        """
+        Check whether uuid is a valid uuid
+
+        Parameters
+        ----------
+        uuid : str
+            The string representation of the uuid to check
+
+        Returns
+        -------
+        bool
+            True if uuid is a valid UUID
+        """
+        try:
+            UUID(uuid)
+            return True
+        except ValueError:
+            return False
