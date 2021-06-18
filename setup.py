@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="bless",
-    version="0.2.0",
+    version="0.2.1",
     author="Kevin Davis",
     author_email="kevincarrolldavis@gmail.com",
     description="A Bluetooth Low Energy Server supplement to Bleak",
@@ -16,7 +16,9 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=("test", "examples")),
     include_package_data=True,
     install_requires=[
-        "bleak"
+        "bleak",
+        "twisted; platform_system == 'Linux' ",
+        "txdbus; platform_system == 'Linux'"
         ],
     classifiers=[
         "Programming Language :: Python :: 3",
