@@ -72,7 +72,7 @@ class BlessGATTCharacteristicBlueZDBus(
         # Add a Bleak Characteristic properties
         self.gatt = gatt_char
         super(BlessGATTCharacteristic, self).__init__(
-            dict_obj, gatt_char.path, service.uuid
+            dict_obj, gatt_char.path, service.uuid, 0
         )
 
     @property

@@ -61,7 +61,8 @@ class BlueZGattService(DBusObject):
         app : BlueZApp
             A BlueZApp object that owns this service
         """
-        self.path: str = app.base_path + "/service" + str(index)
+        hex_index: str = hex(index)[2:].rjust(4, "0")
+        self.path: str = app.base_path + "/service" + hex_index
         self.bus: client = app.bus
         self.destination: str = app.destination
         self.uuid: str = uuid
