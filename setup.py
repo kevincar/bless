@@ -16,7 +16,9 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=("test", "examples")),
     include_package_data=True,
     install_requires=[
-        "bleak"
+        "bleak",
+        "twisted; platform_system == 'Linux' ",
+        "txdbus; platform_system == 'Linux'"
         ],
     classifiers=[
         "Programming Language :: Python :: 3",
