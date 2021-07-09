@@ -10,6 +10,8 @@ from CoreBluetooth import (  # type: ignore
     CBService,
     CBPeripheralManager,
     CBMutableCharacteristic,
+    CBAdvertisementDataLocalNameKey,
+    CBAdvertisementDataServiceUUIDsKey,
 )
 
 from bleak.backends.service import BleakGATTService  # type: ignore
@@ -79,10 +81,10 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             raise BlessError("Callback functions must be initialized first")
 
         advertisement_data = {
-            "kCBAdvDataServiceUUIDs": list(
+            CBAdvertisementDataLocalNameKey: self.name,
+            CBAdvertisementDataServiceUUIDsKey: list(
                 map(lambda x: self.services[x].obj.UUID(), self.services)
-            ),
-            "kCBAdvDataLocalName": self.name,
+            )
         }
         logger.debug("Advertisement Data: {}".format(advertisement_data))
         try:
