@@ -1,6 +1,7 @@
 import objc  # type: ignore
 import logging
 import asyncio
+import threading
 
 from typing import Any, Dict, List, Optional, Callable
 
@@ -68,9 +69,13 @@ class PeripheralManagerDelegate(NSObject):
         self._callbacks: Dict[str, Callable] = {}
 
         # Events
-        self._powered_on_event: asyncio.Event = asyncio.Event()
+        self._powered_on_event: threading.Event = threading.Event()
         self._advertisement_started_event: asyncio.Event = asyncio.Event()
         self._services_added_events: Dict[str, asyncio.Event] = {}
+
+        # Documentation requires that no calls be made until we can validate
+        # that the bluetooth module is powered on
+        self._powered_on_event.wait()
 
         self._central_subscriptions = {}
 
@@ -95,18 +100,6 @@ class PeripheralManagerDelegate(NSObject):
         return PeripheralManagerDelegate.pyobjc_classMethods.conformsToProtocol_(
             self.CBPeripheralManagerDelegate
         )
-
-    @objc.python_method
-    async def wait_for_powered_on(self, timeout: float):
-        """
-        Wait for ready state of the peripheralManager
-
-        Parameters
-        ----------
-        timeout : float
-            How long to wait for the powered on event
-        """
-        await asyncio.wait_for(self._powered_on_event.wait(), timeout)
 
     def is_connected(self) -> bool:
         """
@@ -217,8 +210,9 @@ class PeripheralManagerDelegate(NSObject):
 
     # Protocol functions
 
-    @objc.python_method
-    def did_update_state(self, peripheral_manager: CBPeripheralManager):
+    def peripheralManagerDidUpdateState_(  # noqa: N802
+        self, peripheral_manager: CBPeripheralManager
+    ):
         if peripheral_manager.state() == CBManagerStateUnknown:
             logger.debug("Cannot detect bluetooth device")
         elif peripheral_manager.state() == CBManagerStateResetting:
@@ -237,11 +231,6 @@ class PeripheralManagerDelegate(NSObject):
         else:
             self._powered_on_event.clear()
             self._advertisement_started_event.clear()
-
-    def peripheralManagerDidUpdateState_(  # noqa: N802
-        self, peripheral_manager: CBPeripheralManager
-    ):
-        self.event_loop.call_soon_threadsafe(self.did_update_state, peripheral_manager)
 
     def peripheralManager_willRestoreState_(  # noqa: N802
         self, peripheral: CBPeripheralManager, d: dict

@@ -69,8 +69,6 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             Floating point decimal in seconds for how long to wait for the
             on-board bluetooth module to power on
         """
-        await self.peripheral_manager_delegate.wait_for_powered_on(timeout)
-
         for service_uuid in self.services:
             bleak_service: BleakGATTService = self.services[service_uuid]
             service_obj: CBService = bleak_service.obj
