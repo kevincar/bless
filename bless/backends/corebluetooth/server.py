@@ -10,6 +10,8 @@ from CoreBluetooth import (  # type: ignore
     CBService,
     CBPeripheralManager,
     CBMutableCharacteristic,
+    CBAdvertisementDataLocalNameKey,
+    CBAdvertisementDataServiceUUIDsKey,
 )
 
 from bleak.backends.service import BleakGATTService  # type: ignore
@@ -69,8 +71,6 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             Floating point decimal in seconds for how long to wait for the
             on-board bluetooth module to power on
         """
-        await self.peripheral_manager_delegate.wait_for_powered_on(timeout)
-
         for service_uuid in self.services:
             bleak_service: BleakGATTService = self.services[service_uuid]
             service_obj: CBService = bleak_service.obj
@@ -81,10 +81,10 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             raise BlessError("Callback functions must be initialized first")
 
         advertisement_data = {
-            "kCBAdvDataServiceUUIDs": list(
+            CBAdvertisementDataLocalNameKey: self.name,
+            CBAdvertisementDataServiceUUIDsKey: list(
                 map(lambda x: self.services[x].obj.UUID(), self.services)
-            ),
-            "kCBAdvDataLocalName": self.name,
+            )
         }
         logger.debug("Advertisement Data: {}".format(advertisement_data))
         try:
