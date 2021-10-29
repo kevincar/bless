@@ -8,9 +8,7 @@ from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # t
 )
 from bleak_winrt.windows.foundation import IAsyncOperation  # type: ignore
 
-from bleak.backends.winrt.utils import wrap_IAsyncOperation  # type: ignore
-from bleak.backends.winrt.service import BleakGATTServiceWinRT  # type: ignore
-
+from bleak.backends.winrt.service import BleakGATTServiceWinRT
 from bless.backends.service import BlessGATTService
 from bless.backends.winrt.characteristic import BlessGATTCharacteristicWinRT
 

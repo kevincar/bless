@@ -3,9 +3,7 @@ import logging
 from uuid import UUID
 from threading import Event
 from asyncio.events import AbstractEventLoop
-from typing import Dict, Optional, List
-
-from bleak.backends.winrt.utils import BleakDataWriter  # type: ignore
+from typing import Dict, Optional, List, Any
 
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.characteristic import (  # type: ignore
@@ -16,8 +14,6 @@ from bless.backends.winrt.service import BlessGATTServiceWinRT
 from bless.backends.winrt.characteristic import (  # type: ignore
     BlessGATTCharacteristicWinRT,
 )
-from bless.backends.winrt.utils import sync_async_wrap  # type: ignore
-
 # CLR imports
 # Import of Bleak CLR->UWP Bridge.
 # from BleakBridge import Bridge
@@ -306,7 +302,7 @@ class BlessServerWinRT(BaseBlessServer):
         logger.debug("Write Complete")
         deferral.Complete()
 
-    def subscribe_characteristic(self, sender: GattLocalCharacteristic, args: Object):
+    def subscribe_characteristic(self, sender: GattLocalCharacteristic, args: Any):
         """
         Called when a characteristic is subscribed to
 

@@ -5,10 +5,6 @@ from bleak.backends.winrt.characteristic import (  # type: ignore
     BleakGATTCharacteristicWinRT,
 )
 
-from bleak.backends.winrt.utils import (  # type: ignore
-    wrap_IAsyncOperation,
-)
-
 from bleak_winrt.windows.foundation import IAsyncOperation  # type: ignore
 from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore
     GattProtectionLevel,

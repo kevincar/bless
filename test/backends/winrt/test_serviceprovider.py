@@ -13,16 +13,10 @@ from typing import List  # noqa: E402
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
-from bleak.backends.winrt.utils import (  # type: ignore # noqa: E402
-    wrap_IAsyncOperation,
-    BleakDataWriter,
-)
-
 from bless.backends.characteristic import (  # type: ignore # noqa: E402
     GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
-from bless.backends.winrt.utils import sync_async_wrap  # type: ignore # noqa: E402 E501
 
 from bleak_winrt.windows.foundation import IAsyncOperation, Deferral  # type: ignore # noqa: E402 E501
 
