@@ -27,13 +27,13 @@ elif sys.platform == "linux":
 elif sys.platform == "win32":
 
     # Server
-    from bless.backends.dotnet.server import (  # noqa: F401
-        BlessServerDotNet as BlessServer,
+    from bless.backends.winrt.server import (  # noqa: F401
+        BlessServerWinRT as BlessServer,
     )
 
     # Characteristic Classes
-    from bless.backends.dotnet.characteristic import (  # noqa: F401
-        BlessGATTCharacteristicDotNet as BlessGATTCharacteristic,
+    from bless.backends.winrt.characteristic import (  # noqa: F401
+        BlessGATTCharacteristicWinRT as BlessGATTCharacteristic,
     )
 
 

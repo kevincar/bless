@@ -1,33 +1,31 @@
+import asyncio
 import logging
 
 from uuid import UUID
 from threading import Event
 from asyncio.events import AbstractEventLoop
-from typing import Dict, Optional, List
-
-from bleak.backends.dotnet.utils import BleakDataWriter  # type: ignore
+from typing import Dict, Optional, List, Any
 
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.characteristic import (  # type: ignore
     GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
-from bless.backends.dotnet.service import BlessGATTServiceDotNet
-from bless.backends.dotnet.characteristic import (  # type: ignore
-    BlessGATTCharacteristicDotNet,
+from bless.backends.winrt.service import BlessGATTServiceWinRT
+from bless.backends.winrt.characteristic import (  # type: ignore
+    BlessGATTCharacteristicWinRT,
 )
-from bless.backends.dotnet.utils import sync_async_wrap  # type: ignore
 
 # CLR imports
 # Import of Bleak CLR->UWP Bridge.
 # from BleakBridge import Bridge
 
 # Import of other CLR components needed.
-from Windows.Foundation import Deferral  # type: ignore
+from bleak_winrt.windows.foundation import Deferral  # type: ignore
 
-from Windows.Storage.Streams import DataReader, DataWriter  # type: ignore
+from bleak_winrt.windows.storage.streams import DataReader, DataWriter  # type: ignore
 
-from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
+from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
     GattWriteOption,
     GattServiceProvider,
     GattLocalCharacteristic,
@@ -40,8 +38,6 @@ from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
     GattSubscribedClient,
 )
 
-from System import Guid, Object  # type: ignore
-
 logger = logging.getLogger(__name__)
 
 
@@ -50,23 +46,23 @@ class Request:
         self._obj = None
 
 
-class BlessServerDotNet(BaseBlessServer):
+class BlessServerWinRT(BaseBlessServer):
     """
-    DotNet Implementation of BlessServer
+    WinRT Implementation of BlessServer
 
     Attributes
     ----------
     name : str
         The name of the server to advertise
-    services : Dict[str, BlessGATTServiceDotNet]
+    services : Dict[str, BlessGATTServiceWinRT]
         A dictionary of services to be advertised by this server
     """
 
     def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
-        super(BlessServerDotNet, self).__init__(loop=loop, **kwargs)
+        super(BlessServerWinRT, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
-        self.services: Dict[str, BlessGATTServiceDotNet] = {}
+        self.services: Dict[str, BlessGATTServiceWinRT] = {}
 
         self._service_provider: Optional[GattServiceProvider] = None
         self._subscribed_clients: List[GattSubscribedClient] = []
@@ -88,11 +84,11 @@ class BlessServerDotNet(BaseBlessServer):
         adv_parameters: GattServiceProviderAdvertisingParameters = (
             GattServiceProviderAdvertisingParameters()
         )
-        adv_parameters.IsDiscoverable = True
-        adv_parameters.IsConnectable = True
+        adv_parameters.is_discoverable = True
+        adv_parameters.is_connectable = True
 
         for uuid, service in self.services.items():
-            service.service_provider.StartAdvertising(adv_parameters)
+            service.service_provider.start_advertising(adv_parameters)
         self._advertising = True
         self._advertising_started.wait()
 
@@ -101,7 +97,7 @@ class BlessServerDotNet(BaseBlessServer):
         Stop the server
         """
         for uuid, service in self.services.items():
-            service.service_provider.StopAdvertising()
+            service.service_provider.stop_advertising()
         self._advertising = False
 
     async def is_connected(self) -> bool:
@@ -128,7 +124,7 @@ class BlessServerDotNet(BaseBlessServer):
         all_services_advertising: bool = True
         for uuid, service in self.services.items():
             service_is_advertising: bool = (
-                service.service_provider.AdvertisementStatus == 2
+                service.service_provider.advertisement_status == 2
             )
             all_services_advertising = (
                 all_services_advertising and service_is_advertising
@@ -153,7 +149,7 @@ class BlessServerDotNet(BaseBlessServer):
             See
             [here](https://docs.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattserviceprovideradvertisementstatuschangedeventargs.status?view=winrt-19041)
         """
-        if args.Status == 2:
+        if args.status == 2:
             self._advertising_started.set()
 
     async def add_new_service(self, uuid: str):
@@ -167,7 +163,7 @@ class BlessServerDotNet(BaseBlessServer):
         """
         logger.debug("Creating a new service with uuid: {}".format(uuid))
         logger.debug("Adding service to server with uuid {}".format(uuid))
-        service: BlessGATTServiceDotNet = BlessGATTServiceDotNet(uuid)
+        service: BlessGATTServiceWinRT = BlessGATTServiceWinRT(uuid)
         await service.init(self)
         self.services[service.uuid] = service
 
@@ -197,15 +193,14 @@ class BlessServerDotNet(BaseBlessServer):
             The permissions for the characteristic
         """
 
-        serverguid: Guid = Guid.Parse(service_uuid)
-        service: BlessGATTServiceDotNet = self.services[str(serverguid)]
-        characteristic: BlessGATTCharacteristicDotNet = BlessGATTCharacteristicDotNet(
+        service: BlessGATTServiceWinRT = self.services[service_uuid]
+        characteristic: BlessGATTCharacteristicWinRT = BlessGATTCharacteristicWinRT(
             char_uuid, properties, permissions, value
         )
         await characteristic.init(service)
-        characteristic.obj.ReadRequested += self.read_characteristic
-        characteristic.obj.WriteRequested += self.write_characteristic
-        characteristic.obj.SubscribedClientsChanged += self.subscribe_characteristic
+        characteristic.obj.add_read_requested(self.read_characteristic)
+        characteristic.obj.add_write_requested(self.write_characteristic)
+        characteristic.obj.add_subscribed_clients_changed(self.subscribe_characteristic)
         service.add_characteristic(characteristic)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
@@ -230,16 +225,17 @@ class BlessServerDotNet(BaseBlessServer):
         """
         service_uuid = str(UUID(service_uuid))
         char_uuid = str(UUID(char_uuid))
-        service: Optional[BlessGATTServiceDotNet] = self.get_service(service_uuid)
+        service: Optional[BlessGATTServiceWinRT] = self.get_service(service_uuid)
         if service is None:
             return False
-        characteristic: BlessGATTCharacteristicDotNet = service.get_characteristic(
+        characteristic: BlessGATTCharacteristicWinRT = service.get_characteristic(
             char_uuid
         )
         value: bytes = characteristic.value
         value = value if value is not None else b"\x00"
-        with BleakDataWriter(value) as writer:
-            characteristic.obj.NotifyValueAsync(writer.detach_buffer())
+        writer: DataWriter = DataWriter()
+        writer.write_bytes(value)
+        characteristic.obj.notify_value_async(writer.detach_buffer())
 
         return True
 
@@ -258,19 +254,24 @@ class BlessServerDotNet(BaseBlessServer):
             Arguments for the read request
         """
         logger.debug("Reading Characteristic")
-        deferral: Deferral = args.GetDeferral()
-        value: bytearray = self.read_request(str(sender.Uuid))
+        deferral: Deferral = args.get_deferral()
+        value: bytearray = self.read_request(str(sender.uuid))
         logger.debug(f"Current Characteristic value {value}")
         value = value if value is not None else b"\x00"
         writer: DataWriter = DataWriter()
-        writer.WriteBytes(value)
+        writer.write_bytes(value)
         logger.debug("Getting request object {}".format(self))
-        request: GattReadRequest = sync_async_wrap(
-            GattReadRequest, args.GetRequestAsync
-        )
+        request: GattReadRequest
+
+        async def f():
+            nonlocal args
+            nonlocal request
+            request = await args.get_request_async()
+
+        asyncio.new_event_loop().run_until_complete(f())
         logger.debug("Got request object {}".format(request))
-        request.RespondWithValue(writer.DetachBuffer())
-        deferral.Complete()
+        request.respond_with_value(writer.detach_buffer())
+        deferral.complete()
 
     def write_characteristic(
         self, sender: GattLocalCharacteristic, args: GattWriteRequestedEventArgs
@@ -287,28 +288,33 @@ class BlessServerDotNet(BaseBlessServer):
             The event arguments for the write request
         """
 
-        deferral: Deferral = args.GetDeferral()
-        request: GattWriteRequest = sync_async_wrap(
-            GattWriteRequest, args.GetRequestAsync
-        )
-        logger.debug("Request value: {}".format(request.Value))
-        reader: DataReader = DataReader.FromBuffer(request.Value)
-        n_bytes: int = reader.UnconsumedBufferLength
+        deferral: Deferral = args.get_deferral()
+        request: GattWriteRequest
+
+        async def f():
+            nonlocal args
+            nonlocal request
+            request = await args.get_request_async()
+
+        asyncio.new_event_loop().run_until_complete(f())
+        logger.debug("Request value: {}".format(request.value))
+        reader: DataReader = DataReader.from_buffer(request.value)
+        n_bytes: int = reader.unconsumed_buffer_length
         value: bytearray = bytearray()
         for n in range(0, n_bytes):
-            next_byte: int = reader.ReadByte()
+            next_byte: int = reader.read_byte()
             value.append(next_byte)
 
         logger.debug("Written Value: {}".format(value))
-        self.write_request(str(sender.Uuid), value)
+        self.write_request(str(sender.uuid), value)
 
-        if request.Option == GattWriteOption.WriteWithResponse:
-            request.Respond()
+        if request.option == GattWriteOption.WRITE_WITH_RESPONSE:
+            request.respond()
 
         logger.debug("Write Complete")
-        deferral.Complete()
+        deferral.complete()
 
-    def subscribe_characteristic(self, sender: GattLocalCharacteristic, args: Object):
+    def subscribe_characteristic(self, sender: GattLocalCharacteristic, args: Any):
         """
         Called when a characteristic is subscribed to
 
@@ -320,5 +326,5 @@ class BlessServerDotNet(BaseBlessServer):
         args : Object
             Additional arguments to use for the subscription
         """
-        self._subscribed_clients = list(sender.SubscribedClients)
+        self._subscribed_clients = list(sender.subscribed_clients)
         logger.info("New device subscribed")
