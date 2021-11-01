@@ -1,14 +1,13 @@
 from uuid import UUID
 from typing import List, Union, cast, TYPE_CHECKING
 
-from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore
+from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
     GattServiceProviderResult,
     GattServiceProvider,
     GattLocalService,
 )
-from bleak_winrt.windows.foundation import IAsyncOperation  # type: ignore
 
-from bleak.backends.winrt.service import BleakGATTServiceWinRT
+from bleak.backends.winrt.service import BleakGATTServiceWinRT  # type: ignore
 from bless.backends.service import BlessGATTService
 from bless.backends.winrt.characteristic import BlessGATTCharacteristicWinRT
 
@@ -45,19 +44,16 @@ class BlessGATTServiceWinRT(BlessGATTService, BleakGATTServiceWinRT):
             The server to assign the service to
         """
         winrt_server: "BlessServerWinRT" = cast("BlessServerWinRT", server)
-        guid: Guid = Guid.Parse(self._uuid)
-
-        service_provider_result: GattServiceProviderResult = await wrap_IAsyncOperation(
-            IAsyncOperation[GattServiceProviderResult](
-                GattServiceProvider.CreateAsync(guid)
-            ),
-            return_type=GattServiceProviderResult,
+        service_provider_result: GattServiceProviderResult = (
+            await GattServiceProvider.create_async(UUID(self._uuid))
         )
         self.service_provider: GattServiceProvider = (
-            service_provider_result.ServiceProvider
+            service_provider_result.service_provider
         )
-        self.service_provider.AdvertisementStatusChanged += winrt_server._status_update
-        new_service: GattLocalService = self.service_provider.Service
+        self.service_provider.add_advertisement_status_changed(
+            winrt_server._status_update
+        )
+        new_service: GattLocalService = self.service_provider.service
         self.obj = new_service
 
     @property
@@ -68,7 +64,7 @@ class BlessGATTServiceWinRT(BlessGATTService, BleakGATTServiceWinRT):
     @property
     def uuid(self) -> str:
         """UUID for this service"""
-        return self.obj.Uuid.ToString()
+        return str(self.obj.uuid)
 
     @property
     def characteristics(self) -> List[BlessGATTCharacteristicWinRT]:

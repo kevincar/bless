@@ -5,8 +5,7 @@ from bleak.backends.winrt.characteristic import (  # type: ignore
     BleakGATTCharacteristicWinRT,
 )
 
-from bleak_winrt.windows.foundation import IAsyncOperation  # type: ignore
-from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore
+from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
     GattProtectionLevel,
     GattLocalCharacteristicParameters,
     GattLocalCharacteristic,
@@ -65,33 +64,28 @@ class BlessGATTCharacteristicWinRT(
         service : BlessGATTServiceWinRT
             The service to assign the characteristic to
         """
-        charguid: Guid = Guid.Parse(self._uuid)
-
         char_parameters: GattLocalCharacteristicParameters = (
             GattLocalCharacteristicParameters()
         )
-        char_parameters.CharacteristicProperties = self._properties.value
-        char_parameters.ReadProtectionLevel = (
+        char_parameters.characteristic_properties = self._properties.value
+        char_parameters.read_protection_level = (
             BlessGATTCharacteristicWinRT.permissions_to_protection_level(
                 self._permissions, True
             )
         )
-        char_parameters.WriteProtectionLevel = (
+        char_parameters.write_protection_level = (
             BlessGATTCharacteristicWinRT.permissions_to_protection_level(
                 self._permissions, False
             )
         )
 
         characteristic_result: GattLocalCharacteristicResult = (
-            await wrap_IAsyncOperation(
-                IAsyncOperation[GattLocalCharacteristicResult](
-                    service.obj.CreateCharacteristicAsync(charguid, char_parameters)
-                ),
-                return_type=GattLocalCharacteristicResult,
+            await service.obj.create_characteristic_async(
+                UUID(self._uuid), char_parameters
             )
         )
 
-        gatt_char: GattLocalCharacteristic = characteristic_result.Characteristic
+        gatt_char: GattLocalCharacteristic = characteristic_result.characteristic
         super(BlessGATTCharacteristic, self).__init__(obj=gatt_char)
 
     @staticmethod
@@ -114,11 +108,11 @@ class BlessGATTCharacteristicWinRT(
         GattProtectionLevel
             The protection level equivalent
         """
-        result: GattProtectionLevel = GattProtectionLevel.Plain
+        result: GattProtectionLevel = GattProtectionLevel.PLAIN
         shift_value: int = 3 if read else 4
         permission_value: int = permissions.value >> shift_value
         if permission_value & 1:
-            result |= GattProtectionLevel.EncryptionRequired
+            result |= GattProtectionLevel.ENCRYPTION_REQURIED
         return result
 
     @property
