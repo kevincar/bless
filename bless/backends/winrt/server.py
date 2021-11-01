@@ -268,7 +268,7 @@ class BlessServerWinRT(BaseBlessServer):
             nonlocal request
             request = await args.get_request_async()
 
-        asyncio.run(f())
+        asyncio.new_event_loop().run_until_complete(f())
         logger.debug("Got request object {}".format(request))
         request.respond_with_value(writer.detach_buffer())
         deferral.complete()
@@ -296,7 +296,7 @@ class BlessServerWinRT(BaseBlessServer):
             nonlocal request
             request = await args.get_request_async()
 
-        asyncio.run(f())
+        asyncio.new_event_loop().run_until_complete(f())
         logger.debug("Request value: {}".format(request.value))
         reader: DataReader = DataReader.from_buffer(request.value)
         n_bytes: int = reader.unconsumed_buffer_length
