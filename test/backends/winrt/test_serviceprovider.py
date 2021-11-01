@@ -3,10 +3,11 @@ import uuid
 import pytest
 import threading
 import asyncio
-import aioconsole
+import aioconsole  # type: ignore
 
 import numpy as np  # type: ignore
 
+from uuid import UUID
 from concurrent.futures import ThreadPoolExecutor
 
 if sys.platform.lower() != "win32":
@@ -21,7 +22,7 @@ from bless.backends.characteristic import (  # type: ignore # noqa: E402
     GATTAttributePermissions,
 )
 
-from bleak_winrt.windows.foundation import IAsyncOperation, Deferral  # type: ignore # noqa: E402 E501
+from bleak_winrt.windows.foundation import Deferral  # type: ignore # noqa: E402 E501
 
 from bleak_winrt.windows.storage.streams import DataReader, DataWriter  # type: ignore # noqa: E402 E501
 
@@ -92,6 +93,7 @@ class TestServiceProvider:
             writer: DataWriter = DataWriter()
             writer.write_bytes(value)
             request: GattReadRequest
+
             async def f():
                 nonlocal request
                 nonlocal args
@@ -106,6 +108,7 @@ class TestServiceProvider:
             print("WRITE")
             deferral: Deferral = args.get_deferral()
             request: GattWriteRequest
+
             async def f():
                 nonlocal args
                 nonlocal request
@@ -129,7 +132,9 @@ class TestServiceProvider:
 
         # Create service
         service_uuid: UUID = uuid.uuid4()
-        service_provider_result: GattServiceProviderResult = await GattServiceProvider.create_async(service_uuid)
+        service_provider_result: GattServiceProviderResult = (
+            await GattServiceProvider.create_async(service_uuid)
+        )
         service_provider: GattServiceProvider = (
                 service_provider_result.service_provider
                 )
@@ -157,7 +162,9 @@ class TestServiceProvider:
         read_parameters.characteristic_properties = properties.value
         read_parameters.read_protection_level = permissions.value
 
-        characteristic_result: GattLocalCharacteristicResult = await new_service.create_characteristic_async(char_uuid, read_parameters)
+        characteristic_result: GattLocalCharacteristicResult = (
+            await new_service.create_characteristic_async(char_uuid, read_parameters)
+        )
         new_char: GattLocalCharacteristic = characteristic_result.characteristic
         new_char.add_read_requested(read)
         new_char.add_write_requested(write)
@@ -210,7 +217,7 @@ class TestServiceProvider:
         str_val: str = "".join([hex(x)[2:] for x in self.val]).upper()
         assert str_val == hex_val
 
-         # Notify test
+        # Notify test
         hex_val = "".join(rng.choice(self.hex_words, 2, replace=False))
         self.val = bytearray(
             int(f"0x{hex_val}", 16).to_bytes(
