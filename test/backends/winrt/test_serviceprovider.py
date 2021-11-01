@@ -2,33 +2,31 @@ import sys
 import uuid
 import pytest
 import threading
+import asyncio
 import aioconsole  # type: ignore
 
 import numpy as np  # type: ignore
 
+from uuid import UUID
+from concurrent.futures import ThreadPoolExecutor
+
 if sys.platform.lower() != "win32":
     pytest.skip("Only for windows", allow_module_level=True)
 
-from typing import List  # noqa: E402
+from typing import List, Any  # noqa: E402
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
-
-from bleak.backends.dotnet.utils import (  # type: ignore # noqa: E402
-    wrap_IAsyncOperation,
-    BleakDataWriter,
-)
 
 from bless.backends.characteristic import (  # type: ignore # noqa: E402
     GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
-from bless.backends.dotnet.utils import sync_async_wrap  # type: ignore # noqa: E402 E501
 
-from Windows.Foundation import IAsyncOperation, Deferral  # type: ignore # noqa: E402 E501
+from bleak_winrt.windows.foundation import Deferral  # type: ignore # noqa: E402 E501
 
-from Windows.Storage.Streams import DataReader, DataWriter  # type: ignore # noqa: E402 E501
+from bleak_winrt.windows.storage.streams import DataReader, DataWriter  # type: ignore # noqa: E402 E501
 
-from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore # noqa: E402 F401 E501
+from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E402 F401 E501
     GattWriteOption,
     GattServiceProviderResult,
     GattServiceProvider,
@@ -44,8 +42,6 @@ from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore 
     GattWriteRequest,
     GattSubscribedClient,
 )
-
-from System import Guid, Object  # type: ignore # noqa: E402
 
 
 @hardware_only
@@ -70,6 +66,11 @@ class TestServiceProvider:
 
     _subscribed_clients: List = []
 
+    def input(self, msg: str):
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            ftr = executor.submit(input, msg)
+        return ftr.result()
+
     @pytest.mark.asyncio
     async def test_init(self):
 
@@ -79,67 +80,70 @@ class TestServiceProvider:
             sender: GattServiceProvider,
             args: GattServiceProviderAdvertisementStatusChangedEventArgs,
         ):
-            if args.Status == 2:
+            print(f"Advertisement status has changed: {args.status}")
+            if args.status == 2:
                 start_event.set()
 
         def read(
                 sender: GattLocalCharacteristic,
                 args: GattReadRequestedEventArgs):
-            deferral: Deferral = args.GetDeferral()
+            print("Read")
+            deferral: Deferral = args.get_deferral()
             value = self.val
             writer: DataWriter = DataWriter()
-            writer.WriteBytes(value)
-            request: GattReadRequest = sync_async_wrap(
-                GattReadRequest, args.GetRequestAsync
-            )
-            request.RespondWithValue(writer.DetachBuffer())
-            deferral.Complete()
+            writer.write_bytes(value)
+            request: GattReadRequest
+
+            async def f():
+                nonlocal request
+                nonlocal args
+                request = await args.get_request_async()
+            asyncio.run(f())
+            request.respond_with_value(writer.detach_buffer())
+            deferral.complete()
 
         def write(
                 sender: GattLocalCharacteristic,
                 args: GattWriteRequestedEventArgs):
-            deferral: Deferral = args.GetDeferral()
-            request: GattWriteRequest = sync_async_wrap(
-                GattWriteRequest, args.GetRequestAsync
-            )
-            reader: DataReader = DataReader.FromBuffer(request.Value)
-            n_bytes: int = reader.UnconsumedBufferLength
+            print("WRITE")
+            deferral: Deferral = args.get_deferral()
+            request: GattWriteRequest
+
+            async def f():
+                nonlocal args
+                nonlocal request
+                request = await args.get_request_async()
+            asyncio.run(f())
+            reader: DataReader = DataReader.from_buffer(request.value)
+            n_bytes: int = reader.unconsumed_buffer_length
             value: bytearray = bytearray()
             for n in range(0, n_bytes):
-                next_byte: int = reader.ReadByte()
+                next_byte: int = reader.read_byte()
                 value.append(next_byte)
             self.val = value
 
-            if request.Option == GattWriteOption.WriteWithResponse:
-                request.Respond()
+            if request.option == GattWriteOption.WRITE_WITH_RESPONSE:
+                request.respond()
 
-            deferral.Complete()
+            deferral.complete()
 
-        def subscribe(sender: GattLocalCharacteristic, args: Object):
-            self._subscribed_clients = list(sender.SubscribedClients)
+        def subscribe(sender: GattLocalCharacteristic, args: Any):
+            self._subscribed_clients = list(sender.subscribed_clients)
 
         # Create service
-        service_uuid: str = str(uuid.uuid4())
-        service_guid: Guid = Guid.Parse(service_uuid)
-        ServiceProviderResult: GattServiceProviderResult = (
-                await wrap_IAsyncOperation(
-                        IAsyncOperation[GattServiceProviderResult](
-                                GattServiceProvider.CreateAsync(service_guid)
-                                ),
-                        return_type=GattServiceProviderResult)
-                        )
+        service_uuid: UUID = uuid.uuid4()
+        service_provider_result: GattServiceProviderResult = (
+            await GattServiceProvider.create_async(service_uuid)
+        )
         service_provider: GattServiceProvider = (
-                ServiceProviderResult.ServiceProvider
+                service_provider_result.service_provider
                 )
-        service_provider.AdvertisementStatusChanged += (
-                advertisement_status_changed
-                )
+        service_provider.add_advertisement_status_changed(advertisement_status_changed)
 
-        new_service: GattLocalService = service_provider.Service
+        new_service: GattLocalService = service_provider.service
 
         # Add a characteristic
-        char_uuid: str = str(uuid.uuid4())
-        char_guid: Guid = Guid.Parse(char_uuid)
+        char_uuid: UUID = uuid.uuid4()
 
         properties: GATTCharacteristicProperties = (
             GATTCharacteristicProperties.read
@@ -152,41 +156,35 @@ class TestServiceProvider:
             GATTAttributePermissions.writeable
         )
 
-        ReadParameters: GattLocalCharacteristicParameters = (
+        read_parameters: GattLocalCharacteristicParameters = (
             GattLocalCharacteristicParameters()
         )
-        ReadParameters.CharacteristicProperties = properties.value
-        ReadParameters.ReadProtectionLevel = permissions.value
+        read_parameters.characteristic_properties = properties.value
+        read_parameters.read_protection_level = permissions.value
 
         characteristic_result: GattLocalCharacteristicResult = (
-            await wrap_IAsyncOperation(
-                IAsyncOperation[GattLocalCharacteristicResult](
-                    new_service.CreateCharacteristicAsync(
-                        char_guid, ReadParameters)
-                ),
-                return_type=GattLocalCharacteristicResult,
-            )
+            await new_service.create_characteristic_async(char_uuid, read_parameters)
         )
-        newChar: GattLocalCharacteristic = characteristic_result.Characteristic
-        newChar.ReadRequested += read
-        newChar.WriteRequested += write
-        newChar.SubscribedClientsChanged += subscribe
+        new_char: GattLocalCharacteristic = characteristic_result.characteristic
+        new_char.add_read_requested(read)
+        new_char.add_write_requested(write)
+        new_char.add_subscribed_clients_changed(subscribe)
 
         # Ensure we're not advertising
-        assert service_provider.AdvertisementStatus != 2
+        assert service_provider.advertisement_status != 2
 
         # Advertise
         adv_parameters: GattServiceProviderAdvertisingParameters = (
             GattServiceProviderAdvertisingParameters()
         )
-        adv_parameters.IsDiscoverable = True
-        adv_parameters.IsConnectable = True
+        adv_parameters.is_discoverable = True
+        adv_parameters.is_connectable = True
 
-        service_provider.StartAdvertising(adv_parameters)
+        service_provider.start_advertising(adv_parameters)
 
         # Check
         start_event.wait()
-        assert service_provider.AdvertisementStatus == 2
+        assert service_provider.advertisement_status == 2
 
         # We shouldn't be connected
         assert len(self._subscribed_clients) < 1
@@ -230,8 +228,9 @@ class TestServiceProvider:
         print("A new value will be sent")
         await aioconsole.ainput("Press enter to receive the new value...")
 
-        with BleakDataWriter(self.val) as writer:
-            newChar.NotifyValueAsync(writer.detach_buffer())
+        writer: DataWriter = DataWriter()
+        writer.write_bytes(self.val)
+        await new_char.notify_value_async(writer.detach_buffer())
 
         new_value: str = await aioconsole.ainput("Enter the New value: ")
         assert new_value == hex_val
@@ -242,8 +241,8 @@ class TestServiceProvider:
         assert len(self._subscribed_clients) < 1
 
         # Stop Advertising
-        service_provider.StopAdvertising()
+        service_provider.stop_advertising()
 
         # There are some cases where calls to `StopAdvertising` does not update
         # the `AdvertisementStatus`
-        # assert service_provider.AdvertisementStatus != 2
+        # assert service_provider.advertisement_status != 2

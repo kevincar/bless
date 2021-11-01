@@ -1,16 +1,11 @@
 from uuid import UUID
 from typing import Union, Optional
 
-from bleak.backends.dotnet.characteristic import (  # type: ignore
-    BleakGATTCharacteristicDotNet,
-)
-from bleak.backends.dotnet.utils import (  # type: ignore
-    wrap_IAsyncOperation,
+from bleak.backends.winrt.characteristic import (  # type: ignore
+    BleakGATTCharacteristicWinRT,
 )
 
-from System import Guid  # type: ignore
-from Windows.Foundation import IAsyncOperation  # type: ignore
-from Windows.Devices.Bluetooth.GenericAttributeProfile import (  # type: ignore
+from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
     GattProtectionLevel,
     GattLocalCharacteristicParameters,
     GattLocalCharacteristic,
@@ -26,11 +21,11 @@ from bless.backends.characteristic import (
 )
 
 
-class BlessGATTCharacteristicDotNet(
-    BlessGATTCharacteristic, BleakGATTCharacteristicDotNet
+class BlessGATTCharacteristicWinRT(
+    BlessGATTCharacteristic, BleakGATTCharacteristicWinRT
 ):
     """
-    DotNet implementation of the BlessGATTCharacteristic
+    WinRT implementation of the BlessGATTCharacteristic
     """
 
     def __init__(
@@ -62,40 +57,35 @@ class BlessGATTCharacteristicDotNet(
 
     async def init(self, service: BlessGATTService):
         """
-        Initialize the DotNet GattLocalCharacteristic object
+        Initialize the WinRT GattLocalCharacteristic object
 
         Parameters
         ----------
-        service : BlessGATTServiceDotNet
+        service : BlessGATTServiceWinRT
             The service to assign the characteristic to
         """
-        charguid: Guid = Guid.Parse(self._uuid)
-
         char_parameters: GattLocalCharacteristicParameters = (
             GattLocalCharacteristicParameters()
         )
-        char_parameters.CharacteristicProperties = self._properties.value
-        char_parameters.ReadProtectionLevel = (
-            BlessGATTCharacteristicDotNet.permissions_to_protection_level(
+        char_parameters.characteristic_properties = self._properties.value
+        char_parameters.read_protection_level = (
+            BlessGATTCharacteristicWinRT.permissions_to_protection_level(
                 self._permissions, True
             )
         )
-        char_parameters.WriteProtectionLevel = (
-            BlessGATTCharacteristicDotNet.permissions_to_protection_level(
+        char_parameters.write_protection_level = (
+            BlessGATTCharacteristicWinRT.permissions_to_protection_level(
                 self._permissions, False
             )
         )
 
         characteristic_result: GattLocalCharacteristicResult = (
-            await wrap_IAsyncOperation(
-                IAsyncOperation[GattLocalCharacteristicResult](
-                    service.obj.CreateCharacteristicAsync(charguid, char_parameters)
-                ),
-                return_type=GattLocalCharacteristicResult,
+            await service.obj.create_characteristic_async(
+                UUID(self._uuid), char_parameters
             )
         )
 
-        gatt_char: GattLocalCharacteristic = characteristic_result.Characteristic
+        gatt_char: GattLocalCharacteristic = characteristic_result.characteristic
         super(BlessGATTCharacteristic, self).__init__(obj=gatt_char)
 
     @staticmethod
@@ -118,11 +108,11 @@ class BlessGATTCharacteristicDotNet(
         GattProtectionLevel
             The protection level equivalent
         """
-        result: GattProtectionLevel = GattProtectionLevel.Plain
+        result: GattProtectionLevel = GattProtectionLevel.PLAIN
         shift_value: int = 3 if read else 4
         permission_value: int = permissions.value >> shift_value
         if permission_value & 1:
-            result |= GattProtectionLevel.EncryptionRequired
+            result |= GattProtectionLevel.ENCRYPTION_REQURIED
         return result
 
     @property
