@@ -193,6 +193,7 @@ class BlessServerWinRT(BaseBlessServer):
             The permissions for the characteristic
         """
 
+        service_uuid = str(UUID(service_uuid))                                          # Issue61 uuid case sensitivity
         service: BlessGATTServiceWinRT = self.services[service_uuid]
         characteristic: BlessGATTCharacteristicWinRT = BlessGATTCharacteristicWinRT(
             char_uuid, properties, permissions, value
