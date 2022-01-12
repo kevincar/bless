@@ -52,7 +52,7 @@ class BlessGATTServiceBlueZDBus(BlessGATTService, BleakGATTServiceBlueZDBus):
     @property
     def uuid(self) -> str:
         """UUID for this service"""
-        return self.obj["UUID"]
+        return self.obj["UUID"].value
 
     @property
     def characteristics(self) -> List[BlessGATTCharacteristicBlueZDBus]:
