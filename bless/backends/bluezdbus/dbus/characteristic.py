@@ -4,13 +4,10 @@ import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import List, Dict, TYPE_CHECKING
 
-from txdbus.objects import (  # type: ignore
-        DBusObject,
-        DBusProperty,
-        dbusMethod,
-        RemoteDBusObject
-        )
-from txdbus.interface import DBusInterface, Method, Property  # type: ignore
+from dbus_next.aio import ProxyObject, ProxyInterface
+from dbus_next.service import ServiceInterface, method, dbus_property
+from dbus_next.introspection import Node
+from dbus_next.constants import PropertyAccess
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.dbus.service import (  # type: ignore
@@ -35,33 +32,12 @@ class Flags(Enum):
     ENCRYPT_AUTHENTICATED_WRITE = "encrypt-authenticated-write"
 
 
-class BlueZGattCharacteristic(DBusObject):
+class BlueZGattCharacteristic(ServiceInterface):
     """
     org.bluez.GattCharacteristic1 interface implementation
     """
 
     interface_name: str = defs.GATT_CHARACTERISTIC_INTERFACE
-
-    iface: DBusInterface = DBusInterface(
-        interface_name,
-        Method("ReadValue", arguments="a{sv}", returns="ay"),
-        Method("WriteValue", arguments="aya{sv}"),
-        Method("StartNotify"),
-        Method("StopNotify"),
-        Property("UUID", "s"),
-        Property("Service", "o"),
-        Property("Value", "ay"),
-        Property("Notifying", "b"),
-        Property("Flags", "as"),
-    )
-
-    dbusInterfaces: List[DBusInterface] = [iface]
-
-    uuid: DBusProperty = DBusProperty("UUID")
-    service: DBusProperty = DBusProperty("Service")
-    flags: DBusProperty = DBusProperty("Flags")
-    value: DBusProperty = DBusProperty("Value")
-    notifying: DBusProperty = DBusProperty("Notifying")
 
     def __init__(
         self,
@@ -86,19 +62,49 @@ class BlueZGattCharacteristic(DBusObject):
             The Gatt Service that owns this characteristic
         """
         self.path: str = service.path + "/char" + f"{index:04d}"
-        self.uuid: str = uuid
-        self.flags: List[str] = [x.value for x in flags]
-        self.service: str = service.path  # noqa: F821
+        self._uuid: str = uuid
+        self._flags: List[str] = [x.value for x in flags]
+        self._service_path: str = service.path  # noqa: F821
         self._service: "BlueZGattService" = service  # noqa: F821
 
-        self.value: bytes = b""
-        self.notifying: bool = False
+        self._value: bytes = b""
+        self._notifying: bool = (
+            "notify" in self._flags
+            or "indicate" in self._flags
+        )
         self.descriptors: List["BlueZGattDescriptor"] = []  # noqa: F821
 
-        super(BlueZGattCharacteristic, self).__init__(self.path)
+        super(BlueZGattCharacteristic, self).__init__(self.interface_name)
 
-    @dbusMethod(interface_name, "ReadValue")
-    def ReadValue(self, options: Dict) -> bytearray:  # noqa: N802
+    @dbus_property(access=PropertyAccess.READ)
+    def UUID(self) -> "s":  # type: ignore # noqa: F821
+        return self._uuid
+
+    @dbus_property(access=PropertyAccess.READ)
+    def Service(self) -> "o":  # type: ignore # noqa: F821
+        return self._service_path
+
+    @dbus_property()
+    def Value(self) -> "ay":  # type: ignore # noqa: F821
+        return self._value
+
+    @Value.setter  # type: ignore
+    def Value(self, value: "ay"):  # type: ignore # noqa: F821
+        self._value = value
+        self.emit_properties_changed(
+            changed_properties={"Value": self._value}
+        )
+
+    @dbus_property(access=PropertyAccess.READ)
+    def Notifying(self) -> "b":  # type: ignore # noqa: F821
+        return self._notifying
+
+    @dbus_property(access=PropertyAccess.READ)
+    def Flags(self) -> "as":  # type: ignore # noqa: F821 F722
+        return self._flags
+
+    @method()
+    def ReadValue(self, options: "a{sv}") -> "ay":  # type: ignore # noqa: F722 F821
         """
         Read the value of the characteristic.
         This is to be fully implemented at the application level
@@ -110,23 +116,23 @@ class BlueZGattCharacteristic(DBusObject):
 
         Returns
         -------
-        bytearray
-            The bytearray that is the value of the characteristic
+        bytes
+            The bytes that is the value of the characteristic
         """
         f = self._service.app.Read
         if f is None:
             raise NotImplementedError()
         return f(self)
 
-    @dbusMethod(interface_name, "WriteValue")
-    def WriteValue(self, value: bytearray, options: Dict):  # noqa: N802
+    @method()
+    def WriteValue(self, value: "ay", options: "a{sv}"):  # type: ignore # noqa
         """
         Write a value to the characteristic
         This is to be fully implemented at the application level
 
         Parameters
         ----------
-        value : bytearray
+        value : bytes
             The value to set
         options : Dict
             Some options for you to select from
@@ -135,8 +141,9 @@ class BlueZGattCharacteristic(DBusObject):
         if f is None:
             raise NotImplementedError()
         f(self, value)
+        return value
 
-    @dbusMethod(interface_name, "StartNotify")
+    @method()
     def StartNotify(self):  # noqa: N802
         """
         Begin a subscription to the characteristic
@@ -145,9 +152,9 @@ class BlueZGattCharacteristic(DBusObject):
         if f is None:
             raise NotImplementedError()
         f(None)
-        self._service.app.subscribed_characteristics.append(self.uuid)
+        self._service.app.subscribed_characteristics.append(self._uuid)
 
-    @dbusMethod(interface_name, "StopNotify")
+    @method()
     def StopNotify(self):  # noqa: N802
         """
         Stop a subscription to the characteristic
@@ -156,7 +163,7 @@ class BlueZGattCharacteristic(DBusObject):
         if f is None:
             raise NotImplementedError()
         f(None)
-        self._service.app.subscribed_characteristics.remove(self.uuid)
+        self._service.app.subscribed_characteristics.remove(self._uuid)
 
     async def get_obj(self) -> Dict:
         """
@@ -168,12 +175,16 @@ class BlueZGattCharacteristic(DBusObject):
         Dict
             The dictionary that describes the characteristic
         """
-        dbus_obj: RemoteDBusObject = await self._service.app.bus.getRemoteObject(
+        bluez_node: Node = await self._service.app.bus.introspect(
             self._service.app.destination, self.path
-        ).asFuture(self._service.app.loop)
-        dict_obj: Dict = await dbus_obj.callRemote(
-            "GetAll",
-            defs.GATT_CHARACTERISTIC_INTERFACE,
-            interface=defs.PROPERTIES_INTERFACE,
-        ).asFuture(self._service.app.loop)
+        )
+        dbus_obj: ProxyObject = self._service.app.bus.get_proxy_object(
+            self._service.app.destination, self.path, bluez_node
+        )
+        dbus_iface: ProxyInterface = dbus_obj.get_interface(
+            defs.PROPERTIES_INTERFACE
+        )
+        dict_obj: Dict = await dbus_iface.call_get_all(  # type: ignore
+            defs.GATT_CHARACTERISTIC_INTERFACE
+        )
         return dict_obj

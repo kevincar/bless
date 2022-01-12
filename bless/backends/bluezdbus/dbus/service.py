@@ -1,14 +1,9 @@
-import asyncio
-
 from typing import List, TYPE_CHECKING, Any, Dict
 
-from txdbus import client  # type: ignore
-from txdbus.objects import (  # type: ignore
-        DBusObject,
-        DBusProperty,
-        RemoteDBusObject
-        )
-from txdbus.interface import DBusInterface, Property  # type: ignore
+from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface
+from dbus_next.service import ServiceInterface, dbus_property
+from dbus_next.introspection import Node
+from dbus_next.constants import PropertyAccess
 
 from bleak.backends.bluezdbus import defs  # type: ignore
 
@@ -20,23 +15,12 @@ if TYPE_CHECKING:
     )
 
 
-class BlueZGattService(DBusObject):
+class BlueZGattService(ServiceInterface):
     """
     org.bluez.GattService1 interface implementation
     """
 
     interface_name: str = defs.GATT_SERVICE_INTERFACE
-
-    iface: DBusInterface = DBusInterface(
-        interface_name,
-        Property("UUID", "s"),
-        Property("Primary", "b"),
-    )
-
-    dbusInterfaces: List[DBusInterface] = [iface]
-
-    uuid: DBusProperty = DBusProperty("UUID")
-    primary: DBusProperty = DBusProperty("Primary")
 
     def __init__(
         self,
@@ -63,15 +47,24 @@ class BlueZGattService(DBusObject):
         """
         hex_index: str = hex(index)[2:].rjust(4, "0")
         self.path: str = app.base_path + "/service" + hex_index
-        self.bus: client = app.bus
+        self.bus: MessageBus = app.bus
         self.destination: str = app.destination
-        self.uuid: str = uuid
-        self.primary: bool = primary
-        self.loop: asyncio.AbstractEventLoop = app.loop
+
+        self._uuid: str = uuid
+        self._primary: bool = primary
+
         self.app: "BlueZGattApplication" = app  # noqa: F821
 
         self.characteristics: List[BlueZGattCharacteristic] = []
-        super(BlueZGattService, self).__init__(self.path)
+        super(BlueZGattService, self).__init__(self.interface_name)
+
+    @dbus_property(access=PropertyAccess.READ)
+    def UUID(self) -> "s":  # type: ignore # noqa: F821
+        return self._uuid
+
+    @dbus_property(access=PropertyAccess.READ)
+    def Primary(self) -> "b":  # type: ignore # noqa: F821
+        return self._primary
 
     async def add_characteristic(
         self, uuid: str, flags: List[Flags], value: Any
@@ -92,7 +85,7 @@ class BlueZGattService(DBusObject):
         characteristic: BlueZGattCharacteristic = BlueZGattCharacteristic(
             uuid, flags, index, self
         )
-        characteristic.value = value
+        characteristic._value = value  # type: ignore
         self.characteristics.append(characteristic)
         await self.app._register_object(characteristic)
         return characteristic
@@ -107,12 +100,16 @@ class BlueZGattService(DBusObject):
         Dict
             The dictionary that describes the service
         """
-        dbus_obj: RemoteDBusObject = await self.app.bus.getRemoteObject(
+        bluez_node: Node = await self.bus.introspect(
             self.app.destination, self.path
-        ).asFuture(self.app.loop)
-        dict_obj: Dict = await dbus_obj.callRemote(
-            "GetAll",
-            defs.GATT_SERVICE_INTERFACE,
-            interface=defs.PROPERTIES_INTERFACE,
-        ).asFuture(self.app.loop)
+        )
+        dbus_obj: ProxyObject = self.bus.get_proxy_object(
+            self.app.destination, self.path, bluez_node
+        )
+        dbus_iface: ProxyInterface = dbus_obj.get_interface(
+            defs.PROPERTIES_INTERFACE
+        )
+        dict_obj: Dict = await dbus_iface.call_get_all(  # type: ignore
+            defs.GATT_SERVICE_INTERFACE
+        )
         return dict_obj
