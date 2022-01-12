@@ -1,11 +1,10 @@
-import asyncio
-
 import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import List, Any, Callable, Optional, Union
 
-from txdbus import client  # type: ignore
-from txdbus.objects import DBusObject, RemoteDBusObject  # type: ignore
+from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface
+from dbus_next.service import ServiceInterface
+from dbus_next.signature import Variant
 
 from bless.backends.bluezdbus.dbus.advertisement import (  # type: ignore
     Type,
@@ -18,13 +17,16 @@ from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
 )
 
 
-class BlueZGattApplication(DBusObject):
+class BlueZGattApplication(ServiceInterface):
     """
     org.bluez.GattApplication1 interface implementation
     """
 
     def __init__(
-        self, name: str, destination: str, bus: client, loop: asyncio.AbstractEventLoop
+        self,
+        name: str,
+        destination: str,
+        bus: MessageBus
     ):
         """
         Initialize a new GattApplication1
@@ -35,31 +37,28 @@ class BlueZGattApplication(DBusObject):
             The name of the Bluetooth Low Energy Application
         destination : str
             The destination interface to add the application to
-        bus : client
-            The txdbus connection
-        loop : asyncio.AbstractEventLoop
-            The loop to use
+        bus : MessageBus
+            The dbus_next connection
         """
         self.path: str = "/"
         self.name: str = name
         self.destination: str = destination
-        self.bus: client = bus
-        self.loop: asyncio.AbstractEventLoop = loop
+        self.bus: MessageBus = bus
 
         self.base_path: str = "/org/bluez/" + self.name
         self.advertisements: List[BlueZLEAdvertisement] = []
         self.services: List[BlueZGattService] = []
 
-        self.Read: Optional[Callable[[BlueZGattCharacteristic], bytearray]] = None
+        self.Read: Optional[Callable[[BlueZGattCharacteristic], bytes]] = None
         self.Write: Optional[
-            Callable[[BlueZGattCharacteristic, bytearray], None]
+            Callable[[BlueZGattCharacteristic, bytes], None]
         ] = None
         self.StartNotify: Optional[Callable[[None], None]] = None
         self.StopNotify: Optional[Callable[[None], None]] = None
 
         self.subscribed_characteristics: List[str] = []
 
-        super(BlueZGattApplication, self).__init__(self.path)
+        super(BlueZGattApplication, self).__init__(self.destination)
 
     async def add_service(self, uuid: str) -> BlueZGattService:  # noqa: F821
         """
@@ -81,8 +80,8 @@ class BlueZGattApplication(DBusObject):
         primary: bool = index == 1
         service: BlueZGattService = BlueZGattService(uuid, primary, index, self)
         self.services.append(service)
-        self.bus.exportObject(service)
-        await self.bus.requestBusName(self.destination).asFuture(self.loop)
+        self.bus.export(service.path, service)
+        await self.bus.request_name(self.destination)
         return service
 
     async def add_characteristic(
@@ -110,43 +109,47 @@ class BlueZGattApplication(DBusObject):
             The characteristic object
         """
         service: BlueZGattService = next(
-            iter([x for x in self.services if x.uuid == service_uuid])
+            iter([x for x in self.services if x._uuid == service_uuid])
         )
         return await service.add_characteristic(uuid, flags, value)
 
-    async def register(self, adapter: RemoteDBusObject):
+    async def register(self, adapter: ProxyObject):
         """
         Register the application with BlueZDBus
 
         Parameters
         ----------
-        adapter : DBusObject
+        adapter : ProxyObject
             The adapter to register the application with
         """
-        await adapter.callRemote(
-            "RegisterApplication", self.path, {}, interface=defs.GATT_MANAGER_INTERFACE
-        ).asFuture(self.loop)
+        iface: ProxyInterface = adapter.get_interface(defs.GATT_MANAGER_INTERFACE)
+        print(dir(iface))
+        await iface.call_register_application(  # type: ignore
+            self.path,
+            {}
+        )
 
-    async def unregister(self, adapter: RemoteDBusObject):
+    async def unregister(self, adapter: ProxyObject):
         """
         Unregister the application with BlueZDBus
 
         Parameters
         ----------
-        adapter : RemoteDBusObject
+        adapter : ProxyObject
             The adapter on which the current application is registered
         """
-        await adapter.callRemote(
-            "UnregisterApplication", self.path, interface=defs.GATT_MANAGER_INTERFACE
-        ).asFuture(self.loop)
+        iface: ProxyInterface = adapter.get_interface(defs.GATT_MANAGER_INTERFACE)
+        await iface.call_unregister_application(  # type: ignore
+            self.path
+        )
 
-    async def start_advertising(self, adapter: RemoteDBusObject):
+    async def start_advertising(self, adapter: ProxyObject):
         """
         Start Advertising the application
 
         Parameters
         ----------
-        adapter : RemoteDBusObject
+        adapter : ProxyObject
             The adapter object to start advertising on
         """
         advertisement: BlueZLEAdvertisement = BlueZLEAdvertisement(
@@ -155,22 +158,23 @@ class BlueZGattApplication(DBusObject):
         self.advertisements.append(advertisement)
 
         for service in self.services:
-            advertisement.service_uuids.append(service.uuid)
+            advertisement._service_uuids.append(service.UUID)
 
-        self.bus.exportObject(advertisement)
-        await self.bus.requestBusName(self.destination).asFuture(self.loop)
+        self.bus.export(advertisement.path, advertisement)
+        await self.bus.request_name(self.destination)
 
-        await adapter.callRemote(
-            "RegisterAdvertisement", advertisement.path, {}
-        ).asFuture(self.loop)
+        iface: ProxyInterface = adapter.get_interface("org.bluez.LEAdvertisingManager1")
+        await iface.call_register_advertisement(  # type: ignore
+            advertisement.path, {}
+        )
 
-    async def is_advertising(self, adapter: RemoteDBusObject) -> bool:
+    async def is_advertising(self, adapter: ProxyObject) -> bool:
         """
         Check if the adapter is advertising
 
         Parameters
         ----------
-        adapter : RemoteDBusObject
+        adapter : ProxyObject
             The adapter object to check for advertising
 
         Returns
@@ -178,27 +182,27 @@ class BlueZGattApplication(DBusObject):
         bool
             Whether the adapter is advertising anything
         """
-        instances: int = await adapter.callRemote(
-            "Get",
+        iface: ProxyInterface = adapter.get_interface(defs.PROPERTIES_INTERFACE)
+        instances: Variant = await iface.call_get(  # type: ignore
             "org.bluez.LEAdvertisingManager1",
-            "ActiveInstances",
-            interface=defs.PROPERTIES_INTERFACE,
-        ).asFuture(self.loop)
-        return instances > 0
+            "ActiveInstances"
+        )
+        return instances.value > 0
 
-    async def stop_advertising(self, adapter: RemoteDBusObject):
+    async def stop_advertising(self, adapter: ProxyObject):
         """
         Stop Advertising
 
         Parameters
         ----------
-        adapter : RemoteDBusObject
+        adapter : ProxyObject
             The adapter object to stop advertising
         """
         advertisement: BlueZLEAdvertisement = self.advertisements.pop()
-        await adapter.callRemote(
-            "UnregisterAdvertisement", advertisement.path
-        ).asFuture(self.loop)
+        iface: ProxyInterface = adapter.get_interface("org.bluez.LEAdvertisingManager1")
+        await iface.call_unregister_advertisement(  # type: ignore
+            advertisement.path
+        )
 
     async def is_connected(self) -> bool:
         """
@@ -224,5 +228,5 @@ class BlueZGattApplication(DBusObject):
         ----------
         o : A service or characteristic to register
         """
-        self.bus.exportObject(o)
-        await self.bus.requestBusName(self.destination).asFuture(self.loop)
+        self.bus.export(o.path, o)
+        await self.bus.request_name(self.destination)
