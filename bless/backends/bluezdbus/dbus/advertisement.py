@@ -65,19 +65,19 @@ class BlueZLEAdvertisement(ServiceInterface):
     def Type(self, type: "s"):  # type: ignore # noqa: F821 F722
         self._type = type
 
-    @dbus_property()
+    @dbus_property()  # noqa: F722
     def ServiceUUIDs(self) -> "as":  # type: ignore # noqa: F821 F722
         return self._service_uuids
 
-    @ServiceUUIDs.setter  # type: ignore
+    @ServiceUUIDs.setter  # type: ignore # noqa: 722
     def ServiceUUIDs(self, service_uuids: "as"):  # type: ignore # noqa: F821 F722
         self._service_uuids = service_uuids
 
-    @dbus_property()
+    @dbus_property()  # noqa: 722
     def ManufacturerData(self) -> "a{qv}":  # type: ignore # noqa: F821 F722
         return self._manufacturer_data
 
-    @ManufacturerData.setter  # type: ignore
+    @ManufacturerData.setter  # type: ignore # noqa: F722
     def ManufacturerData(self, data: "a{qv}"):  # type: ignore # noqa: F821 F722
         self._manufacturer_data = data
 
@@ -89,11 +89,11 @@ class BlueZLEAdvertisement(ServiceInterface):
     # def SolicitUUIDs(self, uuids: "as"):  # type: ignore # noqa: F821 F722
         # self._solicit_uuids = uuids
 
-    @dbus_property()
+    @dbus_property()  # noqa: F722
     def ServiceData(self) -> "a{sv}":  # type: ignore # noqa: F821 F722
         return self._service_data
 
-    @ServiceData.setter  # type: ignore
+    @ServiceData.setter  # type: ignore # noqa: F722
     def ServiceData(self, data: "a{sv}"):  # type: ignore # noqa: F821 F722
         self._service_data = data
 

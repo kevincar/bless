@@ -99,11 +99,11 @@ class BlueZGattCharacteristic(ServiceInterface):
     def Notifying(self) -> "b":  # type: ignore # noqa: F821
         return self._notifying
 
-    @dbus_property(access=PropertyAccess.READ)
+    @dbus_property(access=PropertyAccess.READ)  # noqa: F722
     def Flags(self) -> "as":  # type: ignore # noqa: F821 F722
         return self._flags
 
-    @method()
+    @method()  # noqa: F722
     def ReadValue(self, options: "a{sv}") -> "ay":  # type: ignore # noqa: F722 F821
         """
         Read the value of the characteristic.
@@ -124,7 +124,7 @@ class BlueZGattCharacteristic(ServiceInterface):
             raise NotImplementedError()
         return f(self)
 
-    @method()
+    @method()  # noqa: F722
     def WriteValue(self, value: "ay", options: "a{sv}"):  # type: ignore # noqa
         """
         Write a value to the characteristic
