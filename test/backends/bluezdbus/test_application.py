@@ -1,7 +1,6 @@
 import sys
 import uuid
 import pytest
-import asyncio
 import aioconsole  # type: ignore
 
 import numpy as np  # type: ignore
@@ -9,17 +8,17 @@ import numpy as np  # type: ignore
 if sys.platform.lower() != "linux":
     pytest.skip("Only for linux", allow_module_level=True)
 
-from typing import List  # noqa: E402
+from typing import List, Dict, Optional, cast  # noqa: E402
 
-from txdbus import client  # type: ignore # noqa: E402
-from txdbus.objects import RemoteDBusObject  # type: ignore # noqa: E402
+from dbus_next import Message
+from dbus_next.aio import MessageBus, ProxyObject
+from dbus_next.constants import BusType
+from dbus_next.signature import Variant
 
 from bless.backends.bluezdbus.dbus.characteristic import Flags  # type: ignore # noqa: E402 E501
 from bless.backends.bluezdbus.dbus.utils import get_adapter  # type: ignore # noqa: E402 E501
 from bless.backends.bluezdbus.dbus.application import BlueZGattApplication  # type: ignore # noqa: E402 E501
 from bless.backends.bluezdbus.dbus.characteristic import BlueZGattCharacteristic  # type: ignore # noqa: E402 E501
-
-from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # type: ignore # noqa: E402 E501
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
@@ -40,12 +39,12 @@ class TestBlueZGattApplication:
     @pytest.mark.asyncio
     async def test_init(self):
 
-        def read(char: BlueZGattCharacteristic):
-            return self.val
+        def read(char: BlueZGattCharacteristic) -> bytes:
+            return bytes(self.val)
 
-        def write(char: BlueZGattCharacteristic, value: bytearray):
-            char.value = value
-            self.val = value
+        def write(char: BlueZGattCharacteristic, value: bytes):
+            char.Value = bytes(value)  # type: ignore
+            self.val = bytearray(value)
 
         def notify(char: BlueZGattCharacteristic):
             return
@@ -53,19 +52,16 @@ class TestBlueZGattApplication:
         def stop_notify(char: BlueZGattCharacteristic):
             return
 
-        loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
-
-        reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(loop)
-        bus: client = await client.connect(reactor, "system").asFuture(loop)
+        bus: MessageBus = await MessageBus(bus_type=BusType.SYSTEM).connect()
 
         # Create the app
         app: BlueZGattApplication = BlueZGattApplication(
-                "ble", "org.bluez.testapp", bus, loop
+                "ble", "org.bluez.testapp", bus
                 )
         app.Read = read
         app.Write = write
-        app.StartNotify = notify
-        app.StopNotify = stop_notify
+        app.StartNotify = notify  # type: ignore
+        app.StopNotify = stop_notify  # type: ignore
 
         # Add a service
         service_uuid: str = str(uuid.uuid4())
@@ -74,47 +70,52 @@ class TestBlueZGattApplication:
         # Add a characteristic
         char_uuid: str = str(uuid.uuid4())
         flags: List[Flags] = [
-                Flags.READ,
-                Flags.WRITE,
-                Flags.NOTIFY
-                ]
+            Flags.READ,
+            Flags.WRITE,
+            Flags.NOTIFY
+        ]
         await app.add_characteristic(
-                service_uuid, char_uuid, bytearray(b'1'), flags
-                )
+            service_uuid, char_uuid, b'1', flags
+        )
 
         # Validate the app
-        bus.exportObject(app)
-        await bus.requestBusName(app.destination).asFuture(loop)
+        bus.export(app.path, app)
+        await bus.request_name(app.destination)
 
-        response = await bus.callRemote(
-                app.path,
-                "GetManagedObjects",
-                interface="org.freedesktop.DBus.ObjectManager",
-                destination=app.destination
-                ).asFuture(loop)
+        msg: Message = Message(
+            destination=app.destination,
+            path=app.path,
+            interface="org.freedesktop.DBus.ObjectManager",
+            member="GetManagedObjects"
+        )
+        response: Optional[Message] = await bus.call(msg)
 
-        assert response == {
-                '/org/bluez/ble/service1': {
-                    'org.bluez.GattService1': {
-                        'Primary': True,
-                        'UUID': service_uuid
-                        },
-                    'org.freedesktop.DBus.Properties': {}
-                    },
-                '/org/bluez/ble/service1/char1': {
-                    'org.bluez.GattCharacteristic1': {
-                        'Flags': ['read', 'write', 'notify'],
-                        'Notifying': False,
-                        'Service': '/org/bluez/ble/service1',
-                        'UUID': char_uuid,
-                        'Value': [49]
-                        },
-                    'org.freedesktop.DBus.Properties': {}
-                    }
+        observed: Dict = cast(Message, response).body[0]
+        expected: Dict = {
+            '/org/bluez/ble/service0001': {
+                'org.bluez.GattService1': {
+                    'Primary': Variant('b', True),
+                    'UUID': Variant('s', service_uuid)
                 }
+            },
+            '/org/bluez/ble/service0001/char0001': {
+                'org.bluez.GattCharacteristic1': {
+                    'Flags': Variant('as', ['read', 'write', 'notify']),
+                    'Notifying': Variant('b', True),
+                    'Service': Variant('o', '/org/bluez/ble/service0001'),
+                    'UUID': Variant('s', char_uuid),
+                    'Value': Variant('ay', b'1')
+                }
+            },
+            '/': {
+                'org.bluez.testapp': {}
+            }
+        }
+        assert observed == expected
 
         # Register the Application
-        adapter: RemoteDBusObject = await get_adapter(bus, loop)
+        oadapter: Optional[ProxyObject] = await get_adapter(bus)
+        adapter: ProxyObject = cast(ProxyObject, oadapter)
         await app.register(adapter)
 
         # Ensure we're not advertising
@@ -171,7 +172,7 @@ class TestBlueZGattApplication:
         print("A new value will be sent")
         await aioconsole.ainput("Press enter to receive the new value...")
 
-        app.services[0].characteristics[0].value = self.val
+        app.services[0].characteristics[0].Value = bytes(self.val)
 
         new_value: str = await aioconsole.ainput("Enter the New value: ")
         assert new_value == hex_val
