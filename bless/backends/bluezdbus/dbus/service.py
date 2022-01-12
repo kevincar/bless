@@ -1,9 +1,9 @@
 from typing import List, TYPE_CHECKING, Any, Dict
 
-from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface
-from dbus_next.service import ServiceInterface, dbus_property
-from dbus_next.introspection import Node
-from dbus_next.constants import PropertyAccess
+from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface  # type: ignore
+from dbus_next.service import ServiceInterface, dbus_property  # type: ignore
+from dbus_next.introspection import Node  # type: ignore
+from dbus_next.constants import PropertyAccess  # type: ignore
 
 from bleak.backends.bluezdbus import defs  # type: ignore
 

@@ -2,9 +2,9 @@ import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import List, Any, Callable, Optional, Union
 
-from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface
-from dbus_next.service import ServiceInterface
-from dbus_next.signature import Variant
+from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface  # type: ignore
+from dbus_next.service import ServiceInterface  # type: ignore
+from dbus_next.signature import Variant  # type: ignore
 
 from bless.backends.bluezdbus.dbus.advertisement import (  # type: ignore
     Type,

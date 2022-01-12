@@ -2,7 +2,7 @@ from enum import Enum
 
 from typing import List, Dict, TYPE_CHECKING
 
-from dbus_next.service import ServiceInterface, method, dbus_property
+from dbus_next.service import ServiceInterface, method, dbus_property  # type: ignore
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.dbus.application import (  # type: ignore

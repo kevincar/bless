@@ -2,8 +2,8 @@ import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import Dict, Optional, cast
 
-from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface
-from dbus_next.introspection import Node
+from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface  # type: ignore
+from dbus_next.introspection import Node  # type: ignore
 
 
 async def find_adapter(bus: MessageBus) -> Optional[str]:

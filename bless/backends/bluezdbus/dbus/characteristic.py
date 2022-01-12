@@ -4,10 +4,10 @@ import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import List, Dict, TYPE_CHECKING
 
-from dbus_next.aio import ProxyObject, ProxyInterface
-from dbus_next.service import ServiceInterface, method, dbus_property
-from dbus_next.introspection import Node
-from dbus_next.constants import PropertyAccess
+from dbus_next.aio import ProxyObject, ProxyInterface  # type: ignore
+from dbus_next.service import ServiceInterface, method, dbus_property  # type: ignore
+from dbus_next.introspection import Node  # type: ignore
+from dbus_next.constants import PropertyAccess  # type: ignore
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.dbus.service import (  # type: ignore

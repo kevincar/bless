@@ -6,8 +6,8 @@ from typing import Optional, Dict, Any, cast
 
 from asyncio import AbstractEventLoop
 
-from dbus_next.aio import MessageBus, ProxyObject
-from dbus_next.constants import BusType
+from dbus_next.aio import MessageBus, ProxyObject  # type: ignore
+from dbus_next.constants import BusType  # type: ignore
 
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
