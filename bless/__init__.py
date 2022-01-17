@@ -8,15 +8,26 @@ if sys.platform == "darwin":
         BlessServerCoreBluetooth as BlessServer,
     )
 
+    # Service
+    from bless.backends.corebluetooth.service import (  # noqa: F401
+        BlessGATTServiceCoreBluetooth as BlessGATTService
+    )
+
     # Characteristic Classes
     from bless.backends.corebluetooth.characteristic import (  # noqa: F401
         BlessGATTCharacteristicCoreBluetooth as BlessGATTCharacteristic,
     )
+
 elif sys.platform == "linux":
 
     # Server
     from bless.backends.bluezdbus.server import (  # noqa: F401
         BlessServerBlueZDBus as BlessServer,
+    )
+
+    # Service
+    from bless.backends.bluezdbus.service import (  # noqa: F401
+        BlessGATTSeviceBlueZDBus as BlessGATTService
     )
 
     # Characteristic Classes
@@ -29,6 +40,11 @@ elif sys.platform == "win32":
     # Server
     from bless.backends.winrt.server import (  # noqa: F401
         BlessServerWinRT as BlessServer,
+    )
+
+    # Service
+    from bless.backends.winrt.service import (  # noqa: F401
+        BlessGATTServiceWinRT as BlessGATTService
     )
 
     # Characteristic Classes
