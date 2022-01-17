@@ -27,7 +27,7 @@ elif sys.platform == "linux":
 
     # Service
     from bless.backends.bluezdbus.service import (  # noqa: F401
-        BlessGATTSeviceBlueZDBus as BlessGATTService
+        BlessGATTServiceBlueZDBus as BlessGATTService
     )
 
     # Characteristic Classes
