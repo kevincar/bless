@@ -194,7 +194,7 @@ class BlessServerWinRT(BaseBlessServer):
         """
 
         service_uuid = str(UUID(service_uuid))
-        char_uuid = str(UUID(char_uuid)
+        char_uuid = str(UUID(char_uuid))
         service: BlessGATTServiceWinRT = self.services[service_uuid]
         characteristic: BlessGATTCharacteristicWinRT = BlessGATTCharacteristicWinRT(
             char_uuid, properties, permissions, value
