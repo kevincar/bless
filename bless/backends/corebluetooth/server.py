@@ -136,7 +136,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         """
         logger.debug("Creating a new service with uuid: {}".format(uuid))
         service: BlessGATTServiceCoreBluetooth = BlessGATTServiceCoreBluetooth(uuid)
-        await service.init()
+        await service.init(self)
         self.services[service.uuid] = service
 
     async def add_new_characteristic(

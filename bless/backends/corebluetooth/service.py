@@ -12,6 +12,7 @@ from bleak.backends.corebluetooth.service import (  # type: ignore
         )
 
 from bless.backends.service import BlessGATTService
+from bless.backends.server import BaseBlessServer
 
 
 class BlessGATTServiceCoreBluetooth(BlessGATTService, BleakGATTServiceCoreBluetooth):
@@ -32,7 +33,7 @@ class BlessGATTServiceCoreBluetooth(BlessGATTService, BleakGATTServiceCoreBlueto
         self.__characteristics: List[BlessGATTCharacteristicCoreBluetooth] = []
         self.__handle = 0
 
-    async def init(self):
+    async def init(self, server: "BaseBlessServer"):
         """
         Initailize the CoreBluetooth Service object
         """
