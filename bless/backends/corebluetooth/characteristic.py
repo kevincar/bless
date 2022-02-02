@@ -11,6 +11,8 @@ from bleak.backends.corebluetooth.characteristic import (  # type: ignore
     BleakGATTCharacteristicCoreBluetooth,
 )
 
+from bless.backends.service import BlessGATTService
+
 from bless.backends.characteristic import (
         GATTCharacteristicProperties,
         GATTAttributePermissions,
@@ -59,7 +61,7 @@ class BlessGATTCharacteristicCoreBluetooth(
             uuid, properties, permissions, value
         )
 
-    async def init(self):
+    async def init(self, service: BlessGATTService):
         """
         Initializes the backend-specific characteristic object and stores it in
         self.obj
