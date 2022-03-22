@@ -51,7 +51,8 @@
 #-------------------------------------------------------------------------------
 # Version info
 #-------------------------------------------------------------------------------
-__version__ = "2022-03-14"
+__version__ = "2022-03-21"
+# 2022-03-21    Made available to kevincar/bless as example; small modifications
 # 2022-03-16    bleBleak.py works on Windows 10
 #               - sometimes the BLE dongle must be reset (remove/insert)
 #               - sometimes indications are not received
@@ -87,8 +88,8 @@ from bleak import __version__ as bleakVersion
 
 import struct
 
-BlessExample = True
-if not BlessExample:
+if False:
+    BlessExample = False
     #---------------------------------------------------------------------------
     # Import in the FortiusAnt context
     #---------------------------------------------------------------------------
@@ -97,18 +98,16 @@ if not BlessExample:
     from   bleBlessClass        import clsBleServer
     import bleConstants         as bc
 
-if BlessExample:
+else:
+    BlessExample = True
     #---------------------------------------------------------------------------
     # Import and Constants for bless example context
     #---------------------------------------------------------------------------
     import FTMSconstants        as bc
-
-    def HexSpace(info):
-        return (info)
-
+    from   FTMSconstants        import HexSpace
 
 #-------------------------------------------------------------------------------
-# Status feb 2022:
+# Status mar 2022:
 #-------------------------------------------------------------------------------
 # Notes on Windows 10 Pro, version 21H2, build 19044.1526
 #                          Windows Feature Experience Pack 120.2212.4170.0
@@ -118,14 +117,12 @@ if BlessExample:
 #
 # When indications are not received, the simulation loop does not work
 #-------------------------------------------------------------------------------
-# Raspberry rpi0W with Raspbian version (10) buster
-# - bleBleak.py works; sample output added to end-of-this-file.
+# Tested on:
+# 1. Raspberry rpi0W with Raspbian version (10) buster
+# 2. Windows 10 (for version see above)
+# --> bleBleak.py works; sample output added to end-of-this-file.
 #-------------------------------------------------------------------------------
 print("bleak = %s" % bleakVersion)
-if os.name == 'nt':
-    print("************************************************************************")
-    print("***** bleBleak.py works under Windows 10; but is not always stable *****")
-    print("************************************************************************\n\n")
 
 #-------------------------------------------------------------------------------
 # ADDRESSES: Returned by findBLEdevices()
@@ -321,7 +318,25 @@ async def serverInspectionSub(client):
                 else:
                     s = HexSpace(value)
 
-                s = '\tCharacteristic: %-80s, props=%s, value=%s' % (char, char.properties, s)
+                #---------------------------------------------------------------
+                # Get description, if known in our context
+                #---------------------------------------------------------------
+                uuid  = str(char.uuid)
+                if   uuid == bc.cDeviceNameUUID:                 descr = bc.cDeviceNameName
+                elif uuid == bc.cAppearanceUUID:                 descr = bc.cAppearanceName
+
+                elif uuid == bc.cFitnessMachineFeatureUUID:      descr = bc.cFitnessMachineFeatureName
+                elif uuid == bc.cIndoorBikeDataUUID:             descr = bc.cIndoorBikeDataName
+                elif uuid == bc.cFitnessMachineStatusUUID:       descr = bc.cFitnessMachineStatusName
+                elif uuid == bc.cFitnessMachineControlPointUUID: descr = bc.cFitnessMachineControlPointName
+                elif uuid == bc.cSupportedPowerRangeUUID:        descr = bc.cSupportedPowerRangeName
+                elif uuid == bc.cHeartRateMeasurementUUID:       descr = bc.cHeartRateMeasurementUUID
+                else:                                            descr = "?"
+
+                #---------------------------------------------------------------
+                # And print
+                #---------------------------------------------------------------
+                s = '\tCharacteristic: uuid=%-12s (handle: %3s): %-30s, props=%s, value=%s' % (char.uuid, char.handle, descr, char.properties, s)
                 s = s.replace(bc.BluetoothBaseUUIDsuffix, '-...') # Always the same
                 print(s)
 
@@ -680,60 +695,89 @@ SAMPLE OUTPUT:
 ==============
 
 -------------------------------
- Discover existing BLE devices 
+ Discover existing BLE devices
 -------------------------------
-75:A1:76:76:46:49: 75-A1-76-76-46-49
-5C:F3:70:9F:8C:98: FortiusANT Trainer
-24:B7:A7:30:5A:01: 24-B7-A7-30-5A-01
+No devices found, retry
+B8:27:EB:0B:EA:62: Unknown will be inspected
 ---------------------------------------------------
- Inspect BLE-device with address 5C:F3:70:9F:8C:98
+ Inspect BLE-device with address B8:27:EB:0B:EA:62
 ---------------------------------------------------
 Connected:  True
-<Unknown>: This is a matching Fitness Machine
-Service: 0000180d-... (Handle: 29): Heart Rate
-	Characteristic: 00002a37-... (Handle: 30): Heart Rate Measurement       , props=['notify'], value="(N/A: Wait for notification)"
-Service: 00001826-... (Handle: 10): Fitness Machine
-	Characteristic: 00002ad8-... (Handle: 26): Supported Power Range        , props=['read'], value="00 00 e8 03 01 00"
-	Characteristic: 00002ad9-... (Handle: 22): Fitness Machine Control Point, props=['write', 'indicate'], value="(N/A: Wait for indication)"
-	Characteristic: 00002ada-... (Handle: 18): Fitness Machine Status       , props=['notify'], value="(N/A: Wait for notification)"
-	Characteristic: 00002ad2-... (Handle: 14): Indoor Bike Data             , props=['notify'], value="(N/A: Wait for notification)"
-	Characteristic: 00002acc-... (Handle: 11): Fitness Machine Feature      , props=['read'], value="02 40 00 00 08 20 00 00"
-		Supported: Cadence, PowerMeasurement, PowerTargetSetting, IndoorBikeSimulation.
+Device Name=rpiServer
+Appearance=bytearray(b'\x00\x00')
+rpiServer: This is a matching Fitness Machine
+Service: 00001800-... (Handle: 1): Generic Access Profile
+        Characteristic: uuid=00002a00-... (handle:   2): Device Name                   , props=['read'], value="rpiServer"
+        Characteristic: uuid=00002a01-... (handle:   4): Appearance                    , props=['read'], value="00 00"
 Service: 00001801-... (Handle: 6): Generic Attribute Profile
-	Characteristic: 00002a05-... (Handle: 7): Service Changed               , props=['indicate'], value="(N/A; not readable)"
+        Characteristic: uuid=00002a05-... (handle:   7): ?                             , props=['indicate'], value="(N/A; not readable)"
+Service: 00001826-... (Handle: 331): Fitness Machine
+        Characteristic: uuid=00002acc-... (handle: 332): Fitness Machine Feature       , props=['read'], value="02 40 00 00 08 20 00 00"
+                Supported: Cadence, PowerMeasurement, PowerTargetSetting, IndoorBikeSimulation.
+        Characteristic: uuid=00002ad2-... (handle: 334): Indoor Bike Data              , props=['notify'], value="(N/A: Wait for notification)"
+        Characteristic: uuid=00002ada-... (handle: 337): Fitness Machine Status        , props=['notify'], value="(N/A: Wait for notification)"
+        Characteristic: uuid=00002ad9-... (handle: 340): Fitness Machine Control Point , props=['write', 'indicate'], value="(N/A: Wait for indication)"
+        Characteristic: uuid=00002ad8-... (handle: 343): Supported Power Range         , props=['read'], value="00 00 e8 03 01 00"
 Register notifications
-14 Indoor Bike Data       "44 00 00 00 c4 00 31 00" status=initial    speed=0 cadence= 98 power=  49 hrm=  0
-30 Heart Rate Measurement "00 5f"                   status=initial    speed=0 cadence= 98 power=  49 hrm= 95
+Registration failed Characteristic 00002a37-0000-1000-8000-00805f9b34fb not found!
 Register indications
 ------------------------------------------------------
- Start simulation of a Cycling Training Program (CTP) 
+ Start simulation of a Cycling Training Program (CTP)
 ------------------------------------------------------
 Request control, so that commands can be sent
-14 Indoor Bike Data       "44 00 00 00 c6 00 31 00" status=initial    speed=0 cadence= 99 power=  49 hrm= 95
-30 Heart Rate Measurement "00 57"                   status=initial    speed=0 cadence= 99 power=  49 hrm= 87
-...
+340 Fitness Machine Control Point "80 00 01" ResponseCode=128 RequestCode=0 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 fc 53 e6 00 3b 01" status=initial    speed=215.0 cadence=115 power= 315 hrm=  0
 Start training session
-18 Fitness Machine Status "04"                      status=Started    speed=0 cadence=100 power=  51 hrm= 85
-...
+337 Fitness Machine Status "04"                      status=Started    speed=215.0 cadence=115 power= 315 hrm=  0
+340 Fitness Machine Control Point "80 07 01" ResponseCode=128 RequestCode=7 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 60 54 e8 00 3c 01" status=Started    speed=216.0 cadence=116 power= 316 hrm=  0
 Switch to PowerMode, 324W
-14 Indoor Bike Data       "44 00 00 00 ca 00 31 00" status=Started    speed=0 cadence=101 power=  49 hrm= 85
-...
+337 Fitness Machine Status "08 44 01"                status=Power mode speed=216.0 cadence=116 power= 316 hrm=  0
+340 Fitness Machine Control Point "80 05 01" ResponseCode=128 RequestCode=5 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 c4 54 ea 00 3d 01" status=Power mode speed=217.0 cadence=117 power= 317 hrm=  0
 Switch to GradeMode, 4%
-18 Fitness Machine Status "12 00 00 04 00 00 00"    status=Grade mode speed=0 cadence= 97 power= 145 hrm=105
-...
+337 Fitness Machine Status "12 00 00 90 01 28 33"    status=Grade mode speed=217.0 cadence=117 power= 317 hrm=  0
+340 Fitness Machine Control Point "80 11 01" ResponseCode=128 RequestCode=17 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 28 55 ec 00 3e 01" status=Grade mode speed=218.0 cadence=118 power= 318 hrm=  0
+Switch to PowerMode, 323W
+337 Fitness Machine Status "08 43 01"                status=Power mode speed=218.0 cadence=118 power= 318 hrm=  0
+340 Fitness Machine Control Point "80 05 01" ResponseCode=128 RequestCode=5 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 8c 55 ee 00 3f 01" status=Power mode speed=219.0 cadence=119 power= 319 hrm=  0
+Switch to GradeMode, 3%
+340 Fitness Machine Control Point "80 11 01" ResponseCode=128 RequestCode=17 ResultCode=1(Succes)
+337 Fitness Machine Status "12 00 00 2c 01 28 33"    status=Grade mode speed=219.0 cadence=119 power= 319 hrm=  0
+334 Indoor Bike Data       "44 00 f0 55 f0 00 40 01" status=Grade mode speed=220.0 cadence=120 power= 320 hrm=  0
+Switch to PowerMode, 322W
+337 Fitness Machine Status "08 42 01"                status=Power mode speed=220.0 cadence=120 power= 320 hrm=  0
+340 Fitness Machine Control Point "80 05 01" ResponseCode=128 RequestCode=5 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 54 56 f2 00 41 01" status=Power mode speed=221.0 cadence=121 power= 321 hrm=  0
+Switch to GradeMode, 2%
+337 Fitness Machine Status "12 00 00 c8 00 28 33"    status=Grade mode speed=221.0 cadence=121 power= 321 hrm=  0
+340 Fitness Machine Control Point "80 11 01" ResponseCode=128 RequestCode=17 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 b8 56 f4 00 42 01" status=Grade mode speed=222.0 cadence=122 power= 322 hrm=  0
+Switch to PowerMode, 321W
+334 Indoor Bike Data       "44 00 1c 57 f6 00 43 01" status=Grade mode speed=223.0 cadence=123 power= 323 hrm=  0
+337 Fitness Machine Status "08 41 01"                status=Power mode speed=223.0 cadence=123 power= 323 hrm=  0
+340 Fitness Machine Control Point "80 05 01" ResponseCode=128 RequestCode=5 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 80 57 f8 00 44 01" status=Power mode speed=224.0 cadence=124 power= 324 hrm=  0
+Switch to GradeMode, 1%
+337 Fitness Machine Status "12 00 00 64 00 28 33"    status=Grade mode speed=224.0 cadence=124 power= 324 hrm=  0
+340 Fitness Machine Control Point "80 11 01" ResponseCode=128 RequestCode=17 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 e4 57 fa 00 45 01" status=Grade mode speed=225.0 cadence=125 power= 325 hrm=  0
 Switch to PowerMode, 50W
-18 Fitness Machine Status "08 32 00"                status=Power mode speed=0 cadence=101 power= 340 hrm=184
-...
+337 Fitness Machine Status "08 32 00"                status=Power mode speed=225.0 cadence=125 power= 325 hrm=  0
+340 Fitness Machine Control Point "80 05 01" ResponseCode=128 RequestCode=5 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 48 58 fc 00 46 01" status=Power mode speed=226.0 cadence=126 power= 326 hrm=  0
 Stop training session
-...
-18 Fitness Machine Status "02"                      status=Stopped    speed=0 cadence= 99 power=  51 hrm= 90
-...
+337 Fitness Machine Status "02"                      status=Stopped    speed=226.0 cadence=126 power= 326 hrm=  0
+340 Fitness Machine Control Point "80 08 01" ResponseCode=128 RequestCode=8 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 ac 58 fe 00 47 01" status=Stopped    speed=227.0 cadence=127 power= 327 hrm=  0
 Release control / reset
-18 Fitness Machine Status "01"                      status=Reset      speed=0 cadence=102 power=  48 hrm= 90
-...
+337 Fitness Machine Status "01"                      status=Reset      speed=227.0 cadence=127 power= 327 hrm=  0
+340 Fitness Machine Control Point "80 01 01" ResponseCode=128 RequestCode=1 ResultCode=1(Succes)
+334 Indoor Bike Data       "44 00 10 59 00 01 48 01" status=Reset      speed=228.0 cadence=128 power= 328 hrm=  0
 Stop collector loop
 Unregister notifications
 Unregister indications
-
 
 """
