@@ -14,7 +14,8 @@
 #-------------------------------------------------------------------------------
 # Version info
 #-------------------------------------------------------------------------------
-__version__ = "2022-03-08"
+__version__ = "2022-03-21"
+# 2022-03-21    Made available to kevincar/bless as example; small modifications
 # 2022-03-08    Class to create a bless server split into bleBlessClass.py
 # 2022-03-08    Tested:
 #               - Windows 10 with Trainer Road and Rouvy
@@ -39,15 +40,8 @@ from bless import (
         GATTAttributePermissions
         )
 
-#-------------------------------------------------------------------------------
-# To distribute to bless/examples, proceed as follows:
-# - Copy bleBless.py, bleBlessClass and bleConstants   bleBleak.py to hbldh\bless\examples
-#        FTMSserver   FTMSserverClass   FTMSconstants  FTMSclient
-# - Change BlessExample to True
-# - Check code for BlessExample
-#-------------------------------------------------------------------------------
-BlessExample = True
-if not BlessExample:
+if False:
+    BlessExample = False
     #---------------------------------------------------------------------------
     # Import in the FortiusAnt context
     #---------------------------------------------------------------------------
@@ -58,20 +52,19 @@ if not BlessExample:
     from   bleBlessClass        import clsBleServer
     import bleConstants         as bc
 
-if BlessExample:
+else:
+    BlessExample = True
     #---------------------------------------------------------------------------
     # Import and Constants for bless example context
     #---------------------------------------------------------------------------
     from   FTMSserverClass      import clsBleServer
     import FTMSconstants        as bc
-
+    from   FTMSconstants        import HexSpace
     import logging
+
     mode_Power          = 1     # Target Power
     mode_Grade          = 2     # Target Resistance
     UseBluetooth        = True
-
-    def HexSpace(info):
-        return (info)
 
 #-------------------------------------------------------------------------------
 # Define the server structure with services and characteristics
@@ -698,7 +691,7 @@ if __name__ == "__main__":
         logfile.Open()
         print('FTMS server in FortiusAnt context')
     else:
-        logging.basicConfig(level=logging.ERROR)
+        logging.basicConfig(level=logging.ERROR)            # pylint:disable=invalid-name,used-before-assignment,undefined-variable
         logger = logging.getLogger(name=__name__)
         print('FTMS server in bless/example context')
 
@@ -723,3 +716,58 @@ if __name__ == "__main__":
     # Termination
     #---------------------------------------------------------------------------
     print("bleBless ended")
+
+"""
+SAMPLE OUTPUT:
+==============
+
+bleBless started
+----------------
+Message=, Bluetooth interface available (bless)
+Message=, Bluetooth interface open
+20:03:56,328: ---------------------------------------------------------------------------------------
+20:03:56,329: FortiusAnt simulated trainer is active
+20:03:56,329: Start a training in a CTP; 5 seconds after completing the training, simulation will end
+20:03:56,330: ---------------------------------------------------------------------------------------
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=257 Cadence=157, Power=357, HeartRate= 57
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=258 Cadence=158, Power=358, HeartRate= 58
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=259 Cadence=159, Power=359, HeartRate= 59
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=200 Cadence=100, Power=300, HeartRate=  0
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=201 Cadence=101, Power=301, HeartRate=  1
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=202 Cadence=102, Power=302, HeartRate=  2
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=203 Cadence=103, Power=303, HeartRate=  3
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=204 Cadence=104, Power=304, HeartRate=  4
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=205 Cadence=105, Power=305, HeartRate=  5
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=206 Cadence=106, Power=306, HeartRate=  6
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=207 Cadence=107, Power=307, HeartRate=  7
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=208 Cadence=108, Power=308, HeartRate=  8
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=209 Cadence=109, Power=309, HeartRate=  9
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=210 Cadence=110, Power=310, HeartRate= 10
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=211 Cadence=111, Power=311, HeartRate= 11
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=212 Cadence=112, Power=312, HeartRate= 12
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=213 Cadence=113, Power=313, HeartRate= 13
+Client=False HasControl=False Started=False TargetPower= 100 TargetGrade=0      Speed=214 Cadence=114, Power=314, HeartRate= 14
+Client=True  HasControl=True  Started=False TargetPower= 100 TargetGrade=0      Speed=215 Cadence=115, Power=315, HeartRate= 15
+Client=True  HasControl=True  Started=True  TargetPower= 100 TargetGrade=0      Speed=216 Cadence=116, Power=316, HeartRate= 16
+Client=True  HasControl=True  Started=True  TargetPower= 324 TargetGrade=0      Speed=217 Cadence=117, Power=317, HeartRate= 17
+Client=True  HasControl=True  Started=True  TargetPower=   0 TargetGrade=4.0    Speed=218 Cadence=118, Power=318, HeartRate= 18
+Client=True  HasControl=True  Started=True  TargetPower= 323 TargetGrade=0      Speed=219 Cadence=119, Power=319, HeartRate= 19
+Client=True  HasControl=True  Started=True  TargetPower=   0 TargetGrade=3.0    Speed=220 Cadence=120, Power=320, HeartRate= 20
+Client=True  HasControl=True  Started=True  TargetPower= 322 TargetGrade=0      Speed=221 Cadence=121, Power=321, HeartRate= 21
+Client=True  HasControl=True  Started=True  TargetPower=   0 TargetGrade=2.0    Speed=222 Cadence=122, Power=322, HeartRate= 22
+Client=True  HasControl=True  Started=True  TargetPower=   0 TargetGrade=2.0    Speed=223 Cadence=123, Power=323, HeartRate= 23
+Client=True  HasControl=True  Started=True  TargetPower= 321 TargetGrade=0      Speed=224 Cadence=124, Power=324, HeartRate= 24
+Client=True  HasControl=True  Started=True  TargetPower=   0 TargetGrade=1.0    Speed=225 Cadence=125, Power=325, HeartRate= 25
+Client=True  HasControl=True  Started=True  TargetPower=  50 TargetGrade=0      Speed=226 Cadence=126, Power=326, HeartRate= 26
+Client=True  HasControl=True  Started=False TargetPower=  50 TargetGrade=0      Speed=227 Cadence=127, Power=327, HeartRate= 27
+Client=True  HasControl=False Started=False TargetPower=  50 TargetGrade=0      Speed=228 Cadence=128, Power=328, HeartRate= 28
+Client=True  HasControl=False Started=False TargetPower=  50 TargetGrade=0      Speed=229 Cadence=129, Power=329, HeartRate= 29
+Client=False HasControl=False Started=False TargetPower=  50 TargetGrade=0      Speed=230 Cadence=130, Power=330, HeartRate= 30
+Client=False HasControl=False Started=False TargetPower=  50 TargetGrade=0      Speed=231 Cadence=131, Power=331, HeartRate= 31
+Client=False HasControl=False Started=False TargetPower=  50 TargetGrade=0      Speed=232 Cadence=132, Power=332, HeartRate= 32
+Client=False HasControl=False Started=False TargetPower=  50 TargetGrade=0      Speed=233 Cadence=133, Power=333, HeartRate= 33
+Client=False HasControl=False Started=False TargetPower=  50 TargetGrade=0      Speed=234 Cadence=134, Power=334, HeartRate= 34
+Client=False HasControl=False Started=False TargetPower=  50 TargetGrade=0      Speed=235 Cadence=135, Power=335, HeartRate= 35
+20:04:35,810: FortiusAnt simulated trainer is stopped
+20:04:35,812: ---------------------------------------
+"""
