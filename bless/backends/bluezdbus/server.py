@@ -54,7 +54,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
 
         gatt_name: str = self.name.replace(" ", "")
         self.app: BlueZGattApplication = BlueZGattApplication(
-            gatt_name, "org.bluez." + gatt_name, self.bus
+            gatt_name, "org.bluez", self.bus
         )
 
         self.app.Read = self.read
