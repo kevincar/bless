@@ -41,11 +41,11 @@ class BlueZGattApplication(ServiceInterface):
             The dbus_next connection
         """
         self.path: str = "/"
-        self.name: str = name
+        self.app_name: str = name
         self.destination: str = destination
         self.bus: MessageBus = bus
 
-        self.base_path: str = "/org/bluez/" + self.name
+        self.base_path: str = "/org/bluez/" + self.app_name
         self.advertisements: List[BlueZLEAdvertisement] = []
         self.services: List[BlueZGattService] = []
 
@@ -111,6 +111,22 @@ class BlueZGattApplication(ServiceInterface):
         )
         return await service.add_characteristic(uuid, flags, value)
 
+    async def set_name(self, adapter: ProxyObject, name: str):
+        """
+        Set's the alias of our bluetooth adapter to our application's name
+
+        Parameters
+        ----------
+        adapter : ProxyObject
+            The adapter whose alias name to set
+        name : str
+            The namem to set the adapter alias
+        """
+        iface: ProxyInterface = adapter.get_interface("org.freedesktop.DBus.Properties")
+        await iface.call_set(  # type: ignore
+            "org.bluez.Adapter1", "Alias", Variant('s', name)
+        )
+
     async def register(self, adapter: ProxyObject):
         """
         Register the application with BlueZDBus
@@ -149,6 +165,8 @@ class BlueZGattApplication(ServiceInterface):
         adapter : ProxyObject
             The adapter object to start advertising on
         """
+        await self.set_name(adapter, self.app_name)
+
         advertisement: BlueZLEAdvertisement = BlueZLEAdvertisement(
             Type.PERIPHERAL, len(self.advertisements) + 1, self
         )
@@ -194,6 +212,7 @@ class BlueZGattApplication(ServiceInterface):
         adapter : ProxyObject
             The adapter object to stop advertising
         """
+        await self.set_name(adapter, "")
         advertisement: BlueZLEAdvertisement = self.advertisements.pop()
         iface: ProxyInterface = adapter.get_interface("org.bluez.LEAdvertisingManager1")
         await iface.call_unregister_advertisement(  # type: ignore
