@@ -1,9 +1,9 @@
 from typing import List, TYPE_CHECKING, Any, Dict
 
-from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface  # type: ignore
+from dbus_next.aio import MessageBus  # type: ignore
 from dbus_next.service import ServiceInterface, dbus_property  # type: ignore
-from dbus_next.introspection import Node  # type: ignore
 from dbus_next.constants import PropertyAccess  # type: ignore
+from dbus_next.signature import Variant  # type: ignore
 
 from bleak.backends.bluezdbus import defs  # type: ignore
 
@@ -100,16 +100,7 @@ class BlueZGattService(ServiceInterface):
         Dict
             The dictionary that describes the service
         """
-        bluez_node: Node = await self.bus.introspect(
-            self.app.destination, self.path
-        )
-        dbus_obj: ProxyObject = self.bus.get_proxy_object(
-            self.app.destination, self.path, bluez_node
-        )
-        dbus_iface: ProxyInterface = dbus_obj.get_interface(
-            defs.PROPERTIES_INTERFACE
-        )
-        dict_obj: Dict = await dbus_iface.call_get_all(  # type: ignore
-            defs.GATT_SERVICE_INTERFACE
-        )
-        return dict_obj
+        return {
+            "Primary": Variant('b', self._primary),
+            "UUID": Variant('s', self._uuid)
+        }

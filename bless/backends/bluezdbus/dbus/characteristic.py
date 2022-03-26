@@ -4,10 +4,9 @@ import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import List, Dict, TYPE_CHECKING
 
-from dbus_next.aio import ProxyObject, ProxyInterface  # type: ignore
 from dbus_next.service import ServiceInterface, method, dbus_property  # type: ignore
-from dbus_next.introspection import Node  # type: ignore
 from dbus_next.constants import PropertyAccess  # type: ignore
+from dbus_next.signature import Variant  # type: ignore
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.dbus.service import (  # type: ignore
@@ -141,7 +140,6 @@ class BlueZGattCharacteristic(ServiceInterface):
         if f is None:
             raise NotImplementedError()
         f(self, value)
-        return value
 
     @method()
     def StartNotify(self):  # noqa: N802
@@ -175,16 +173,6 @@ class BlueZGattCharacteristic(ServiceInterface):
         Dict
             The dictionary that describes the characteristic
         """
-        bluez_node: Node = await self._service.app.bus.introspect(
-            self._service.app.destination, self.path
-        )
-        dbus_obj: ProxyObject = self._service.app.bus.get_proxy_object(
-            self._service.app.destination, self.path, bluez_node
-        )
-        dbus_iface: ProxyInterface = dbus_obj.get_interface(
-            defs.PROPERTIES_INTERFACE
-        )
-        dict_obj: Dict = await dbus_iface.call_get_all(  # type: ignore
-            defs.GATT_CHARACTERISTIC_INTERFACE
-        )
-        return dict_obj
+        return {
+            "UUID": Variant('s', self._uuid)
+        }
