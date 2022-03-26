@@ -75,13 +75,11 @@ class BlueZGattApplication(ServiceInterface):
         BlueZGattService
             Returns and instance of the service object
         """
-
         index: int = len(self.services) + 1
         primary: bool = index == 1
         service: BlueZGattService = BlueZGattService(uuid, primary, index, self)
         self.services.append(service)
         self.bus.export(service.path, service)
-        await self.bus.request_name(self.destination)
         return service
 
     async def add_characteristic(
@@ -123,7 +121,6 @@ class BlueZGattApplication(ServiceInterface):
             The adapter to register the application with
         """
         iface: ProxyInterface = adapter.get_interface(defs.GATT_MANAGER_INTERFACE)
-        print(dir(iface))
         await iface.call_register_application(  # type: ignore
             self.path,
             {}
@@ -161,7 +158,6 @@ class BlueZGattApplication(ServiceInterface):
             advertisement._service_uuids.append(service.UUID)
 
         self.bus.export(advertisement.path, advertisement)
-        await self.bus.request_name(self.destination)
 
         iface: ProxyInterface = adapter.get_interface("org.bluez.LEAdvertisingManager1")
         await iface.call_register_advertisement(  # type: ignore
@@ -229,4 +225,3 @@ class BlueZGattApplication(ServiceInterface):
         o : A service or characteristic to register
         """
         self.bus.export(o.path, o)
-        await self.bus.request_name(self.destination)
