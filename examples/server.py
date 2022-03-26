@@ -9,7 +9,7 @@ import threading
 
 from typing import Any
 
-from bless import (
+from bless import (  # type: ignore
         BlessServer,
         BlessGATTCharacteristic,
         GATTCharacteristicProperties,
