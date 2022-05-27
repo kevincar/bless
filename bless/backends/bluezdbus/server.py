@@ -82,7 +82,6 @@ class BlessServerBlueZDBus(BaseBlessServer):
 
         # Make our app available
         self.bus.export(self.app.path, self.app)
-        await self.bus.request_name(self.app.destination)
 
         # Register
         await self.app.register(self.adapter)
