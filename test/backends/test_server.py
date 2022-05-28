@@ -69,7 +69,7 @@ class TestBlessServer:
         await server.add_new_service(service_uuid)
 
         assert len(server.services) > 0
-        print(server.services)
+        # print(server.services)
 
         # setup a characteristic for the service
         char_uuid: str = str(uuid.uuid4())

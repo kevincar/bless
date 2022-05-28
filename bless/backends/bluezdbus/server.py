@@ -2,12 +2,12 @@ import asyncio
 
 from uuid import UUID
 
-from typing import Optional, Dict, Any, cast, List
+from typing import Optional, Dict, Any, cast
 
 from asyncio import AbstractEventLoop
-from twisted.internet.asyncioreactor import AsyncioSelectorReactor  # type: ignore
-from txdbus import client  # type: ignore
-from txdbus.objects import RemoteDBusObject  # type: ignore
+
+from dbus_next.aio import MessageBus, ProxyObject  # type: ignore
+from dbus_next.constants import BusType  # type: ignore
 
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
@@ -41,9 +41,6 @@ class BlessServerBlueZDBus(BaseBlessServer):
     def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
         super(BlessServerBlueZDBus, self).__init__(loop=loop, **kwargs)
         self.name: str = name
-        self.reactor: AsyncioSelectorReactor = AsyncioSelectorReactor(
-            cast(asyncio.unix_events._UnixSelectorEventLoop, loop)
-        )
 
         self.services: Dict[str, BlessGATTServiceBlueZDBus] = {}
 
@@ -53,13 +50,11 @@ class BlessServerBlueZDBus(BaseBlessServer):
         """
         Asyncronous side of init
         """
-        self.bus: client = await client.connect(self.reactor, "system").asFuture(
-            self.loop
-        )
+        self.bus: MessageBus = await MessageBus(bus_type=BusType.SYSTEM).connect()
 
         gatt_name: str = self.name.replace(" ", "")
         self.app: BlueZGattApplication = BlueZGattApplication(
-            gatt_name, "org.bluez." + gatt_name, self.bus, self.loop
+            gatt_name, "org.bluez", self.bus
         )
 
         self.app.Read = self.read
@@ -69,7 +64,10 @@ class BlessServerBlueZDBus(BaseBlessServer):
         self.app.StartNotify = lambda x: None
         self.app.StopNotify = lambda x: None
 
-        self.adapter: RemoteDBusObject = await get_adapter(self.bus, self.loop)
+        potential_adapter: Optional[ProxyObject] = await get_adapter(self.bus)
+        if potential_adapter is None:
+            raise Exception("Could not locate bluetooth adapter")
+        self.adapter: ProxyObject = cast(ProxyObject, potential_adapter)
 
     async def start(self, **kwargs) -> bool:
         """
@@ -83,8 +81,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
         await self.setup_task
 
         # Make our app available
-        self.bus.exportObject(self.app)
-        await self.bus.requestBusName(self.app.destination).asFuture(self.loop)
+        self.bus.export(self.app.path, self.app)
 
         # Register
         await self.app.register(self.adapter)
@@ -220,10 +217,10 @@ class BlessServerBlueZDBus(BaseBlessServer):
         cur_value: Any = bless_char.value
 
         characteristic: BlueZGattCharacteristic = bless_char.gatt
-        characteristic.value = cur_value
+        characteristic.Value = bytes(cur_value)  # type: ignore
         return True
 
-    def read(self, char: BlueZGattCharacteristic) -> List[int]:
+    def read(self, char: BlueZGattCharacteristic) -> bytes:
         """
         Read request.
         This re-routes the the request incomming on the dbus to the server to
@@ -238,12 +235,12 @@ class BlessServerBlueZDBus(BaseBlessServer):
 
         Returns
         -------
-        List[int]
+        bytes
             The value of the characteristic
         """
-        return list(self.read_request(char.uuid))
+        return bytes(self.read_request(char.UUID))
 
-    def write(self, char: BlueZGattCharacteristic, value: bytearray):
+    def write(self, char: BlueZGattCharacteristic, value: bytes):
         """
         Write request.
         This function re-routes the write request sent from the
@@ -257,4 +254,4 @@ class BlessServerBlueZDBus(BaseBlessServer):
         value : bytearray
             The value being requested to set
         """
-        return self.write_request(char.uuid, value)
+        return self.write_request(char.UUID, bytearray(value))

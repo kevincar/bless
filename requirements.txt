@@ -7,4 +7,4 @@ aioconsole
 numpy
 pyobjc; platform_system == "Darwin"
 twisted; platform_system == "Linux"
-txdbus; platform_system == "Linux"
+dbus-next; platform_system == "Linux"
