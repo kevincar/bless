@@ -16,7 +16,7 @@ from CoreBluetooth import (  # type: ignore
 
 from bleak.backends.service import BleakGATTService  # type: ignore
 
-from .PeripheralManagerDelegate import PeripheralManagerDelegate  # type: ignore
+from .peripheral_manager_delegate import PeripheralManagerDelegate  # type: ignore
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.corebluetooth.service import BlessGATTServiceCoreBluetooth
@@ -75,7 +75,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             bleak_service: BleakGATTService = self.services[service_uuid]
             service_obj: CBService = bleak_service.obj
             logger.debug("Adding service: {}".format(bleak_service.uuid))
-            await self.peripheral_manager_delegate.addService(service_obj)
+            await self.peripheral_manager_delegate.add_service(service_obj)
 
         if not self.read_request_func or not self.write_request_func:
             raise BlessError("Callback functions must be initialized first")
@@ -88,7 +88,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         }
         logger.debug("Advertisement Data: {}".format(advertisement_data))
         try:
-            await self.peripheral_manager_delegate.startAdvertising_(advertisement_data)
+            await self.peripheral_manager_delegate.start_advertising(advertisement_data)
         except TimeoutError:
             # If advertising fails as a result of bluetooth module power
             # cycling or advertisement failure, attempt to start again
@@ -100,7 +100,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         """
         Stop the server
         """
-        await self.peripheral_manager_delegate.stopAdvertising()
+        await self.peripheral_manager_delegate.stop_advertising()
 
     async def is_connected(self) -> bool:
         """
