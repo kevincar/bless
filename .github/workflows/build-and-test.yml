@@ -48,6 +48,8 @@ jobs:
         # exit-zero treats all errors as warnings.
         flake8 . --count --exit-zero --statistic --max-line-length 88
     - name: Check mypy
+      # Hold off on windows. Mypy is not being consistant there
+      if: runner.os != 'Windows'
       run: |
           mypy bless
     - name: Test with pytest
