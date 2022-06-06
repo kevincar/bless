@@ -62,7 +62,7 @@ class TestBlessServer:
     @pytest.mark.asyncio
     async def test_server(self):
         # Initialize
-        server: BlessServer = BlessServer("TestServ")
+        server: BlessServer = BlessServer("Test Server")
 
         # setup a service
         service_uuid: str = str(uuid.uuid4())

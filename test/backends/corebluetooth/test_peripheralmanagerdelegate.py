@@ -24,7 +24,7 @@ from CoreBluetooth import (
     CBAttributePermissionsReadable,
     CBAttributePermissionsWriteable,
     CBAdvertisementDataServiceUUIDsKey,
-    CBAdvertisementDataLocalNameKey
+    CBAdvertisementDataLocalNameKey,
 )
 
 from bless.backends.corebluetooth.peripheral_manager_delegate import (  # type: ignore # noqa: E402 E501
@@ -101,8 +101,11 @@ class TestPeripheralManagerDelegate:
                 CBAttributePermissionsReadable | CBAttributePermissionsWriteable
             )
             cb_char_id: CBUUID = CBUUID.alloc().initWithString_(char_id)
-            cb_char = CBMutableCharacteristic.alloc().initWithType_properties_value_permissions_(
-                cb_char_id, props, None, permissions
+            cb_char = (
+                CBMutableCharacteristic.alloc()
+                .initWithType_properties_value_permissions_(
+                    cb_char_id, props, None, permissions
+                )
             )
             service.setCharacteristics_([cb_char])
 
@@ -115,7 +118,7 @@ class TestPeripheralManagerDelegate:
             # Start Advertising
             advertisement_data: Dict[str, Any] = {
                 CBAdvertisementDataServiceUUIDsKey: [cbid],
-                CBAdvertisementDataLocalNameKey: "TestDev",
+                CBAdvertisementDataLocalNameKey: "TestBLE",
             }
 
             try:
