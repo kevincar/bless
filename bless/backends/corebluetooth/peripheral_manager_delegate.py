@@ -1,11 +1,11 @@
-import objc
+import objc  # type: ignore
 import asyncio
 import logging
 import threading
 
 from typing import Callable, Dict, Any, List
-from Foundation import NSObject, NSError
-from CoreBluetooth import (
+from Foundation import NSObject, NSError  # type: ignore
+from CoreBluetooth import (  # type: ignore
     CBService,
     CBCentral,
     CBATTRequest,
@@ -19,15 +19,20 @@ from CoreBluetooth import (
     CBManagerStateUnauthorized,
     CBManagerStatePoweredOff,
     CBManagerStatePoweredOn,
+    CBAdvertisementDataLocalNameKey,
+    CBAdvertisementDataServiceUUIDsKey,
 )
 
-from libdispatch import dispatch_queue_create, DISPATCH_QUEUE_SERIAL
+from libdispatch import dispatch_queue_create, DISPATCH_QUEUE_SERIAL  # type: ignore
 
 LOGGER = logging.getLogger(name=__name__)
 CBPeripheralManagerDelegate = objc.protocolNamed("CBPeripheralManagerDelegate")
 
 
-class PeripheralManagerDelegate(NSObject, protocols=[CBPeripheralManagerDelegate]):
+class PeripheralManagerDelegate(  # type: ignore
+        NSObject,
+        protocols=[CBPeripheralManagerDelegate]
+        ):
     def init(self):
         self = objc.super(PeripheralManagerDelegate, self).init()
 
@@ -86,6 +91,33 @@ class PeripheralManagerDelegate(NSObject, protocols=[CBPeripheralManagerDelegate
             How long to wait before throwing an error if advertising doesn't
             start
         """
+
+        len_local_name: int = len(
+            advertisement_data.get(CBAdvertisementDataLocalNameKey, "")
+        )
+        num_uuids: int = len(
+            advertisement_data.get(CBAdvertisementDataServiceUUIDsKey, [])
+        )
+        LOGGER.debug(f"len_local_name: {len_local_name}")
+        LOGGER.debug(f"num_uuids: {num_uuids}")
+        if len_local_name:
+            if num_uuids > 0:
+                if len_local_name >= 10:
+                    LOGGER.warning(
+                        "The local name of your BLE application "
+                        + "may not be transmitted appropriately because it is longer "
+                        + "than the available space. Either remove the UUIDs being "
+                        + "advertised or shorten the local name to less than 10 "
+                        + "characters."
+                    )
+            else:
+                if len_local_name >= 28:
+                    LOGGER.warning(
+                        "The local name of your BLE application "
+                        + "may not be transmitted appropriately because it is longer "
+                        + "than the available space. Consider advertised shortening "
+                        + "the local name to less than 28 characters."
+                    )
 
         self.peripheral_manager.startAdvertising_(advertisement_data)
 
@@ -280,9 +312,7 @@ class PeripheralManagerDelegate(NSObject, protocols=[CBPeripheralManagerDelegate
         request.setValue_(
             self.read_request_func(request.characteristic().UUID().UUIDString())
         )
-        peripheral_manager.respondToRequest_withResult_(
-            request, CBATTErrorSuccess
-        )
+        peripheral_manager.respondToRequest_withResult_(request, CBATTErrorSuccess)
 
     def peripheralManager_didReceiveWriteRequests_(  # noqa: N802
         self, peripheral_manager: CBPeripheralManager, requests: List[CBATTRequest]
@@ -300,6 +330,4 @@ class PeripheralManagerDelegate(NSObject, protocols=[CBPeripheralManagerDelegate
             )
             self.write_request_func(char.UUID().UUIDString(), value)
 
-        peripheral_manager.respondToRequest_withResult_(
-            requests[0], CBATTErrorSuccess
-        )
+        peripheral_manager.respondToRequest_withResult_(requests[0], CBATTErrorSuccess)
