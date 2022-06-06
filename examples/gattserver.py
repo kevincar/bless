@@ -10,7 +10,7 @@ import threading
 
 from typing import Any, Dict
 
-from bless import (
+from bless import (  # type: ignore
         BlessServer,
         BlessGATTCharacteristic,
         GATTCharacteristicProperties,

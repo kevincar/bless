@@ -16,7 +16,7 @@ from CoreBluetooth import (  # type: ignore
 
 from bleak.backends.service import BleakGATTService  # type: ignore
 
-from .PeripheralManagerDelegate import PeripheralManagerDelegate  # type: ignore
+from .peripheral_manager_delegate import PeripheralManagerDelegate  # type: ignore
 from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.corebluetooth.service import BlessGATTServiceCoreBluetooth
@@ -61,7 +61,9 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         self.peripheral_manager_delegate.read_request_func = self.read_request
         self.peripheral_manager_delegate.write_request_func = self.write_request
 
-    async def start(self, timeout: float = 10, **kwargs):
+    async def start(
+        self, timeout: float = 10, prioritize_local_name: bool = True, **kwargs
+    ):
         """
         Start the server
 
@@ -70,25 +72,37 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         timeout : float
             Floating point decimal in seconds for how long to wait for the
             on-board bluetooth module to power on
+        prioritize_local_name : bool
+            CoreBluetooth only allows a limited amount of 28 bytes of
+            advertisement data, this makes it difficult to advertise long local
+            names associated with BLE applications. When true, the name of the
+            server is prioritized over service UUIDs, and will automatrically
+            be truncated if longer than 28 bytes.
         """
         for service_uuid in self.services:
             bleak_service: BleakGATTService = self.services[service_uuid]
             service_obj: CBService = bleak_service.obj
             logger.debug("Adding service: {}".format(bleak_service.uuid))
-            await self.peripheral_manager_delegate.addService(service_obj)
+            await self.peripheral_manager_delegate.add_service(service_obj)
 
         if not self.read_request_func or not self.write_request_func:
             raise BlessError("Callback functions must be initialized first")
 
-        advertisement_data = {
-            CBAdvertisementDataLocalNameKey: self.name,
-            CBAdvertisementDataServiceUUIDsKey: list(
+        advertisement_uuids: List
+        if (prioritize_local_name) and len(self.name) > 10:
+            advertisement_uuids = []
+        else:
+            advertisement_uuids = list(
                 map(lambda x: self.services[x].obj.UUID(), self.services)
             )
+
+        advertisement_data = {
+            CBAdvertisementDataLocalNameKey: self.name,
+            CBAdvertisementDataServiceUUIDsKey: advertisement_uuids,
         }
         logger.debug("Advertisement Data: {}".format(advertisement_data))
         try:
-            await self.peripheral_manager_delegate.startAdvertising_(advertisement_data)
+            await self.peripheral_manager_delegate.start_advertising(advertisement_data)
         except TimeoutError:
             # If advertising fails as a result of bluetooth module power
             # cycling or advertisement failure, attempt to start again
@@ -100,7 +114,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         """
         Stop the server
         """
-        await self.peripheral_manager_delegate.stopAdvertising()
+        await self.peripheral_manager_delegate.stop_advertising()
 
     async def is_connected(self) -> bool:
         """
@@ -136,7 +150,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         """
         logger.debug("Creating a new service with uuid: {}".format(uuid))
         service: BlessGATTServiceCoreBluetooth = BlessGATTServiceCoreBluetooth(uuid)
-        await service.init()
+        await service.init(self)
         self.services[service.uuid] = service
 
     async def add_new_characteristic(
@@ -172,9 +186,10 @@ class BlessServerCoreBluetooth(BaseBlessServer):
                 char_uuid, properties, permissions, value
             )
         )
-        await characteristic.init()
 
         service: BlessGATTServiceCoreBluetooth = self.services[service_uuid]
+        await characteristic.init(service)
+
         service.add_characteristic(characteristic)
         characteristics: List[CBMutableCharacteristic] = [
             characteristic.obj for characteristic in service.characteristics

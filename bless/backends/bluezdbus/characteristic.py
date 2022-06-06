@@ -65,7 +65,7 @@ class BlessGATTCharacteristicBlueZDBus(
 
         # Add to our BlueZDBus app
         gatt_char: BlueZGattCharacteristic = await service.gatt.add_characteristic(
-            self._uuid, flags, self.value
+            self._uuid, flags, bytes(self.value)
         )
         dict_obj: Dict = await gatt_char.get_obj()
 
@@ -84,6 +84,11 @@ class BlessGATTCharacteristicBlueZDBus(
     def value(self, val: bytearray):
         """Set the value of the characteristic"""
         self._value = val
+
+    @property
+    def uuid(self) -> str:
+        """The uuid of this characteristic"""
+        return self.obj.get("UUID").value
 
 
 def flags_to_dbus(flags: GATTCharacteristicProperties) -> List[Flags]:
