@@ -61,7 +61,9 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         self.peripheral_manager_delegate.read_request_func = self.read_request
         self.peripheral_manager_delegate.write_request_func = self.write_request
 
-    async def start(self, timeout: float = 10, **kwargs):
+    async def start(
+        self, timeout: float = 10, prioritize_local_name: bool = True, **kwargs
+    ):
         """
         Start the server
 
@@ -70,6 +72,12 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         timeout : float
             Floating point decimal in seconds for how long to wait for the
             on-board bluetooth module to power on
+        prioritize_local_name : bool
+            CoreBluetooth only allows a limited amount of 28 bytes of
+            advertisement data, this makes it difficult to advertise long local
+            names associated with BLE applications. When true, the name of the
+            server is prioritized over service UUIDs, and will automatrically
+            be truncated if longer than 28 bytes.
         """
         for service_uuid in self.services:
             bleak_service: BleakGATTService = self.services[service_uuid]
@@ -80,11 +88,17 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         if not self.read_request_func or not self.write_request_func:
             raise BlessError("Callback functions must be initialized first")
 
-        advertisement_data = {
-            CBAdvertisementDataLocalNameKey: self.name,
-            CBAdvertisementDataServiceUUIDsKey: list(
+        advertisement_uuids: List
+        if (prioritize_local_name) and len(self.name) > 10:
+            advertisement_uuids = []
+        else:
+            advertisement_uuids = list(
                 map(lambda x: self.services[x].obj.UUID(), self.services)
             )
+
+        advertisement_data = {
+            CBAdvertisementDataLocalNameKey: self.name,
+            CBAdvertisementDataServiceUUIDsKey: advertisement_uuids,
         }
         logger.debug("Advertisement Data: {}".format(advertisement_data))
         try:
