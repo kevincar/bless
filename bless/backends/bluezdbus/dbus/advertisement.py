@@ -51,6 +51,7 @@ class BlueZLEAdvertisement(ServiceInterface):
         self._service_data: Dict = {}
 
         self._tx_power: int = 20
+        self._local_name = app.app_name
 
         self.data = None
         super(BlueZLEAdvertisement, self).__init__(self.interface_name)
@@ -114,3 +115,11 @@ class BlueZLEAdvertisement(ServiceInterface):
     @TxPower.setter  # type: ignore
     def TxPower(self, dbm: "n"):  # type: ignore # noqa: F821
         self._tx_power = dbm
+
+    @dbus_property()
+    def LocalName(self) -> "s":  # type: ignore # noqa: F821
+        return self._local_name
+
+    @LocalName.setter
+    def LocalName(self, name: str):  # type: ignore # noqa: F821
+        self._local_name = name

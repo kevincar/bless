@@ -52,9 +52,8 @@ class BlessServerBlueZDBus(BaseBlessServer):
         """
         self.bus: MessageBus = await MessageBus(bus_type=BusType.SYSTEM).connect()
 
-        gatt_name: str = self.name.replace(" ", "")
         self.app: BlueZGattApplication = BlueZGattApplication(
-            gatt_name, "org.bluez", self.bus
+            self.name, "org.bluez", self.bus
         )
 
         self.app.Read = self.read
