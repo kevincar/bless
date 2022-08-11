@@ -18,6 +18,8 @@ class Type(Enum):
 class BlueZLEAdvertisement(ServiceInterface):
     """
     org.bluez.LEAdvertisement1 interface implementation
+
+    https://github.com/bluez/bluez/blob/5.64/doc/advertising-api.txt
     """
 
     interface_name: str = "org.bluez.LEAdvertisement1"
@@ -48,7 +50,8 @@ class BlueZLEAdvertisement(ServiceInterface):
         self._solicit_uuids: List[str] = [""]
         self._service_data: Dict = {}
 
-        self._include_tx_power: bool = False
+        self._tx_power: int = 20
+        self._local_name = app.app_name
 
         self.data = None
         super(BlueZLEAdvertisement, self).__init__(self.interface_name)
@@ -97,10 +100,26 @@ class BlueZLEAdvertisement(ServiceInterface):
     def ServiceData(self, data: "a{sv}"):  # type: ignore # noqa: F821 F722
         self._service_data = data
 
-    @dbus_property()
-    def IncludeTxPower(self) -> "b":  # type: ignore # noqa: F821
-        return self._include_tx_power
+    # @dbus_property()
+    # def Includes(self) -> "as": # type: ignore # noqa: F821
+    #     return ["tx-power", "local-name"]
 
-    @IncludeTxPower.setter  # type: ignore
-    def IncludeTxPower(self, include: "b"):  # type: ignore # noqa: F821
-        self._include_tx_power = include
+    # @Includes.setter
+    # def Includes(self, include): # type: ignore # noqa: F821
+    #     pass
+
+    @dbus_property()
+    def TxPower(self) -> "n":  # type: ignore # noqa: F821
+        return self._tx_power
+
+    @TxPower.setter  # type: ignore
+    def TxPower(self, dbm: "n"):  # type: ignore # noqa: F821
+        self._tx_power = dbm
+
+    @dbus_property()
+    def LocalName(self) -> "s":  # type: ignore # noqa: F821
+        return self._local_name
+
+    @LocalName.setter
+    def LocalName(self, name: str):  # type: ignore # noqa: F821
+        self._local_name = name
