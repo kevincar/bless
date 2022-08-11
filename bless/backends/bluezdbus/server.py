@@ -2,7 +2,7 @@ import asyncio
 
 from uuid import UUID
 
-from typing import Optional, Dict, Any, cast
+from typing import Any, Optional, cast
 
 from asyncio import AbstractEventLoop
 
@@ -41,8 +41,6 @@ class BlessServerBlueZDBus(BaseBlessServer):
     def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
         super(BlessServerBlueZDBus, self).__init__(loop=loop, **kwargs)
         self.name: str = name
-
-        self.services: Dict[str, BlessGATTServiceBlueZDBus] = {}
 
         self.setup_task: asyncio.Task = self.loop.create_task(self.setup())
 
@@ -172,7 +170,9 @@ class BlessServerBlueZDBus(BaseBlessServer):
             characteristic
         """
         await self.setup_task
-        service: BlessGATTServiceBlueZDBus = self.services[str(UUID(service_uuid))]
+        service: BlessGATTServiceBlueZDBus = cast(
+            BlessGATTServiceBlueZDBus, self.services[str(UUID(service_uuid))]
+        )
         characteristic: BlessGATTCharacteristicBlueZDBus = (
             BlessGATTCharacteristicBlueZDBus(char_uuid, properties, permissions, value)
         )
@@ -204,14 +204,15 @@ class BlessServerBlueZDBus(BaseBlessServer):
         """
         service_uuid = str(UUID(service_uuid))
         char_uuid = str(UUID(char_uuid))
-        bless_service: Optional[BlessGATTServiceBlueZDBus] = self.get_service(
-            service_uuid
+        bless_service: Optional[BlessGATTServiceBlueZDBus] = cast(
+            Optional[BlessGATTServiceBlueZDBus], self.get_service(service_uuid)
         )
         if bless_service is None:
             return False
 
-        bless_char: BlessGATTCharacteristicBlueZDBus = bless_service.get_characteristic(
-            char_uuid
+        bless_char: BlessGATTCharacteristicBlueZDBus = cast(
+            BlessGATTCharacteristicBlueZDBus,
+            bless_service.get_characteristic(char_uuid),
         )
         cur_value: Any = bless_char.value
 

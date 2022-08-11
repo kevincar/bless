@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Union, Optional, List, Dict, TYPE_CHECKING
+from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING
 
 from bleak.backends.bluezdbus.characteristic import (  # type: ignore
     _GattCharacteristicsFlagsEnum,
@@ -8,6 +8,7 @@ from bleak.backends.bluezdbus.characteristic import (  # type: ignore
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
+    from bless.backends.service import BlessGATTService
 
 from bless.backends.characteristic import (
     BlessGATTCharacteristic,
@@ -52,7 +53,7 @@ class BlessGATTCharacteristicBlueZDBus(
         super().__init__(uuid, properties, permissions, value)
         self.value = value
 
-    async def init(self, service: "BlessGATTServiceBlueZDBus"):
+    async def init(self, service: "BlessGATTService"):
         """
         Initialize the BlueZGattCharacteristic object
 
@@ -64,8 +65,13 @@ class BlessGATTCharacteristicBlueZDBus(
         flags: List[Flags] = flags_to_dbus(self._properties)
 
         # Add to our BlueZDBus app
-        gatt_char: BlueZGattCharacteristic = await service.gatt.add_characteristic(
-            self._uuid, flags, bytes(self.value)
+        bluez_service: "BlessGATTServiceBlueZDBus" = cast(
+            "BlessGATTServiceBlueZDBus", service
+        )
+        gatt_char: BlueZGattCharacteristic = (
+            await bluez_service.gatt.add_characteristic(
+                self._uuid, flags, bytes(self.value)
+            )
         )
         dict_obj: Dict = await gatt_char.get_obj()
 

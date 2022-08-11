@@ -65,14 +65,3 @@ class BlessGATTServiceWinRT(BlessGATTService, BleakGATTServiceWinRT):
     def uuid(self) -> str:
         """UUID for this service"""
         return str(self.obj.uuid)
-
-    @property
-    def characteristics(self) -> List[BlessGATTCharacteristicWinRT]:
-        """List of characteristics for this service"""
-        return self.__characteristics
-
-    def add_characteristic(self, characteristic: BlessGATTCharacteristicWinRT):
-        """
-        Should not be used by end user, but rather by `bleak` itself.
-        """
-        self.__characteristics.append(characteristic)

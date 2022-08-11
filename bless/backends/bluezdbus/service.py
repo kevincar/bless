@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class BlessGATTServiceBlueZDBus(BlessGATTService, BleakGATTServiceBlueZDBus):
-    """"
+    """ "
     GATT service implementation for the BlueZ backend
     """
 
@@ -55,11 +55,14 @@ class BlessGATTServiceBlueZDBus(BlessGATTService, BleakGATTServiceBlueZDBus):
         return self.obj["UUID"].value
 
     @property
-    def characteristics(self) -> List[BlessGATTCharacteristicBlueZDBus]:
+    def characteristics(self) -> List[BlessGATTCharacteristicBlueZDBus]:  # type: ignore
         """List of characteristics for this service"""
         return self.__characteristics
 
-    def add_characteristic(self, characteristic: BlessGATTCharacteristicBlueZDBus):
+    def add_characteristic(  # type: ignore
+        self,
+        characteristic: BlessGATTCharacteristicBlueZDBus
+    ):
         """
         Should not be used by end user, but rather by `bleak` itself.
         """

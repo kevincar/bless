@@ -120,6 +120,6 @@ class BlueZLEAdvertisement(ServiceInterface):
     def LocalName(self) -> "s":  # type: ignore # noqa: F821
         return self._local_name
 
-    @LocalName.setter
+    @LocalName.setter  # type: ignore
     def LocalName(self, name: str):  # type: ignore # noqa: F821
         self._local_name = name

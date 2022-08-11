@@ -1,7 +1,7 @@
 import logging
 
 from uuid import UUID
-from typing import Optional, Dict, List, cast
+from typing import Optional, List, cast
 
 from asyncio import TimeoutError
 from asyncio.events import AbstractEventLoop
@@ -53,7 +53,6 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         super(BlessServerCoreBluetooth, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
-        self.services: Dict[str, BlessGATTServiceCoreBluetooth] = {}
 
         self.peripheral_manager_delegate: PeripheralManagerDelegate = (
             PeripheralManagerDelegate.alloc().init()
@@ -187,7 +186,9 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             )
         )
 
-        service: BlessGATTServiceCoreBluetooth = self.services[service_uuid]
+        service: BlessGATTServiceCoreBluetooth = cast(
+            BlessGATTServiceCoreBluetooth, self.services[service_uuid]
+        )
         await characteristic.init(service)
 
         service.add_characteristic(characteristic)

@@ -55,14 +55,3 @@ class BlessGATTServiceCoreBluetooth(BlessGATTService, BleakGATTServiceCoreBlueto
     def uuid(self) -> str:
         """UUID for this service."""
         return cb_uuid_to_str(self.obj.UUID())
-
-    @property
-    def characteristics(self) -> List[BlessGATTCharacteristicCoreBluetooth]:
-        """List of characteristics for this service"""
-        return self.__characteristics
-
-    def add_characteristic(self, characteristic: BlessGATTCharacteristicCoreBluetooth):
-        """
-        Should not be used by end user, but rather by `bleak` itself.
-        """
-        self.__characteristics.append(characteristic)

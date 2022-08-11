@@ -5,7 +5,6 @@ import logging
 from uuid import UUID
 from asyncio import AbstractEventLoop
 from typing import Any, Optional, Dict, Callable, List
-from bleak.backends.service import BleakGATTService  # type: ignore
 
 from bless.backends.service import BlessGATTService
 from bless.backends.characteristic import (  # type: ignore
@@ -34,7 +33,7 @@ class BaseBlessServer(abc.ABC):
 
         self._callbacks: Dict[str, Callable[[Any], Any]] = {}
 
-        self.services: Dict[str, BleakGATTService] = {}
+        self.services: Dict[str, BlessGATTService] = {}
 
     # Async Context managers
 
