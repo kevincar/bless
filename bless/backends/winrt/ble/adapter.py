@@ -1,8 +1,10 @@
 import winreg
+import win32file  # type: ignore
+import win32api  # type: ignore
 
-from pysetupdi import devices
-from pywin32 import win32file, win32api
-from pywin32.win32con import GENERIC_WRITE, OPEN_EXISTING
+from typing import cast
+from pysetupdi import devices  # type: ignore
+from win32con import GENERIC_WRITE, OPEN_EXISTING  # type: ignore
 
 
 class BLEAdapter:
@@ -10,7 +12,7 @@ class BLEAdapter:
         self._dev: int = None
         self._adapter_name: str = get_bluetooth_adapter()
         self._device_guid: str = "{a5dcbf10-6530-11d2-901f-00c04fb951ed}"
-        self._device_name_: str = self._adapter_name.replace("\\", "#")
+        self._device_name: str = self._adapter_name.replace("\\", "#")
         self._filename: str = "\\\\.\\" + self._device_name + "#" + self._device_guid
 
         self._dev: int = win32file.CreateFile(
@@ -33,7 +35,11 @@ class BLEAdapter:
         )
 
         winreg.SetValueEx(
-            key, "Local Name", 0, winreg.REG_BINARY, local_name
+            key,
+            "Local Name",
+            0,
+            winreg.REG_BINARY,
+            cast(str, bytes(local_name, "utf-8"))
         )
         winreg.CloseKey(key)
 
@@ -41,7 +47,9 @@ class BLEAdapter:
         os_major_version: int = win32api.GetVersionEx()[0]
         control_code: int = 0x220fd4 if os_major_version < 6 else 0x411008
         reload_command: int = 4
-        win32file.DeviceIoControl(self._dev, control_code, reload_command, 0)
+        win32file.DeviceIoControl(
+            self._dev, control_code, reload_command.to_bytes(4, byteorder="little"), 0
+        )
 
 
 def get_bluetooth_adapter() -> str:
