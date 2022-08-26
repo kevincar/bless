@@ -1,15 +1,21 @@
-import winreg
 import win32file  # type: ignore
 import win32api  # type: ignore
 
 from typing import cast
 from pysetupdi import devices  # type: ignore
 from win32con import GENERIC_WRITE, OPEN_EXISTING  # type: ignore
+from winreg import (  # type: ignore
+    HKEY_LOCAL_MACHINE,
+    KEY_SET_VALUE,
+    REG_BINARY,
+    OpenKeyEx,
+    SetValueEx,
+    CloseKey
+)
 
 
 class BLEAdapter:
     def __init__(self):
-        self._dev: int = None
         self._adapter_name: str = get_bluetooth_adapter()
         self._device_guid: str = "{a5dcbf10-6530-11d2-901f-00c04fb951ed}"
         self._device_name: str = self._adapter_name.replace("\\", "#")
@@ -30,18 +36,18 @@ class BLEAdapter:
         local_name_key: str = (
             f"SYSTEM\\ControlSet001\\Enum\\{self._adapter_name}\\Device Parameters"
         )
-        key = winreg.OpenKeyEx(
-            winreg.HKEY_LOCAL_MACHINE, local_name_key, 0, winreg.KEY_SET_VALUE
+        key = OpenKeyEx(
+            HKEY_LOCAL_MACHINE, local_name_key, 0, KEY_SET_VALUE
         )
 
-        winreg.SetValueEx(
+        SetValueEx(
             key,
             "Local Name",
             0,
-            winreg.REG_BINARY,
+            REG_BINARY,
             cast(str, bytes(local_name, "utf-8"))
         )
-        winreg.CloseKey(key)
+        CloseKey(key)
 
     def _restart_device(self):
         os_major_version: int = win32api.GetVersionEx()[0]
