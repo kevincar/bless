@@ -31,8 +31,9 @@ class BlessGATTServiceWinRT(BlessGATTService, BleakGATTServiceWinRT):
             The UUID to assign to the service
         """
         super(BlessGATTServiceWinRT, self).__init__(uuid)
-        self.__characteristics: List[BlessGATTCharacteristicWinRT] = []
-        self.__handle = 0
+        super(BlessGATTService, self).__init__(uuid)
+        # self.__characteristics: List[BlessGATTCharacteristicWinRT] = []
+        # self.__handle = 0
 
     async def init(self, server: "BaseBlessServer"):
         """
