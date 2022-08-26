@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import List, Union, cast, TYPE_CHECKING
+from typing import Union, cast, TYPE_CHECKING
 
 from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
     GattServiceProviderResult,
@@ -9,7 +9,6 @@ from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # t
 
 from bleak.backends.winrt.service import BleakGATTServiceWinRT  # type: ignore
 from bless.backends.service import BlessGATTService
-from bless.backends.winrt.characteristic import BlessGATTCharacteristicWinRT
 
 if TYPE_CHECKING:
     from bless.backends.server import BaseBlessServer
@@ -56,13 +55,3 @@ class BlessGATTServiceWinRT(BlessGATTService, BleakGATTServiceWinRT):
         )
         new_service: GattLocalService = self.service_provider.service
         self.obj = new_service
-
-    @property
-    def handle(self) -> int:
-        """The integer handle of the service"""
-        return self.__handle
-
-    @property
-    def uuid(self) -> str:
-        """UUID for this service"""
-        return str(self.obj.uuid)
