@@ -10,13 +10,15 @@ if TYPE_CHECKING:
     from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
     from bless.backends.service import BlessGATTService
 
-from bless.backends.characteristic import (
+from bless.backends.characteristic import (  # noqa: E402
     BlessGATTCharacteristic,
     GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
 
-from bless.backends.bluezdbus.dbus.characteristic import Flags, BlueZGattCharacteristic
+from bless.backends.bluezdbus.dbus.characteristic import (  # noqa: E402
+    Flags, BlueZGattCharacteristic
+)
 
 
 class BlessGATTCharacteristicBlueZDBus(

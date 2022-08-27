@@ -59,11 +59,11 @@ class BlueZGattService(ServiceInterface):
         super(BlueZGattService, self).__init__(self.interface_name)
 
     @dbus_property(access=PropertyAccess.READ)
-    def UUID(self) -> "s":  # type: ignore # noqa: F821
+    def UUID(self) -> "s":  # type: ignore # noqa: F821 N802
         return self._uuid
 
     @dbus_property(access=PropertyAccess.READ)
-    def Primary(self) -> "b":  # type: ignore # noqa: F821
+    def Primary(self) -> "b":  # type: ignore # noqa: F821 N802
         return self._primary
 
     async def add_characteristic(

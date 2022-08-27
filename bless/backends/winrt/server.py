@@ -16,6 +16,9 @@ from bless.backends.winrt.characteristic import (  # type: ignore
     BlessGATTCharacteristicWinRT,
 )
 
+
+from bless.backends.winrt.ble import BLEAdapter
+
 # CLR imports
 # Import of Bleak CLR->UWP Bridge.
 # from BleakBridge import Bridge
@@ -68,6 +71,7 @@ class BlessServerWinRT(BaseBlessServer):
 
         self._advertising: bool = False
         self._advertising_started: Event = Event()
+        self._adapter: BLEAdapter = BLEAdapter()
 
     async def start(self, **kwargs):
         """
@@ -80,6 +84,7 @@ class BlessServerWinRT(BaseBlessServer):
             on-board bluetooth module to power on
         """
 
+        self._adapter.set_local_name(self.name)
         adv_parameters: GattServiceProviderAdvertisingParameters = (
             GattServiceProviderAdvertisingParameters()
         )
