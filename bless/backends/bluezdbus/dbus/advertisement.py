@@ -61,27 +61,27 @@ class BlueZLEAdvertisement(ServiceInterface):
         print("%s: Released!" % self.path)
 
     @dbus_property()
-    def Type(self) -> "s":  # type: ignore # noqa: F821
+    def Type(self) -> "s":  # type: ignore # noqa: F821 N802
         return self._type
 
     @Type.setter  # type: ignore
-    def Type(self, type: "s"):  # type: ignore # noqa: F821 F722
+    def Type(self, type: "s"):  # type: ignore # noqa: F821 F722 N802
         self._type = type
 
     @dbus_property()  # noqa: F722
-    def ServiceUUIDs(self) -> "as":  # type: ignore # noqa: F821 F722
+    def ServiceUUIDs(self) -> "as":  # type: ignore # noqa: F821 F722 N802
         return self._service_uuids
 
     @ServiceUUIDs.setter  # type: ignore # noqa: 722
-    def ServiceUUIDs(self, service_uuids: "as"):  # type: ignore # noqa: F821 F722
+    def ServiceUUIDs(self, service_uuids: "as"):  # type: ignore # noqa: F821 F722 N802
         self._service_uuids = service_uuids
 
     @dbus_property()  # noqa: 722
-    def ManufacturerData(self) -> "a{qv}":  # type: ignore # noqa: F821 F722
+    def ManufacturerData(self) -> "a{qv}":  # type: ignore # noqa: F821 F722 N802
         return self._manufacturer_data
 
     @ManufacturerData.setter  # type: ignore # noqa: F722
-    def ManufacturerData(self, data: "a{qv}"):  # type: ignore # noqa: F821 F722
+    def ManufacturerData(self, data: "a{qv}"):  # type: ignore # noqa: F821 F722 N802
         self._manufacturer_data = data
 
     # @dbus_property()
@@ -93,11 +93,11 @@ class BlueZLEAdvertisement(ServiceInterface):
         # self._solicit_uuids = uuids
 
     @dbus_property()  # noqa: F722
-    def ServiceData(self) -> "a{sv}":  # type: ignore # noqa: F821 F722
+    def ServiceData(self) -> "a{sv}":  # type: ignore # noqa: F821 F722 N802
         return self._service_data
 
     @ServiceData.setter  # type: ignore # noqa: F722
-    def ServiceData(self, data: "a{sv}"):  # type: ignore # noqa: F821 F722
+    def ServiceData(self, data: "a{sv}"):  # type: ignore # noqa: F821 F722 N802
         self._service_data = data
 
     # @dbus_property()
@@ -109,17 +109,17 @@ class BlueZLEAdvertisement(ServiceInterface):
     #     pass
 
     @dbus_property()
-    def TxPower(self) -> "n":  # type: ignore # noqa: F821
+    def TxPower(self) -> "n":  # type: ignore # noqa: F821 N802
         return self._tx_power
 
     @TxPower.setter  # type: ignore
-    def TxPower(self, dbm: "n"):  # type: ignore # noqa: F821
+    def TxPower(self, dbm: "n"):  # type: ignore # noqa: F821 N802
         self._tx_power = dbm
 
     @dbus_property()
-    def LocalName(self) -> "s":  # type: ignore # noqa: F821
+    def LocalName(self) -> "s":  # type: ignore # noqa: F821 N802
         return self._local_name
 
     @LocalName.setter  # type: ignore
-    def LocalName(self, name: str):  # type: ignore # noqa: F821
+    def LocalName(self, name: str):  # type: ignore # noqa: F821 N802
         self._local_name = name

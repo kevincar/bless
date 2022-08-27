@@ -9,9 +9,9 @@ from dbus_next.constants import PropertyAccess  # type: ignore
 from dbus_next.signature import Variant  # type: ignore
 
 if TYPE_CHECKING:
-    from bless.backends.bluezdbus.dbus.service import (  # type: ignore
+    from bless.backends.bluezdbus.dbus.service import (  # type: ignore # noqa: F401
         BlueZGattService,
-        BlueZGattDescriptor,
+        BlueZGattDescriptor
     )
 
 
@@ -76,34 +76,34 @@ class BlueZGattCharacteristic(ServiceInterface):
         super(BlueZGattCharacteristic, self).__init__(self.interface_name)
 
     @dbus_property(access=PropertyAccess.READ)
-    def UUID(self) -> "s":  # type: ignore # noqa: F821
+    def UUID(self) -> "s":  # type: ignore # noqa: F821 N802
         return self._uuid
 
     @dbus_property(access=PropertyAccess.READ)
-    def Service(self) -> "o":  # type: ignore # noqa: F821
+    def Service(self) -> "o":  # type: ignore # noqa: F821 N802
         return self._service_path
 
     @dbus_property()
-    def Value(self) -> "ay":  # type: ignore # noqa: F821
+    def Value(self) -> "ay":  # type: ignore # noqa: F821 N802
         return self._value
 
     @Value.setter  # type: ignore
-    def Value(self, value: "ay"):  # type: ignore # noqa: F821
+    def Value(self, value: "ay"):  # type: ignore # noqa: F821 N802
         self._value = value
         self.emit_properties_changed(
             changed_properties={"Value": self._value}
         )
 
     @dbus_property(access=PropertyAccess.READ)
-    def Notifying(self) -> "b":  # type: ignore # noqa: F821
+    def Notifying(self) -> "b":  # type: ignore # noqa: F821 N802
         return self._notifying
 
     @dbus_property(access=PropertyAccess.READ)  # noqa: F722
-    def Flags(self) -> "as":  # type: ignore # noqa: F821 F722
+    def Flags(self) -> "as":  # type: ignore # noqa: F821 F722 N802
         return self._flags
 
     @method()  # noqa: F722
-    def ReadValue(self, options: "a{sv}") -> "ay":  # type: ignore # noqa: F722 F821
+    def ReadValue(self, options: "a{sv}") -> "ay":  # type: ignore # noqa: F722 F821 N802 E501
         """
         Read the value of the characteristic.
         This is to be fully implemented at the application level

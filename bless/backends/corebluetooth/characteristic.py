@@ -2,10 +2,7 @@ from enum import Flag
 from uuid import UUID
 from typing import Union, Optional
 
-from CoreBluetooth import (  # type: ignore
-        CBUUID,
-        CBMutableCharacteristic
-        )
+from CoreBluetooth import CBUUID, CBMutableCharacteristic  # type: ignore
 
 from bleak.backends.corebluetooth.characteristic import (  # type: ignore
     BleakGATTCharacteristicCoreBluetooth,
@@ -14,10 +11,10 @@ from bleak.backends.corebluetooth.characteristic import (  # type: ignore
 from bless.backends.service import BlessGATTService
 
 from bless.backends.characteristic import (
-        GATTCharacteristicProperties,
-        GATTAttributePermissions,
-        BlessGATTCharacteristic
-        )
+    GATTCharacteristicProperties,
+    GATTAttributePermissions,
+    BlessGATTCharacteristic,
+)
 
 
 class CBAttributePermissions(Flag):
@@ -39,7 +36,7 @@ class BlessGATTCharacteristicCoreBluetooth(
         uuid: Union[str, UUID],
         properties: GATTCharacteristicProperties,
         permissions: GATTAttributePermissions,
-        value: Optional[bytearray]
+        value: Optional[bytearray],
     ):
         """
         Instantiates a new GATT Characteristic but is not yet assigned to any
@@ -75,7 +72,9 @@ class BlessGATTCharacteristicCoreBluetooth(
                 cb_uuid, properties_value, self._initial_value, permissions_value
             )
         )
-        super(BlessGATTCharacteristic, self).__init__(obj=cb_characteristic)
+        super(BleakGATTCharacteristicCoreBluetooth, self).__init__(  # type: ignore
+            obj=cb_characteristic
+        )
 
     @property
     def value(self) -> bytearray:
