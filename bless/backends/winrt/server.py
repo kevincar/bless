@@ -61,7 +61,29 @@ class BlessServerWinRT(BaseBlessServer):
         A dictionary of services to be advertised by this server
     """
 
-    def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        loop: AbstractEventLoop = None,
+        name_overwrite: bool = False,
+        **kwargs,
+    ):
+        """
+        Initialize a new instance of a Bless BLE peripheral (server) for WinRT
+
+        Parameters
+        ----------
+        name : str
+            The display name that central device uses when your service is
+            identified. The `local_name`. By default, windows machines use the
+            name of the computer. This can can be used instead if name_overwrite
+            is set to True.
+        loop : AbstractEventLoop
+            An asyncio loop to run the server on
+        name_overwrite : bool
+            Defaults to false. If true, will cause the bluetooth system module
+            to be renamed to self.name
+        """
         super(BlessServerWinRT, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
@@ -72,6 +94,7 @@ class BlessServerWinRT(BaseBlessServer):
         self._advertising: bool = False
         self._advertising_started: Event = Event()
         self._adapter: BLEAdapter = BLEAdapter()
+        self._name_overwrite: bool = name_overwrite
 
     async def start(self, **kwargs):
         """
@@ -84,7 +107,9 @@ class BlessServerWinRT(BaseBlessServer):
             on-board bluetooth module to power on
         """
 
-        self._adapter.set_local_name(self.name)
+        if self._name_overwrite:
+            self._adapter.set_local_name(self.name)
+
         adv_parameters: GattServiceProviderAdvertisingParameters = (
             GattServiceProviderAdvertisingParameters()
         )
