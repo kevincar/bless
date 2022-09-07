@@ -2,11 +2,11 @@ import sys
 from uuid import UUID
 
 if sys.version_info[:2] < (3, 8):
-    from typing_extensions import (
-        Union, Optional, Literal, List, Dict, cast, TYPE_CHECKING
-    )
+    from typing_extensions import Literal
 else:
-    from typing import Union, Optional, Literal, List, Dict, cast, TYPE_CHECKING
+    from typing import Literal 
+
+from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING
 
 from bleak.backends.bluezdbus.characteristic import (  # type: ignore
     _GattCharacteristicsFlagsEnum,
