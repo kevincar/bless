@@ -56,8 +56,15 @@ async def run(loop):
                                     GATTAttributePermissions.writeable),
                     "Value": None
                     }
+                },
+            "5c339364-c7be-4f23-b666-a8ff73a6a86a": {
+                "bfc0c92f-317d-4ba9-976b-cc11ce77b4ca": {
+                    "Properties": GATTCharacteristicProperties.read,
+                    "Permissions": GATTAttributePermissions.readable,
+                    "Value": bytearray(b'\x69')
                 }
             }
+        }
     my_service_name = "Test Service"
     server = BlessServer(name=my_service_name, loop=loop)
     server.read_request_func = read_request

@@ -172,8 +172,8 @@ class BlueZGattApplication(ServiceInterface):
         )
         self.advertisements.append(advertisement)
 
-        for service in self.services:
-            advertisement._service_uuids.append(service.UUID)
+        # Only add the first UUID
+        advertisement._service_uuids.append(self.services[0].UUID)
 
         self.bus.export(advertisement.path, advertisement)
 
