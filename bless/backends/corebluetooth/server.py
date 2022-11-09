@@ -17,7 +17,6 @@ from CoreBluetooth import (  # type: ignore
 from bleak.backends.service import BleakGATTService  # type: ignore
 
 from .peripheral_manager_delegate import PeripheralManagerDelegate  # type: ignore
-from bless.exceptions import BlessError
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.corebluetooth.service import BlessGATTServiceCoreBluetooth
 from bless.backends.corebluetooth.characteristic import (  # type: ignore
