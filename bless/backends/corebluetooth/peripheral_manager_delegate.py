@@ -33,7 +33,7 @@ class PeripheralManagerDelegate(  # type: ignore
         NSObject,
         protocols=[CBPeripheralManagerDelegate]
         ):
-    def init(self):
+    def init(self: "PeripheralManagerDelegate"):
         self = objc.super(PeripheralManagerDelegate, self).init()
 
         self.event_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
@@ -55,7 +55,7 @@ class PeripheralManagerDelegate(  # type: ignore
         # that the bluetooth module is powered on
         self._powered_on_event.wait()
 
-        self._central_subscriptions = {}
+        self._central_subscriptions: Dict = {}
 
         if not self.compliant():
             LOGGER.warning("PeripheralManagerDelegate is not compliant")
