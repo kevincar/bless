@@ -15,7 +15,7 @@ from winreg import (  # type: ignore
 
 
 class BLEAdapter:
-    def __init__(self):
+    def __init__(self: "BLEAdapter"):
         self._adapter_name: str = get_bluetooth_adapter()
         self._device_guid: str = "{a5dcbf10-6530-11d2-901f-00c04fb951ed}"
         self._device_name: str = self._adapter_name.replace("\\", "#")
@@ -49,7 +49,7 @@ class BLEAdapter:
         )
         CloseKey(key)
 
-    def _restart_device(self):
+    def _restart_device(self: "BLEAdapter"):
         os_major_version: int = win32api.GetVersionEx()[0]
         control_code: int = 0x220fd4 if os_major_version < 6 else 0x411008
         reload_command: int = 4

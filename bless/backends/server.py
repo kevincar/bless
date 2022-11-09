@@ -28,7 +28,7 @@ class BaseBlessServer(abc.ABC):
         Used to manage services and characteristics that this server advertises
     """
 
-    def __init__(self, loop: AbstractEventLoop = None, **kwargs):
+    def __init__(self, loop: Optional[AbstractEventLoop] = None, **kwargs):
         self.loop: AbstractEventLoop = loop if loop else asyncio.get_event_loop()
 
         self._callbacks: Dict[str, Callable[[Any], Any]] = {}

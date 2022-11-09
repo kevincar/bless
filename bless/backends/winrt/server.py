@@ -64,7 +64,7 @@ class BlessServerWinRT(BaseBlessServer):
     def __init__(
         self,
         name: str,
-        loop: AbstractEventLoop = None,
+        loop: Optional[AbstractEventLoop] = None,
         name_overwrite: bool = False,
         **kwargs,
     ):
@@ -96,7 +96,7 @@ class BlessServerWinRT(BaseBlessServer):
         self._adapter: BLEAdapter = BLEAdapter()
         self._name_overwrite: bool = name_overwrite
 
-    async def start(self, **kwargs):
+    async def start(self: "BlessServerWinRT", **kwargs):
         """
         Start the server
 
@@ -122,7 +122,7 @@ class BlessServerWinRT(BaseBlessServer):
         self._advertising = True
         self._advertising_started.wait()
 
-    async def stop(self):
+    async def stop(self: "BlessServerWinRT"):
         """
         Stop the server
         """

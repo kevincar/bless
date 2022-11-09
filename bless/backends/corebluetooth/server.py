@@ -49,7 +49,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         The delegated class to manage this peripheral device
     """
 
-    def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
+    def __init__(self, name: str, loop: Optional[AbstractEventLoop] = None, **kwargs):
         super(BlessServerCoreBluetooth, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
@@ -83,9 +83,6 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             service_obj: CBService = bleak_service.obj
             logger.debug("Adding service: {}".format(bleak_service.uuid))
             await self.peripheral_manager_delegate.add_service(service_obj)
-
-        if not self.read_request_func or not self.write_request_func:
-            raise BlessError("Callback functions must be initialized first")
 
         advertisement_uuids: List
         if (prioritize_local_name) and len(self.name) > 10:

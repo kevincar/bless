@@ -38,14 +38,14 @@ class BlessServerBlueZDBus(BaseBlessServer):
 
     """
 
-    def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
+    def __init__(self, name: str, loop: Optional[AbstractEventLoop] = None, **kwargs):
         super(BlessServerBlueZDBus, self).__init__(loop=loop, **kwargs)
         self.name: str = name
         self._adapter: Optional[str] = kwargs.get("adapter", None)
 
         self.setup_task: asyncio.Task = self.loop.create_task(self.setup())
 
-    async def setup(self):
+    async def setup(self: "BlessServerBlueZDBus"):
         """
         Asyncronous side of init
         """
