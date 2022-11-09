@@ -73,7 +73,8 @@ class BlessGATTCharacteristicCoreBluetooth(
             )
         )
         super(BleakGATTCharacteristicCoreBluetooth, self).__init__(  # type: ignore
-            obj=cb_characteristic
+            obj=cb_characteristic,
+            max_write_without_response_size=0x200
         )
 
     @property
