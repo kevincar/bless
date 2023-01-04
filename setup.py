@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="bless",
-    version="0.2.4",
+    version="0.2.5",
     author="Kevin Davis",
     author_email="kevincarrolldavis@gmail.com",
     description="A Bluetooth Low Energy Server supplement to Bleak",
