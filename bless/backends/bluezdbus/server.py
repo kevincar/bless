@@ -2,7 +2,7 @@ import asyncio
 
 from uuid import UUID
 
-from typing import Optional, Dict, Any, cast
+from typing import Any, Optional, cast
 
 from asyncio import AbstractEventLoop
 
@@ -38,23 +38,21 @@ class BlessServerBlueZDBus(BaseBlessServer):
 
     """
 
-    def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
+    def __init__(self, name: str, loop: Optional[AbstractEventLoop] = None, **kwargs):
         super(BlessServerBlueZDBus, self).__init__(loop=loop, **kwargs)
         self.name: str = name
-
-        self.services: Dict[str, BlessGATTServiceBlueZDBus] = {}
+        self._adapter: Optional[str] = kwargs.get("adapter", None)
 
         self.setup_task: asyncio.Task = self.loop.create_task(self.setup())
 
-    async def setup(self):
+    async def setup(self: "BlessServerBlueZDBus"):
         """
         Asyncronous side of init
         """
         self.bus: MessageBus = await MessageBus(bus_type=BusType.SYSTEM).connect()
 
-        gatt_name: str = self.name.replace(" ", "")
         self.app: BlueZGattApplication = BlueZGattApplication(
-            gatt_name, "org.bluez", self.bus
+            self.name, "org.bluez", self.bus
         )
 
         self.app.Read = self.read
@@ -64,7 +62,9 @@ class BlessServerBlueZDBus(BaseBlessServer):
         self.app.StartNotify = lambda x: None
         self.app.StopNotify = lambda x: None
 
-        potential_adapter: Optional[ProxyObject] = await get_adapter(self.bus)
+        potential_adapter: Optional[ProxyObject] = await get_adapter(
+            self.bus, self._adapter
+        )
         if potential_adapter is None:
             raise Exception("Could not locate bluetooth adapter")
         self.adapter: ProxyObject = cast(ProxyObject, potential_adapter)
@@ -173,7 +173,9 @@ class BlessServerBlueZDBus(BaseBlessServer):
             characteristic
         """
         await self.setup_task
-        service: BlessGATTServiceBlueZDBus = self.services[str(UUID(service_uuid))]
+        service: BlessGATTServiceBlueZDBus = cast(
+            BlessGATTServiceBlueZDBus, self.services[str(UUID(service_uuid))]
+        )
         characteristic: BlessGATTCharacteristicBlueZDBus = (
             BlessGATTCharacteristicBlueZDBus(char_uuid, properties, permissions, value)
         )
@@ -205,14 +207,15 @@ class BlessServerBlueZDBus(BaseBlessServer):
         """
         service_uuid = str(UUID(service_uuid))
         char_uuid = str(UUID(char_uuid))
-        bless_service: Optional[BlessGATTServiceBlueZDBus] = self.get_service(
-            service_uuid
+        bless_service: Optional[BlessGATTServiceBlueZDBus] = cast(
+            Optional[BlessGATTServiceBlueZDBus], self.get_service(service_uuid)
         )
         if bless_service is None:
             return False
 
-        bless_char: BlessGATTCharacteristicBlueZDBus = bless_service.get_characteristic(
-            char_uuid
+        bless_char: BlessGATTCharacteristicBlueZDBus = cast(
+            BlessGATTCharacteristicBlueZDBus,
+            bless_service.get_characteristic(char_uuid),
         )
         cur_value: Any = bless_char.value
 

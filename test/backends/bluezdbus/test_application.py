@@ -10,8 +10,8 @@ if sys.platform.lower() != "linux":
 
 from typing import List, Optional, cast  # noqa: E402
 
-from dbus_next.aio import MessageBus, ProxyObject
-from dbus_next.constants import BusType
+from dbus_next.aio import MessageBus, ProxyObject  # noqa: E402
+from dbus_next.constants import BusType  # noqa: E402
 
 from bless.backends.bluezdbus.dbus.characteristic import Flags  # type: ignore # noqa: E402 E501
 from bless.backends.bluezdbus.dbus.utils import get_adapter  # type: ignore # noqa: E402 E501

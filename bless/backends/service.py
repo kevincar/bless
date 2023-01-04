@@ -6,6 +6,7 @@ from bleak.backends.service import BleakGATTService  # type: ignore
 
 if TYPE_CHECKING:
     from bless.backends.server import BaseBlessServer
+    from bless.backends.characteristic import BlessGATTCharacteristic
 
 
 class BlessGATTService(BleakGATTService):
@@ -39,3 +40,6 @@ class BlessGATTService(BleakGATTService):
             The server to assign the service to
         """
         raise NotImplementedError()
+
+    def get_characteristic(self, uuid: Union[str, UUID]) -> "BlessGATTCharacteristic":
+        return cast("BlessGATTCharacteristic", super().get_characteristic(uuid))

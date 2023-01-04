@@ -12,7 +12,7 @@ from typing import Dict, Any, List, Optional
 if sys.platform.lower() != "darwin":
     pytest.skip("Only for MacOS", allow_module_level=True)
 
-from CoreBluetooth import (
+from CoreBluetooth import (  # noqa: E402
     CBUUID,
     CBMutableCharacteristic,
     CBMutableService,

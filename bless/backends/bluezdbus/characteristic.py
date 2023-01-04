@@ -1,21 +1,34 @@
+import sys
 from uuid import UUID
-from typing import Union, Optional, List, Dict, TYPE_CHECKING
+
+if sys.version_info[:2] < (3, 8):
+    from typing_extensions import Literal
+else:
+    from typing import Literal
+
+from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING
 
 from bleak.backends.bluezdbus.characteristic import (  # type: ignore
     _GattCharacteristicsFlagsEnum,
     BleakGATTCharacteristicBlueZDBus,
 )
 
+from bleak.backends.bluezdbus.defs import GattCharacteristic1
+
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
+    from bless.backends.service import BlessGATTService
 
-from bless.backends.characteristic import (
+from bless.backends.characteristic import (  # noqa: E402
     BlessGATTCharacteristic,
     GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
 
-from bless.backends.bluezdbus.dbus.characteristic import Flags, BlueZGattCharacteristic
+from bless.backends.bluezdbus.dbus.characteristic import (  # noqa: E402
+    Flags,
+    BlueZGattCharacteristic,
+)
 
 
 class BlessGATTCharacteristicBlueZDBus(
@@ -52,7 +65,7 @@ class BlessGATTCharacteristicBlueZDBus(
         super().__init__(uuid, properties, permissions, value)
         self.value = value
 
-    async def init(self, service: "BlessGATTServiceBlueZDBus"):
+    async def init(self, service: "BlessGATTService"):
         """
         Initialize the BlueZGattCharacteristic object
 
@@ -64,15 +77,30 @@ class BlessGATTCharacteristicBlueZDBus(
         flags: List[Flags] = flags_to_dbus(self._properties)
 
         # Add to our BlueZDBus app
-        gatt_char: BlueZGattCharacteristic = await service.gatt.add_characteristic(
-            self._uuid, flags, bytes(self.value)
+        bluez_service: "BlessGATTServiceBlueZDBus" = cast(
+            "BlessGATTServiceBlueZDBus", service
+        )
+        gatt_char: BlueZGattCharacteristic = (
+            await bluez_service.gatt.add_characteristic(
+                self._uuid, flags, bytes(self.value)
+            )
         )
         dict_obj: Dict = await gatt_char.get_obj()
+        obj: GattCharacteristic1 = GattCharacteristic1(
+            UUID=dict_obj["UUID"],
+            Service=service.uuid,
+            Value=bytes(self.value),
+            WriteAcquired=False,
+            NotifyAcquired=False,
+            Notifying=False,
+            Flags=cast(_Flags, flags),
+            MTU=512,
+        )
 
         # Add a Bleak Characteristic properties
         self.gatt = gatt_char
         super(BlessGATTCharacteristic, self).__init__(
-            dict_obj, gatt_char.path, service.uuid, 0
+            obj, gatt_char.path, service.uuid, 0, 128
         )
 
     @property
@@ -123,3 +151,28 @@ def flags_to_dbus(flags: GATTCharacteristicProperties) -> List[Flags]:
             result.append(flag)
 
     return result
+
+
+_Flags = List[
+    Literal[
+        "broadcast",
+        "read",
+        "write-without-response",
+        "write",
+        "notify",
+        "indicate",
+        "authenticated-signed-writes",
+        "extended-properties",
+        "reliable-write",
+        "writable-auxiliaries",
+        "encrypt-read",
+        "encrypt-write",
+        # "encrypt-notify" and "encrypt-indicate" are server-only
+        "encrypt-authenticated-read",
+        "encrypt-authenticated-write",
+        # "encrypt-authenticated-notify", "encrypt-authenticated-indicate",
+        # "secure-read", "secure-write", "secure-notify", "secure-indicate"
+        # are server-only
+        "authorize",
+    ]
+]

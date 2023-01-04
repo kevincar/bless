@@ -1,15 +1,12 @@
 from uuid import UUID
-from typing import List, Union
+from typing import Union
 
 from CoreBluetooth import CBMutableService, CBUUID  # type: ignore
 
 from bleak.backends.corebluetooth.utils import cb_uuid_to_str  # type: ignore
-from bless.backends.corebluetooth.characteristic import (
-    BlessGATTCharacteristicCoreBluetooth,
-)
 from bleak.backends.corebluetooth.service import (  # type: ignore
-        BleakGATTServiceCoreBluetooth
-        )
+    BleakGATTServiceCoreBluetooth
+)
 
 from bless.backends.service import BlessGATTService
 from bless.backends.server import BaseBlessServer
@@ -30,7 +27,6 @@ class BlessGATTServiceCoreBluetooth(BlessGATTService, BleakGATTServiceCoreBlueto
             The uuid to assign to the service
         """
         super(BlessGATTServiceCoreBluetooth, self).__init__(uuid)
-        self.__characteristics: List[BlessGATTCharacteristicCoreBluetooth] = []
         self.__handle = 0
 
     async def init(self, server: "BaseBlessServer"):
@@ -42,8 +38,8 @@ class BlessGATTServiceCoreBluetooth(BlessGATTService, BleakGATTServiceCoreBlueto
             service_uuid, True
         )
 
-        # Cannot call this because of handle issue
         # super(BlessGATTService, self).__init__(obj=cb_service)
+        setattr(self, "_BleakGATTServiceCoreBluetooth__characteristics", [])
         self.obj = cb_service
 
     @property
@@ -55,14 +51,3 @@ class BlessGATTServiceCoreBluetooth(BlessGATTService, BleakGATTServiceCoreBlueto
     def uuid(self) -> str:
         """UUID for this service."""
         return cb_uuid_to_str(self.obj.UUID())
-
-    @property
-    def characteristics(self) -> List[BlessGATTCharacteristicCoreBluetooth]:
-        """List of characteristics for this service"""
-        return self.__characteristics
-
-    def add_characteristic(self, characteristic: BlessGATTCharacteristicCoreBluetooth):
-        """
-        Should not be used by end user, but rather by `bleak` itself.
-        """
-        self.__characteristics.append(characteristic)

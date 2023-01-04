@@ -86,7 +86,9 @@ class BlessGATTCharacteristicWinRT(
         )
 
         gatt_char: GattLocalCharacteristic = characteristic_result.characteristic
-        super(BlessGATTCharacteristic, self).__init__(obj=gatt_char)
+        super(BlessGATTCharacteristic, self).__init__(
+            obj=gatt_char, max_write_without_response_size=128
+        )
 
     @staticmethod
     def permissions_to_protection_level(

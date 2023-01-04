@@ -45,7 +45,7 @@ class BlueZGattApplication(ServiceInterface):
         self.destination: str = destination
         self.bus: MessageBus = bus
 
-        self.base_path: str = "/org/bluez/" + self.app_name
+        self.base_path: str = "/org/bluez/" + self.app_name.replace(" ", "")
         self.advertisements: List[BlueZLEAdvertisement] = []
         self.services: List[BlueZGattService] = []
 
@@ -172,8 +172,8 @@ class BlueZGattApplication(ServiceInterface):
         )
         self.advertisements.append(advertisement)
 
-        for service in self.services:
-            advertisement._service_uuids.append(service.UUID)
+        # Only add the first UUID
+        advertisement._service_uuids.append(self.services[0].UUID)
 
         self.bus.export(advertisement.path, advertisement)
 

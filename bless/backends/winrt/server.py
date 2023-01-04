@@ -4,7 +4,7 @@ import logging
 from uuid import UUID
 from threading import Event
 from asyncio.events import AbstractEventLoop
-from typing import Dict, Optional, List, Any
+from typing import Optional, List, Any, cast
 
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.characteristic import (  # type: ignore
@@ -15,6 +15,9 @@ from bless.backends.winrt.service import BlessGATTServiceWinRT
 from bless.backends.winrt.characteristic import (  # type: ignore
     BlessGATTCharacteristicWinRT,
 )
+
+
+from bless.backends.winrt.ble import BLEAdapter
 
 # CLR imports
 # Import of Bleak CLR->UWP Bridge.
@@ -58,19 +61,42 @@ class BlessServerWinRT(BaseBlessServer):
         A dictionary of services to be advertised by this server
     """
 
-    def __init__(self, name: str, loop: AbstractEventLoop = None, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        loop: Optional[AbstractEventLoop] = None,
+        name_overwrite: bool = False,
+        **kwargs,
+    ):
+        """
+        Initialize a new instance of a Bless BLE peripheral (server) for WinRT
+
+        Parameters
+        ----------
+        name : str
+            The display name that central device uses when your service is
+            identified. The `local_name`. By default, windows machines use the
+            name of the computer. This can can be used instead if name_overwrite
+            is set to True.
+        loop : AbstractEventLoop
+            An asyncio loop to run the server on
+        name_overwrite : bool
+            Defaults to false. If true, will cause the bluetooth system module
+            to be renamed to self.name
+        """
         super(BlessServerWinRT, self).__init__(loop=loop, **kwargs)
 
         self.name: str = name
-        self.services: Dict[str, BlessGATTServiceWinRT] = {}
 
         self._service_provider: Optional[GattServiceProvider] = None
         self._subscribed_clients: List[GattSubscribedClient] = []
 
         self._advertising: bool = False
         self._advertising_started: Event = Event()
+        self._adapter: BLEAdapter = BLEAdapter()
+        self._name_overwrite: bool = name_overwrite
 
-    async def start(self, **kwargs):
+    async def start(self: "BlessServerWinRT", **kwargs):
         """
         Start the server
 
@@ -81,6 +107,9 @@ class BlessServerWinRT(BaseBlessServer):
             on-board bluetooth module to power on
         """
 
+        if self._name_overwrite:
+            self._adapter.set_local_name(self.name)
+
         adv_parameters: GattServiceProviderAdvertisingParameters = (
             GattServiceProviderAdvertisingParameters()
         )
@@ -88,16 +117,18 @@ class BlessServerWinRT(BaseBlessServer):
         adv_parameters.is_connectable = True
 
         for uuid, service in self.services.items():
-            service.service_provider.start_advertising(adv_parameters)
+            winrt_service: BlessGATTServiceWinRT = cast(BlessGATTServiceWinRT, service)
+            winrt_service.service_provider.start_advertising(adv_parameters)
         self._advertising = True
         self._advertising_started.wait()
 
-    async def stop(self):
+    async def stop(self: "BlessServerWinRT"):
         """
         Stop the server
         """
         for uuid, service in self.services.items():
-            service.service_provider.stop_advertising()
+            winrt_service: BlessGATTServiceWinRT = cast(BlessGATTServiceWinRT, service)
+            winrt_service.service_provider.stop_advertising()
         self._advertising = False
 
     async def is_connected(self) -> bool:
@@ -123,8 +154,9 @@ class BlessServerWinRT(BaseBlessServer):
         """
         all_services_advertising: bool = True
         for uuid, service in self.services.items():
+            winrt_service: BlessGATTServiceWinRT = cast(BlessGATTServiceWinRT, service)
             service_is_advertising: bool = (
-                service.service_provider.advertisement_status == 2
+                winrt_service.service_provider.advertisement_status == 2
             )
             all_services_advertising = (
                 all_services_advertising and service_is_advertising
@@ -195,7 +227,9 @@ class BlessServerWinRT(BaseBlessServer):
 
         service_uuid = str(UUID(service_uuid))
         char_uuid = str(UUID(char_uuid))
-        service: BlessGATTServiceWinRT = self.services[service_uuid]
+        service: BlessGATTServiceWinRT = cast(
+            BlessGATTServiceWinRT, self.services[service_uuid]
+        )
         characteristic: BlessGATTCharacteristicWinRT = BlessGATTCharacteristicWinRT(
             char_uuid, properties, permissions, value
         )
@@ -227,11 +261,13 @@ class BlessServerWinRT(BaseBlessServer):
         """
         service_uuid = str(UUID(service_uuid))
         char_uuid = str(UUID(char_uuid))
-        service: Optional[BlessGATTServiceWinRT] = self.get_service(service_uuid)
+        service: Optional[BlessGATTServiceWinRT] = cast(
+            Optional[BlessGATTServiceWinRT], self.get_service(service_uuid)
+        )
         if service is None:
             return False
-        characteristic: BlessGATTCharacteristicWinRT = service.get_characteristic(
-            char_uuid
+        characteristic: BlessGATTCharacteristicWinRT = cast(
+            BlessGATTCharacteristicWinRT, service.get_characteristic(char_uuid)
         )
         value: bytes = characteristic.value
         value = value if value is not None else b"\x00"

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="bless",
-    version="0.2.4",
+    version="0.2.5",
     author="Kevin Davis",
     author_email="kevincarrolldavis@gmail.com",
     description="A Bluetooth Low Energy Server supplement to Bleak",
@@ -17,7 +17,9 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
         "bleak",
-        ],
+        "pywin32;platform_system=='Windows'",
+        "pysetupdi @ git+https://github.com/gwangyi/pysetupdi#egg=pysetupdi;platform_system=='Windows'"  # noqa: E501
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
