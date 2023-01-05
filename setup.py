@@ -15,10 +15,12 @@ setuptools.setup(
     package_data={"bless": ["py.typed"]},
     packages=setuptools.find_packages(exclude=("test", "examples")),
     include_package_data=True,
+    dependency_links=[
+        "https://github.com/gwangyi/pysetupdi#egg=pysetupdi"
+    ],
     install_requires=[
         "bleak",
         "pywin32;platform_system=='Windows'",
-        "pysetupdi @ git+https://github.com/gwangyi/pysetupdi#egg=pysetupdi;platform_system=='Windows'"  # noqa: E501
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
