@@ -18,12 +18,13 @@ setuptools.setup(
     install_requires=[
         "bleak",
         "pywin32;platform_system=='Windows'",
-        "pysetupdi @ git+https://github.com/gwangyi/pysetupdi#egg=pysetupdi;platform_system=='Windows'"  # noqa: E501
+        "dbus_next;platform_system=='Linux'",
+        "pysetupdi @ git+https://github.com/gwangyi/pysetupdi#egg=pysetupdi;platform_system=='Windows'",  # noqa: E501
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.7',
+    python_requires=">=3.7",
 )
