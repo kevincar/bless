@@ -54,15 +54,16 @@ class BlueZLEAdvertisement(ServiceInterface):
         self._solicit_uuids: List[str] = [""]
         self._service_data: Dict = {}
 
-        # 3 options below are classified as Experimental in BlueZ and really work only:
-        # - when BlueZ is compiled with such option (usually it is)
-        # - and when "bluetoothd" daemon is started with -E, --experimental option (usually it's not)
-        # They are taken into account only with Kernel v5.11+ and BlueZ v5.65+.
-        # It's a known fact that BlueZ verions 5.63-5.64 have broken Dbus part for LEAdvertisingManager
-        # and do not work properly when the Experimental mode is enabled.
-        self._min_interval: int = 100   # in ms, range [20ms, 10,485s]
-        self._max_interval: int = 100   # in ms, range [20ms, 10,485s]
-        self._tx_power: int = 20        # range [-127 to +20]
+        # 3 options below are classified as Experimental in BlueZ and really
+        # work only: - when BlueZ is compiled with such option (usually it is)
+        # - and when "bluetoothd" daemon is started with -E, --experimental
+        # option (usually it's not) They are taken into account only with
+        # Kernel v5.11+ and BlueZ v5.65+. It's a known fact that BlueZ verions
+        # 5.63-5.64 have broken Dbus part for LEAdvertisingManager and do not
+        # work properly when the Experimental mode is enabled.
+        self._min_interval: int = 100  # in ms, range [20ms, 10,485s]
+        self._max_interval: int = 100  # in ms, range [20ms, 10,485s]
+        self._tx_power: int = 20  # range [-127 to +20]
 
         self._local_name = app.app_name
 
@@ -99,11 +100,11 @@ class BlueZLEAdvertisement(ServiceInterface):
 
     # @dbus_property()
     # def SolicitUUIDs(self) -> "as":  # type: ignore # noqa: F821 F722
-        # return self._solicit_uuids
+    # return self._solicit_uuids
 
     # @SolicitUUIDs.setter  # type: ignore
     # def SolicitUUIDs(self, uuids: "as"):  # type: ignore # noqa: F821 F722
-        # self._solicit_uuids = uuids
+    # self._solicit_uuids = uuids
 
     @dbus_property()  # noqa: F722
     def ServiceData(self) -> "a{sv}":  # type: ignore # noqa: F821 F722 N802
