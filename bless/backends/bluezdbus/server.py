@@ -106,6 +106,9 @@ class BlessServerBlueZDBus(BaseBlessServer):
         # Unregister
         await self.app.unregister(self.adapter)
 
+        # Remove our App
+        self.bus.unexport(self.app.path, self.app)
+
         return True
 
     async def is_connected(self) -> bool:

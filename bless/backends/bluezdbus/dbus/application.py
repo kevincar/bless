@@ -218,6 +218,7 @@ class BlueZGattApplication(ServiceInterface):
         await iface.call_unregister_advertisement(  # type: ignore
             advertisement.path
         )
+        self.bus.unexport(advertisement.path)
 
     async def is_connected(self) -> bool:
         """
