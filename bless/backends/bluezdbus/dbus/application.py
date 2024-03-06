@@ -1,3 +1,5 @@
+import re
+
 import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import List, Any, Callable, Optional, Union
@@ -45,7 +47,12 @@ class BlueZGattApplication(ServiceInterface):
         self.destination: str = destination
         self.bus: MessageBus = bus
 
-        self.base_path: str = "/org/bluez/" + self.app_name.replace(" ", "")
+        # Valid path must be ASCII characters "[A-Z][a-z][0-9]_"
+        # see https://dbus.freedesktop.org/doc/dbus-specification.html#message-protocol-marshaling-object-path
+
+        self.base_path: str = (
+            "/org/bluez/" + re.sub( '[^A-Za-z0-9_]', '',  self.app_name )
+        )
         self.advertisements: List[BlueZLEAdvertisement] = []
         self.services: List[BlueZGattService] = []
 
