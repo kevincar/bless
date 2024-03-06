@@ -152,14 +152,14 @@ class BlessServerWinRT(BaseBlessServer):
         bool
             True if advertising
         """
-        all_services_advertising: bool = True
+        all_services_advertising: bool = False
         for uuid, service in self.services.items():
             winrt_service: BlessGATTServiceWinRT = cast(BlessGATTServiceWinRT, service)
             service_is_advertising: bool = (
                 winrt_service.service_provider.advertisement_status == 2
             )
             all_services_advertising = (
-                all_services_advertising and service_is_advertising
+                all_services_advertising or service_is_advertising
             )
 
         return self._advertising and all_services_advertising
