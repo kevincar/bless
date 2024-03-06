@@ -1,3 +1,5 @@
+import re
+
 import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import List, Any, Callable, Optional, Union
@@ -22,12 +24,7 @@ class BlueZGattApplication(ServiceInterface):
     org.bluez.GattApplication1 interface implementation
     """
 
-    def __init__(
-        self,
-        name: str,
-        destination: str,
-        bus: MessageBus
-    ):
+    def __init__(self, name: str, destination: str, bus: MessageBus):
         """
         Initialize a new GattApplication1
 
@@ -45,14 +42,15 @@ class BlueZGattApplication(ServiceInterface):
         self.destination: str = destination
         self.bus: MessageBus = bus
 
-        self.base_path: str = "/org/bluez/" + self.app_name.replace(" ", "")
+        # Valid path must be ASCII characters "[A-Z][a-z][0-9]_"
+        # see https://dbus.freedesktop.org/doc/dbus-specification.html#message-protocol-marshaling-object-path  # noqa E501
+
+        self.base_path: str = "/org/bluez/" + re.sub("[^A-Za-z0-9_]", "", self.app_name)
         self.advertisements: List[BlueZLEAdvertisement] = []
         self.services: List[BlueZGattService] = []
 
         self.Read: Optional[Callable[[BlueZGattCharacteristic], bytes]] = None
-        self.Write: Optional[
-            Callable[[BlueZGattCharacteristic, bytes], None]
-        ] = None
+        self.Write: Optional[Callable[[BlueZGattCharacteristic, bytes], None]] = None
         self.StartNotify: Optional[Callable[[None], None]] = None
         self.StopNotify: Optional[Callable[[None], None]] = None
 
@@ -124,7 +122,7 @@ class BlueZGattApplication(ServiceInterface):
         """
         iface: ProxyInterface = adapter.get_interface("org.freedesktop.DBus.Properties")
         await iface.call_set(  # type: ignore
-            "org.bluez.Adapter1", "Alias", Variant('s', name)
+            "org.bluez.Adapter1", "Alias", Variant("s", name)
         )
 
     async def register(self, adapter: ProxyObject):
@@ -137,10 +135,7 @@ class BlueZGattApplication(ServiceInterface):
             The adapter to register the application with
         """
         iface: ProxyInterface = adapter.get_interface(defs.GATT_MANAGER_INTERFACE)
-        await iface.call_register_application(  # type: ignore
-            self.path,
-            {}
-        )
+        await iface.call_register_application(self.path, {})  # type: ignore
 
     async def unregister(self, adapter: ProxyObject):
         """
@@ -152,9 +147,7 @@ class BlueZGattApplication(ServiceInterface):
             The adapter on which the current application is registered
         """
         iface: ProxyInterface = adapter.get_interface(defs.GATT_MANAGER_INTERFACE)
-        await iface.call_unregister_application(  # type: ignore
-            self.path
-        )
+        await iface.call_unregister_application(self.path)  # type: ignore
 
     async def start_advertising(self, adapter: ProxyObject):
         """
@@ -178,9 +171,7 @@ class BlueZGattApplication(ServiceInterface):
         self.bus.export(advertisement.path, advertisement)
 
         iface: ProxyInterface = adapter.get_interface("org.bluez.LEAdvertisingManager1")
-        await iface.call_register_advertisement(  # type: ignore
-            advertisement.path, {}
-        )
+        await iface.call_register_advertisement(advertisement.path, {})  # type: ignore
 
     async def is_advertising(self, adapter: ProxyObject) -> bool:
         """
@@ -198,8 +189,7 @@ class BlueZGattApplication(ServiceInterface):
         """
         iface: ProxyInterface = adapter.get_interface(defs.PROPERTIES_INTERFACE)
         instances: Variant = await iface.call_get(  # type: ignore
-            "org.bluez.LEAdvertisingManager1",
-            "ActiveInstances"
+            "org.bluez.LEAdvertisingManager1", "ActiveInstances"
         )
         return instances.value > 0
 
@@ -215,9 +205,8 @@ class BlueZGattApplication(ServiceInterface):
         await self.set_name(adapter, "")
         advertisement: BlueZLEAdvertisement = self.advertisements.pop()
         iface: ProxyInterface = adapter.get_interface("org.bluez.LEAdvertisingManager1")
-        await iface.call_unregister_advertisement(  # type: ignore
-            advertisement.path
-        )
+        await iface.call_unregister_advertisement(advertisement.path)  # type: ignore
+        self.bus.unexport(advertisement.path)
 
     async def is_connected(self) -> bool:
         """

@@ -20,6 +20,10 @@ class BlueZLEAdvertisement(ServiceInterface):
     org.bluez.LEAdvertisement1 interface implementation
 
     https://github.com/bluez/bluez/blob/5.64/doc/advertising-api.txt
+    https://python-dbus-next.readthedocs.io/en/latest/type-system/index.html
+    https://elixir.bootlin.com/linux/v5.11/source/include/net/bluetooth/mgmt.h#L794
+    https://github.com/bluez/bluez/issues/527
+    https://patches.linaro.org/project/linux-bluetooth/list/?series=31700
     """
 
     interface_name: str = "org.bluez.LEAdvertisement1"
@@ -50,7 +54,17 @@ class BlueZLEAdvertisement(ServiceInterface):
         self._solicit_uuids: List[str] = [""]
         self._service_data: Dict = {}
 
-        self._tx_power: int = 20
+        # 3 options below are classified as Experimental in BlueZ and really
+        # work only: - when BlueZ is compiled with such option (usually it is)
+        # - and when "bluetoothd" daemon is started with -E, --experimental
+        # option (usually it's not) They are taken into account only with
+        # Kernel v5.11+ and BlueZ v5.65+. It's a known fact that BlueZ verions
+        # 5.63-5.64 have broken Dbus part for LEAdvertisingManager and do not
+        # work properly when the Experimental mode is enabled.
+        self._min_interval: int = 100  # in ms, range [20ms, 10,485s]
+        self._max_interval: int = 100  # in ms, range [20ms, 10,485s]
+        self._tx_power: int = 20  # range [-127 to +20]
+
         self._local_name = app.app_name
 
         self.data = None
@@ -86,11 +100,11 @@ class BlueZLEAdvertisement(ServiceInterface):
 
     # @dbus_property()
     # def SolicitUUIDs(self) -> "as":  # type: ignore # noqa: F821 F722
-        # return self._solicit_uuids
+    # return self._solicit_uuids
 
     # @SolicitUUIDs.setter  # type: ignore
     # def SolicitUUIDs(self, uuids: "as"):  # type: ignore # noqa: F821 F722
-        # self._solicit_uuids = uuids
+    # self._solicit_uuids = uuids
 
     @dbus_property()  # noqa: F722
     def ServiceData(self) -> "a{sv}":  # type: ignore # noqa: F821 F722 N802
@@ -115,6 +129,22 @@ class BlueZLEAdvertisement(ServiceInterface):
     @TxPower.setter  # type: ignore
     def TxPower(self, dbm: "n"):  # type: ignore # noqa: F821 N802
         self._tx_power = dbm
+
+    @dbus_property()
+    def MaxInterval(self) -> "u":  # type: ignore # noqa: F821 N802
+        return self._max_interval
+
+    @MaxInterval.setter  # type: ignore
+    def MaxInterval(self, interval: "u"):  # type: ignore # noqa: F821 N802
+        self._max_interval = interval
+
+    @dbus_property()
+    def MinInterval(self) -> "u":  # type: ignore # noqa: F821 N802
+        return self._min_interval
+
+    @MinInterval.setter  # type: ignore
+    def MinInterval(self, interval: "u"):  # type: ignore # noqa: F821 N802
+        self._min_interval = interval
 
     @dbus_property()
     def LocalName(self) -> "s":  # type: ignore # noqa: F821 N802
