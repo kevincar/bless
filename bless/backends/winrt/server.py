@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+import sys
 from uuid import UUID
 from threading import Event
 from asyncio.events import AbstractEventLoop
@@ -24,22 +25,40 @@ from bless.backends.winrt.ble import BLEAdapter
 # from BleakBridge import Bridge
 
 # Import of other CLR components needed.
-from bleak_winrt.windows.foundation import Deferral  # type: ignore
+if sys.version_info >= (3, 12):
+    from winrt.windows.foundation import Deferral  # type: ignore
 
-from bleak_winrt.windows.storage.streams import DataReader, DataWriter  # type: ignore
+    from winrt.windows.storage.streams import DataReader, DataWriter  # type: ignore
 
-from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
-    GattWriteOption,
-    GattServiceProvider,
-    GattLocalCharacteristic,
-    GattServiceProviderAdvertisingParameters,
-    GattServiceProviderAdvertisementStatusChangedEventArgs as StatusChangeEvent,  # noqa: E501
-    GattReadRequestedEventArgs,
-    GattReadRequest,
-    GattWriteRequestedEventArgs,
-    GattWriteRequest,
-    GattSubscribedClient,
-)
+    from winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
+        GattWriteOption,
+        GattServiceProvider,
+        GattLocalCharacteristic,
+        GattServiceProviderAdvertisingParameters,
+        GattServiceProviderAdvertisementStatusChangedEventArgs as StatusChangeEvent,  # noqa: E501
+        GattReadRequestedEventArgs,
+        GattReadRequest,
+        GattWriteRequestedEventArgs,
+        GattWriteRequest,
+        GattSubscribedClient,
+    )
+else:
+    from bleak_winrt.windows.foundation import Deferral  # type: ignore
+
+    from bleak_winrt.windows.storage.streams import DataReader, DataWriter  # type: ignore
+
+    from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
+        GattWriteOption,
+        GattServiceProvider,
+        GattLocalCharacteristic,
+        GattServiceProviderAdvertisingParameters,
+        GattServiceProviderAdvertisementStatusChangedEventArgs as StatusChangeEvent,  # noqa: E501
+        GattReadRequestedEventArgs,
+        GattReadRequest,
+        GattWriteRequestedEventArgs,
+        GattWriteRequest,
+        GattSubscribedClient,
+    )
 
 logger = logging.getLogger(__name__)
 
