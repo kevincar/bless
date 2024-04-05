@@ -20,6 +20,14 @@ setuptools.setup(
         "pywin32;platform_system=='Windows'",
         "dbus_next;platform_system=='Linux'",
         "pysetupdi @ git+https://github.com/gwangyi/pysetupdi#egg=pysetupdi;platform_system=='Windows'",  # noqa: E501
+        'bleak-winrt>=1.2.0; platform_system=="Windows" and python_version<"3.12"',
+        'winrt-Windows.Devices.Bluetooth==2.0.0b1; platform_system=="Windows" and python_version>="3.12"',
+        'winrt-Windows.Devices.Bluetooth.Advertisement==2.0.0b1; platform_system=="Windows" and python_version>="3.12"',
+        'winrt-Windows.Devices.Bluetooth.GenericAttributeProfile==2.0.0b1; platform_system=="Windows" and python_version>="3.12"',
+        'winrt-Windows.Devices.Enumeration==2.0.0b1; platform_system=="Windows" and python_version>="3.12"',
+        'winrt-Windows.Foundation==2.0.0b1; platform_system=="Windows" and python_version>="3.12"',
+        'winrt-Windows.Foundation.Collections==2.0.0b1; platform_system=="Windows" and python_version>="3.12"',
+        'winrt-Windows.Storage.Streams==2.0.0b1; platform_system=="Windows" and python_version>="3.12"',
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

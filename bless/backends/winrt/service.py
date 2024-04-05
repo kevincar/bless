@@ -1,11 +1,18 @@
+import sys
 from uuid import UUID
 from typing import Union, cast, TYPE_CHECKING
-
-from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
-    GattServiceProviderResult,
-    GattServiceProvider,
-    GattLocalService,
-)
+if sys.version_info >= (3, 12):
+    from winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
+        GattServiceProviderResult,
+        GattServiceProvider,
+        GattLocalService,
+    )
+else:
+    from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
+        GattServiceProviderResult,
+        GattServiceProvider,
+        GattLocalService,
+    )
 
 from bleak.backends.winrt.service import BleakGATTServiceWinRT  # type: ignore
 from bless.backends.service import BlessGATTService
