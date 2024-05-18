@@ -74,7 +74,7 @@ class BlessGATTCharacteristicBlueZDBus(
         service : BlessGATTService
             The service to assign the characteristic to
         """
-        flags: List[Flags] = flags_to_dbus(self._properties)
+        flags: List[Flags] = [transform_flags_with_permissions(f, self._permissions) for f in  flags_to_dbus(self._properties)]
 
         # Add to our BlueZDBus app
         bluez_service: "BlessGATTServiceBlueZDBus" = cast(
@@ -118,6 +118,29 @@ class BlessGATTCharacteristicBlueZDBus(
         """The uuid of this characteristic"""
         return self.obj.get("UUID").value
 
+def transform_flags_with_permissions(flag: Flags, permissions: GATTAttributePermissions) -> Flags:
+    """
+    Returns the encrypted variant of a flag if the corresponding permission is set
+
+    Parameters
+    ----------
+    flag : GATTCharacteristicProperties
+        The numerical enumeration of a single flag
+    
+    permissions: GATTAttributePermissions
+        The permissions for the characteristic
+
+    Returns
+    -------
+    List[Flags]
+        A Flags enum value for use in BlueZDBus that has been updated to reflect if it should be encrypted
+    """
+    if flag == Flags.READ and GATTAttributePermissions.read_encryption_required in permissions:
+        return Flags.ENCRYPT_READ
+    elif flag == Flags.WRITE and GATTAttributePermissions.write_encryption_required in permissions:
+        return Flags.ENCRYPT_WRITE
+    
+    return flag
 
 def flags_to_dbus(flags: GATTCharacteristicProperties) -> List[Flags]:
     """
