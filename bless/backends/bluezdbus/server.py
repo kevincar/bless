@@ -11,6 +11,7 @@ from dbus_next.constants import BusType  # type: ignore
 
 from bless.backends.server import BaseBlessServer  # type: ignore
 from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
+from bless.backends.bluezdbus.descriptor import BlessGATTDescriptorBlueZDBus
 from bless.backends.bluezdbus.dbus.application import (  # type: ignore
     BlueZGattApplication,
 )
@@ -21,10 +22,19 @@ from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
 
 from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
 
-from bless.backends.characteristic import (  # type: ignore
-    GATTCharacteristicProperties,
+from bless.backends.attribute import (  # type: ignore
     GATTAttributePermissions,
 )
+
+from bless.backends.characteristic import (  # type: ignore
+    GATTCharacteristicProperties,
+)
+
+from bless.backends.descriptor import (  # type: ignore
+    GATTDescriptorProperties,
+)
+
+from bleak.uuids import normalize_uuid_str
 
 
 class BlessServerBlueZDBus(BaseBlessServer):
@@ -186,6 +196,55 @@ class BlessServerBlueZDBus(BaseBlessServer):
 
         # Add it to the service
         self.services[service.uuid].add_characteristic(characteristic)
+
+    async def add_new_descriptor(
+        self,
+        service_uuid: str,
+        char_uuid: str,
+        desc_uuid: str,
+        properties: GATTDescriptorProperties,
+        value: Optional[bytearray],
+        permissions: GATTAttributePermissions,
+    ):
+        """
+        Add a new characteristic to be associated with the server
+
+        Parameters
+        ----------
+        service_uuid : str
+            The string representation of the UUID of the GATT service to which
+            this existing characteristic belongs
+        char_uuid : str
+            The string representation of the UUID of the GATT characteristic
+            to which this new descriptor should belong
+        desc_uuid : str
+            The string representation of the UUID of the descriptor
+        properties : GATTDescriptorProperties
+            GATT Characteristic Flags that define the descriptor
+        value : Optional[bytearray]
+            A byterray representation of the value to be associated with the
+            descriptor. Can be None if the descriptor is writable
+        permissions : GATTAttributePermissions
+            GATT flags that define the permissions for the descriptor
+        """
+        await self.setup_task
+        std_service_uuid = normalize_uuid_str(service_uuid)
+        service: BlessGATTServiceBlueZDBus = cast(
+            BlessGATTServiceBlueZDBus, self.services[std_service_uuid]
+        )
+        std_char_uuid = normalize_uuid_str(char_uuid)
+        characteristic: BlessGATTCharacteristicBlueZDBus = cast(
+            BlessGATTServiceBlueZDBus, service.get_characteristic(std_char_uuid)
+        )
+        std_desc_uuid = normalize_uuid_str(desc_uuid)
+        descriptor: BlessGATTDescriptorBlueZDBus = (
+            BlessGATTDescriptorBlueZDBus(std_desc_uuid, properties, permissions, value)
+        )
+
+        await descriptor.init(characteristic)
+
+        # Add it to the characteristic
+        service.get_characteristic(str(UUID(char_uuid))).add_descriptor(descriptor)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """

@@ -9,6 +9,7 @@ from bleak.backends.characteristic import BleakGATTCharacteristic  # type: ignor
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from bless.backends.service import BlessGATTService
+    from bless.backends.descriptor import BlessGATTDescriptor
 
 
 class GATTCharacteristicProperties(Flag):
@@ -24,11 +25,7 @@ class GATTCharacteristicProperties(Flag):
     writable_auxiliaries = 0x0200
 
 
-class GATTAttributePermissions(Flag):
-    readable = 0x1
-    writeable = 0x2
-    read_encryption_required = 0x4
-    write_encryption_required = 0x8
+from .attribute import GATTAttributePermissions
 
 
 class BlessGATTCharacteristic(BleakGATTCharacteristic):
@@ -92,3 +89,7 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
     def value(self, val: bytearray):
         """Set the value of this characteristic"""
         raise NotImplementedError()
+
+    def get_descriptor(self, uuid: Union[str, UUID]) -> "BlessGATTDescriptor":
+        """Get a descriptor by UUID (str or uuid.UUID)"""
+        return cast("BlessGATTDescriptor", super().get_descriptor(uuid))

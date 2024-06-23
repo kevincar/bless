@@ -8,9 +8,11 @@ from asyncio.events import AbstractEventLoop
 from typing import Optional, List, Any, cast
 
 from bless.backends.server import BaseBlessServer  # type: ignore
+from bless.backends.attribute import (  # type: ignore
+    GATTAttributePermissions,
+)
 from bless.backends.characteristic import (  # type: ignore
     GATTCharacteristicProperties,
-    GATTAttributePermissions,
 )
 from bless.backends.winrt.service import BlessGATTServiceWinRT
 from bless.backends.winrt.characteristic import (  # type: ignore

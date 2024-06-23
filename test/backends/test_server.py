@@ -21,9 +21,11 @@ if sys.platform not in ['darwin', 'linux', 'win32']:
             )
 
 from bless import BlessServer  # type: ignore  # noqa: E402
+from bless.backends.attribute import (  # noqa: E402
+        GATTAttributePermissions,
+        )
 from bless.backends.characteristic import (  # noqa: E402
         GATTCharacteristicProperties,
-        GATTAttributePermissions
         )
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")

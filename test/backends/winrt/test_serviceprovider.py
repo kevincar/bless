@@ -17,9 +17,12 @@ from typing import List, Any  # noqa: E402
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
+from bless.backends.attribute import (  # type: ignore # noqa: E402
+    GATTAttributePermissions,
+)
+
 from bless.backends.characteristic import (  # type: ignore # noqa: E402
     GATTCharacteristicProperties,
-    GATTAttributePermissions,
 )
 
 if sys.version_info >= (3, 12):

@@ -8,6 +8,7 @@ else:
 
 from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING
 
+from bless.backends.bluezdbus.descriptor import BlessGATTDescriptorBlueZDBus
 from bleak.backends.bluezdbus.characteristic import (  # type: ignore
     _GattCharacteristicsFlagsEnum,
     BleakGATTCharacteristicBlueZDBus,
@@ -19,10 +20,12 @@ if TYPE_CHECKING:
     from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
     from bless.backends.service import BlessGATTService
 
+from bless.backends.attribute import (  # type: ignore
+    GATTAttributePermissions,
+)
 from bless.backends.characteristic import (  # noqa: E402
     BlessGATTCharacteristic,
     GATTCharacteristicProperties,
-    GATTAttributePermissions,
 )
 
 from bless.backends.bluezdbus.dbus.characteristic import (  # noqa: E402
@@ -63,6 +66,7 @@ class BlessGATTCharacteristicBlueZDBus(
         """
         value = value if value is not None else bytearray(b"")
         super().__init__(uuid, properties, permissions, value)
+        self.__descriptors: List[BlessGATTDescriptorBlueZDBus] = []
         self.value = value
 
     async def init(self, service: "BlessGATTService"):
@@ -117,6 +121,20 @@ class BlessGATTCharacteristicBlueZDBus(
     def uuid(self) -> str:
         """The uuid of this characteristic"""
         return self.obj.get("UUID").value
+
+    @property
+    def descriptors(self) -> List[BlessGATTDescriptorBlueZDBus]:  # type: ignore
+        """List of characteristics for this service"""
+        return self.__descriptors
+
+    def add_descriptor(  # type: ignore
+        self,
+        descriptor: BlessGATTDescriptorBlueZDBus
+    ):
+        """
+        Should not be used by end user, but rather by `bleak` itself.
+        """
+        self.__descriptors.append(descriptor)
 
 def transform_flags_with_permissions(flag: Flags, permissions: GATTAttributePermissions) -> Flags:
     """
