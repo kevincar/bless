@@ -10,9 +10,12 @@ from bleak.backends.corebluetooth.characteristic import (  # type: ignore
 
 from bless.backends.service import BlessGATTService
 
+from bless.backends.attribute import (
+    GATTAttributePermissions,
+)
+
 from bless.backends.characteristic import (
     GATTCharacteristicProperties,
-    GATTAttributePermissions,
     BlessGATTCharacteristic,
 )
 
