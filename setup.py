@@ -16,7 +16,7 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=("test", "examples")),
     include_package_data=True,
     install_requires=[
-        "bleak",
+        "bleak>=0.22.3,<1.0.0",
         "pywin32;platform_system=='Windows'",
         "dbus_next;platform_system=='Linux'",
         "pysetupdi @ git+https://github.com/gwangyi/pysetupdi#egg=pysetupdi;platform_system=='Windows'",  # noqa: E501
