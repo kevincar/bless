@@ -127,7 +127,9 @@ class BlessGATTCharacteristicBlueZDBus(
     @property
     def properties(self) -> List[str]:
         """The properties of this characteristic"""
-        return flags_to_dbus(self._properties)
+        flags = flags_to_dbus(self._properties)
+        # Convert Flags enum to string values
+        return [f.value for f in flags]
 
     @property
     def descriptors(self) -> List:
