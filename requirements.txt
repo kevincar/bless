@@ -2,7 +2,7 @@ flake8
 mypy
 pytest
 pytest-asyncio
-bleak
+bleak>=1.1.1
 aioconsole
 numpy
 pyobjc; platform_system == "Darwin"
