@@ -4,3 +4,6 @@
 /dist
 .mypy_cache/
 *~
+
+# Avoid commit bleak lib
+bleak
