@@ -6,11 +6,10 @@ if sys.version_info[:2] < (3, 8):
 else:
     from typing import Literal
 
-from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING
+from typing import Union, Optional, List, cast, TYPE_CHECKING
 
 from bleak.backends.characteristic import (  # type: ignore
     BleakGATTCharacteristic,
-    GattCharacteristicsFlags,
 )
 
 # GattCharacteristicsFlags mappings from Bleak v1.1.1

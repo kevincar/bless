@@ -2,15 +2,11 @@
 Test suite to verify compatibility with Bleak v1.1.1
 """
 
-import sys
 import pytest
-import asyncio
-from uuid import UUID
 
 # Import Bless components
 from bless import (
     BlessServer,
-    BlessGATTCharacteristic,
     GATTCharacteristicProperties,
     GATTAttributePermissions,
 )

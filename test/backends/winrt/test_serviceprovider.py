@@ -96,7 +96,6 @@ class TestServiceProvider:
 
             async def f():
                 nonlocal request
-                nonlocal args
                 request = await args.get_request_async()
             asyncio.run(f())
             request.respond_with_value(writer.detach_buffer())
@@ -110,7 +109,6 @@ class TestServiceProvider:
             request: GattWriteRequest
 
             async def f():
-                nonlocal args
                 nonlocal request
                 request = await args.get_request_async()
             asyncio.run(f())
