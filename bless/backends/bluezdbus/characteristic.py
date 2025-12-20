@@ -1,20 +1,24 @@
-import sys
 from uuid import UUID
 
-if sys.version_info[:2] < (3, 8):
-    from typing_extensions import Literal
-else:
-    from typing import Literal
+from typing import Union, Optional, List, cast, TYPE_CHECKING, Literal
 
-from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING
-
-from bless.backends.bluezdbus.descriptor import BlessGATTDescriptorBlueZDBus
-from bleak.backends.bluezdbus.characteristic import (  # type: ignore
-    _GattCharacteristicsFlagsEnum,
-    BleakGATTCharacteristicBlueZDBus,
+from bleak.backends.characteristic import (  # type: ignore
+    BleakGATTCharacteristic,
 )
 
-from bleak.backends.bluezdbus.defs import GattCharacteristic1
+# GattCharacteristicsFlags mappings from Bleak v1.1.1
+_GattCharacteristicsFlagsEnum = {
+    1: "broadcast",
+    2: "read",
+    4: "write-without-response",
+    8: "write",
+    16: "notify",
+    32: "indicate",
+    64: "authenticated-signed-writes",
+    128: "extended-properties",
+    256: "reliable-write",
+    512: "writable-auxiliaries",
+}
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
@@ -35,7 +39,7 @@ from bless.backends.bluezdbus.dbus.characteristic import (  # noqa: E402
 
 
 class BlessGATTCharacteristicBlueZDBus(
-    BlessGATTCharacteristic, BleakGATTCharacteristicBlueZDBus
+    BlessGATTCharacteristic, BleakGATTCharacteristic
 ):
     """
     BlueZ implementation of the BlessGATTCharacteristic
@@ -65,9 +69,9 @@ class BlessGATTCharacteristicBlueZDBus(
             The binary value of the characteristic
         """
         value = value if value is not None else bytearray(b"")
-        super().__init__(uuid, properties, permissions, value)
-        self.__descriptors: List[BlessGATTDescriptorBlueZDBus] = []
-        self.value = value
+        BlessGATTCharacteristic.__init__(self, uuid, properties, permissions, value)
+        self._value = value
+        self._descriptors = []
 
     async def init(self, service: "BlessGATTService"):
         """
@@ -86,26 +90,62 @@ class BlessGATTCharacteristicBlueZDBus(
         )
         gatt_char: BlueZGattCharacteristic = (
             await bluez_service.gatt.add_characteristic(
-                self._uuid, flags, bytes(self.value)
+                self._uuid, flags, bytes(self._value)
             )
         )
-        dict_obj: Dict = await gatt_char.get_obj()
-        obj: GattCharacteristic1 = GattCharacteristic1(
-            UUID=dict_obj["UUID"],
-            Service=service.uuid,
-            Value=bytes(self.value),
-            WriteAcquired=False,
-            NotifyAcquired=False,
-            Notifying=False,
-            Flags=cast(_Flags, flags),
-            MTU=512,
-        )
 
-        # Add a Bleak Characteristic properties
+        # Store the BlueZ GATT characteristic
         self.gatt = gatt_char
-        super(BlessGATTCharacteristic, self).__init__(
-            obj, gatt_char.path, service.uuid, 0, 128
-        )
+
+        # Set attributes expected by BleakGATTCharacteristic
+        self.obj = gatt_char  # The backend-specific object
+        self.path = gatt_char.path  # D-Bus path
+        self._service_uuid = service.uuid
+        self._handle = 0  # Handle will be assigned by BlueZ
+        self._max_write_without_response_size = 512  # Default MTU
+
+    @property
+    def service_uuid(self) -> str:
+        """The UUID of the service this characteristic belongs to"""
+        return self._service_uuid
+
+    @property
+    def service_handle(self) -> int:
+        """The handle of the service this characteristic belongs to"""
+        return 0  # Not used in BlueZ DBus
+
+    @property
+    def handle(self) -> int:
+        """The handle of this characteristic"""
+        return self._handle
+
+    @property
+    def properties(self) -> List[str]:
+        """The properties of this characteristic"""
+        flags = flags_to_dbus(self._properties)
+        # Convert Flags enum to string values
+        return [f.value for f in flags]
+
+    @property
+    def descriptors(self) -> List:
+        """List of descriptors for this characteristic"""
+        return self._descriptors
+
+    @property
+    def max_write_without_response_size(self) -> int:
+        """Maximum write size without response"""
+        return self._max_write_without_response_size
+
+    def add_descriptor(self, descriptor):
+        """Add a descriptor to this characteristic"""
+        self._descriptors.append(descriptor)
+
+    def get_descriptor(self, uuid: str):
+        """Get a descriptor by UUID"""
+        for desc in self._descriptors:
+            if desc.uuid == uuid:
+                return desc
+        return None
 
     @property
     def value(self) -> bytearray:
@@ -120,7 +160,12 @@ class BlessGATTCharacteristicBlueZDBus(
     @property
     def uuid(self) -> str:
         """The uuid of this characteristic"""
-        return self.obj.get("UUID").value
+        return self._uuid
+
+    @property
+    def description(self) -> str:
+        """Description of this characteristic"""
+        return f"Characteristic {self._uuid}"
 
     @property
     def descriptors(self) -> List[BlessGATTDescriptorBlueZDBus]:  # type: ignore

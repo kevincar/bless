@@ -323,7 +323,6 @@ class BlessServerWinRT(BaseBlessServer):
         request: GattReadRequest
 
         async def f():
-            nonlocal args
             nonlocal request
             request = await args.get_request_async()
 
@@ -351,7 +350,6 @@ class BlessServerWinRT(BaseBlessServer):
         request: GattWriteRequest
 
         async def f():
-            nonlocal args
             nonlocal request
             request = await args.get_request_async()
 

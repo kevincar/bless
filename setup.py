@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="bless",
-    version="0.2.6",
+    version="0.3.0",  # Bumped version for Bleak v1.1.1 compatibility
     author="Kevin Davis",
     author_email="kevincarrolldavis@gmail.com",
     description="A Bluetooth Low Energy Server supplement to Bleak",
@@ -16,7 +16,7 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=("test", "examples")),
     include_package_data=True,
     install_requires=[
-        "bleak",
+        "bleak>=1.1.1",  # Updated to require Bleak v1.1.1+
         "pywin32;platform_system=='Windows'",
         "dbus_next;platform_system=='Linux'",
         "pysetupdi @ git+https://github.com/gwangyi/pysetupdi#egg=pysetupdi;platform_system=='Windows'",  # noqa: E501

@@ -1,9 +1,9 @@
 import sys
 from uuid import UUID
-from typing import Union, Optional
+from typing import Union, Optional, List
 
-from bleak.backends.winrt.characteristic import (  # type: ignore
-    BleakGATTCharacteristicWinRT,
+from bleak.backends.characteristic import (  # type: ignore
+    BleakGATTCharacteristic,
 )
 
 if sys.version_info >= (3, 12):
@@ -28,13 +28,13 @@ from bless.backends.attribute import (
 )
 
 from bless.backends.characteristic import (
-    BlessGATTCharacteristic,
+    BlessGATTCharacteristic as BaseBlessGATTCharacteristic,
     GATTCharacteristicProperties,
 )
 
 
 class BlessGATTCharacteristicWinRT(
-    BlessGATTCharacteristic, BleakGATTCharacteristicWinRT
+    BaseBlessGATTCharacteristic, BleakGATTCharacteristic
 ):
     """
     WinRT implementation of the BlessGATTCharacteristic
@@ -64,8 +64,10 @@ class BlessGATTCharacteristicWinRT(
             The binary value of the characteristic
         """
         value = value if value is not None else bytearray(b"")
-        super().__init__(uuid, properties, permissions, value)
-        self.value = value
+        BaseBlessGATTCharacteristic.__init__(self, uuid, properties, permissions, value)
+        self._value = value
+        self._descriptors = []
+        self._gatt_characteristic = None
 
     async def init(self, service: BlessGATTService):
         """
@@ -98,9 +100,71 @@ class BlessGATTCharacteristicWinRT(
         )
 
         gatt_char: GattLocalCharacteristic = characteristic_result.characteristic
-        super(BlessGATTCharacteristic, self).__init__(
-            obj=gatt_char, max_write_without_response_size=128
-        )
+
+        # Store the WinRT characteristic
+        self._gatt_characteristic = gatt_char
+        self.obj = gatt_char
+        self._service_uuid = service.uuid
+        self._handle = 0
+        self._max_write_without_response_size = 128
+
+    @property
+    def service_uuid(self) -> str:
+        """The UUID of the service this characteristic belongs to"""
+        return self._service_uuid
+
+    @property
+    def service_handle(self) -> int:
+        """The handle of the service this characteristic belongs to"""
+        return 0
+
+    @property
+    def handle(self) -> int:
+        """The handle of this characteristic"""
+        return self._handle
+
+    @property
+    def properties(self) -> List[str]:
+        """The properties of this characteristic"""
+        props = []
+        if self._properties & GATTCharacteristicProperties.read:
+            props.append("read")
+        if self._properties & GATTCharacteristicProperties.write:
+            props.append("write")
+        if self._properties & GATTCharacteristicProperties.notify:
+            props.append("notify")
+        return props
+
+    @property
+    def descriptors(self) -> List:
+        """List of descriptors for this characteristic"""
+        return self._descriptors
+
+    @property
+    def max_write_without_response_size(self) -> int:
+        """Maximum write size without response"""
+        return self._max_write_without_response_size
+
+    @property
+    def uuid(self) -> str:
+        """The uuid of this characteristic"""
+        return self._uuid
+
+    @property
+    def description(self) -> str:
+        """Description of this characteristic"""
+        return f"Characteristic {self._uuid}"
+
+    def add_descriptor(self, descriptor):
+        """Add a descriptor to this characteristic"""
+        self._descriptors.append(descriptor)
+
+    def get_descriptor(self, uuid: str):
+        """Get a descriptor by UUID"""
+        for desc in self._descriptors:
+            if desc.uuid == uuid:
+                return desc
+        return None
 
     @staticmethod
     def permissions_to_protection_level(

@@ -1,17 +1,17 @@
 from uuid import UUID
 from typing import List, Dict, Union, cast, TYPE_CHECKING
 
-from bleak.backends.bluezdbus.service import BleakGATTServiceBlueZDBus  # type: ignore
+from bleak.backends.service import BleakGATTService  # type: ignore
 from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
 from bless.backends.bluezdbus.dbus.service import BlueZGattService
-from bless.backends.service import BlessGATTService
+from bless.backends.service import BlessGATTService as BaseBlessGATTService
 from bless.backends.server import BaseBlessServer
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.server import BlessServerBlueZDBus
 
 
-class BlessGATTServiceBlueZDBus(BlessGATTService, BleakGATTServiceBlueZDBus):
+class BlessGATTServiceBlueZDBus(BaseBlessGATTService, BleakGATTService):
     """ "
     GATT service implementation for the BlueZ backend
     """
@@ -25,9 +25,13 @@ class BlessGATTServiceBlueZDBus(BlessGATTService, BleakGATTServiceBlueZDBus):
         uuid : Union[str, UUID]
             The UUID to assign to the service
         """
-        super(BlessGATTServiceBlueZDBus, self).__init__(uuid)
+        BaseBlessGATTService.__init__(self, uuid)
         self.__characteristics: List[BlessGATTCharacteristicBlueZDBus] = []
+        self._characteristics: Dict[int, BlessGATTCharacteristicBlueZDBus] = (
+            {}
+        )  # For Bleak compatibility
         self.__handle = 0
+        self.__path = ""
 
     async def init(self, server: "BaseBlessServer"):
         """
@@ -40,9 +44,14 @@ class BlessGATTServiceBlueZDBus(BlessGATTService, BleakGATTServiceBlueZDBus):
         """
         bluez_server: "BlessServerBlueZDBus" = cast("BlessServerBlueZDBus", server)
         gatt_service: BlueZGattService = await bluez_server.app.add_service(self._uuid)
-        dict_obj: Dict = await gatt_service.get_obj()
-        super(BlessGATTService, self).__init__(dict_obj, gatt_service.path)
+
+        # Store the BlueZ GATT service
         self.gatt = gatt_service
+        self.__path = gatt_service.path
+
+        # Set attributes expected by BleakGATTService
+        self.obj = gatt_service  # The backend-specific object
+        self._handle = 0  # Handle will be assigned by BlueZ
 
     @property
     def handle(self) -> int:
@@ -52,7 +61,12 @@ class BlessGATTServiceBlueZDBus(BlessGATTService, BleakGATTServiceBlueZDBus):
     @property
     def uuid(self) -> str:
         """UUID for this service"""
-        return self.obj["UUID"].value
+        return self._uuid
+
+    @property
+    def description(self) -> str:
+        """Description of this service"""
+        return f"Service {self._uuid}"
 
     @property
     def characteristics(self) -> List[BlessGATTCharacteristicBlueZDBus]:  # type: ignore
@@ -60,13 +74,15 @@ class BlessGATTServiceBlueZDBus(BlessGATTService, BleakGATTServiceBlueZDBus):
         return self.__characteristics
 
     def add_characteristic(  # type: ignore
-        self,
-        characteristic: BlessGATTCharacteristicBlueZDBus
+        self, characteristic: BlessGATTCharacteristicBlueZDBus
     ):
         """
         Should not be used by end user, but rather by `bleak` itself.
         """
         self.__characteristics.append(characteristic)
+        # Also add to the dict for Bleak compatibility (using handle as key)
+        handle = len(self._characteristics)
+        self._characteristics[handle] = characteristic
 
     @property
     def path(self):
