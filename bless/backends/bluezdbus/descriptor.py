@@ -1,12 +1,5 @@
-import sys
 from uuid import UUID
-
-if sys.version_info[:2] < (3, 8):
-    from typing_extensions import Literal
-else:
-    from typing import Literal
-
-from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING
+from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING, Literal
 
 from bleak.backends.bluezdbus.descriptor import (  # type: ignore
     BleakGATTDescriptorBlueZDBus,
@@ -14,23 +7,19 @@ from bleak.backends.bluezdbus.descriptor import (  # type: ignore
 
 from bleak.backends.bluezdbus.defs import GattDescriptor1
 
-if TYPE_CHECKING:
-    from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
-    from bless.backends.characteristic import BlessGATTCharacteristic
-
-from bless.backends.attribute import (  # noqa: E402
-    GATTAttributePermissions,
-)
-
-from bless.backends.descriptor import (  # noqa: E402
+from bless.backends.attribute import GATTAttributePermissions
+from bless.backends.descriptor import (
     BlessGATTDescriptor,
     GATTDescriptorProperties,
 )
-
-from bless.backends.bluezdbus.dbus.descriptor import (  # noqa: E402
+from bless.backends.bluezdbus.dbus.descriptor import (
     DescriptorFlags,
     BlueZGattDescriptor,
 )
+
+if TYPE_CHECKING:
+    from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
+    from bless.backends.characteristic import BlessGATTCharacteristic
 
 
 _GATTDescriptorsFlagsEnum = {
@@ -89,7 +78,10 @@ class BlessGATTDescriptorBlueZDBus(
         characteristic : BlessGATTCharacteristic
             The characteristic to assign the descriptor to
         """
-        flags: List[DescriptorFlags] = [transform_flags_with_permissions(f, self._permissions) for f in  flags_to_dbus(self._properties)]
+        flags: List[DescriptorFlags] = [
+            transform_flags_with_permissions(flag, self._permissions)
+            for flag in flags_to_dbus(self._properties)
+        ]
 
         # Add to our BlueZDBus app
         bluez_characteristic: "BlessGATTCharacteristicBlueZDBus" = cast(
@@ -108,10 +100,10 @@ class BlessGATTDescriptorBlueZDBus(
             Flags=cast(_Flags, flags),
         )
 
-        # Add a Bleak Characteristic properties
+        # Add a Bleak Descriptor properties
         self.gatt = gatt_desc
         super(BlessGATTDescriptor, self).__init__(
-            obj, gatt_desc.path, characteristic.uuid, 0
+            obj, 0, self._uuid, characteristic
         )
 
     @property
@@ -129,29 +121,41 @@ class BlessGATTDescriptorBlueZDBus(
         """The uuid of this characteristic"""
         return self.obj.get("UUID").value
 
-def transform_flags_with_permissions(flag: DescriptorFlags, permissions: GATTAttributePermissions) -> DescriptorFlags:
+
+def transform_flags_with_permissions(
+    flag: DescriptorFlags, permissions: GATTAttributePermissions
+) -> DescriptorFlags:
     """
-    Returns the encrypted variant of a flag if the corresponding permission is set
+    Returns the encrypted variant of a flag if the corresponding permission is
+    set.
 
     Parameters
     ----------
     flag : GATTDescriptorProperties
         The numerical enumeration of a single flag
-    
+
     permissions: GATTAttributePermissions
         The permissions for the characteristic
 
     Returns
     -------
     List[DescriptorFlags]
-        A Flags enum value for use in BlueZDBus that has been updated to reflect if it should be encrypted
+        A Flags enum value for use in BlueZDBus that reflects encryption
+        requirements.
     """
-    if flag == DescriptorFlags.READ and GATTAttributePermissions.read_encryption_required in permissions:
+    if (
+        flag == DescriptorFlags.READ
+        and GATTAttributePermissions.read_encryption_required in permissions
+    ):
         return DescriptorFlags.ENCRYPT_READ
-    elif flag == DescriptorFlags.WRITE and GATTAttributePermissions.write_encryption_required in permissions:
+    if (
+        flag == DescriptorFlags.WRITE
+        and GATTAttributePermissions.write_encryption_required in permissions
+    ):
         return DescriptorFlags.ENCRYPT_WRITE
-    
+
     return flag
+
 
 def flags_to_dbus(flags: GATTDescriptorProperties) -> List[DescriptorFlags]:
     """

@@ -87,7 +87,7 @@ class TestBlessServer:
                 GATTAttributePermissions.readable |
                 GATTAttributePermissions.writeable
                 )
-        
+
         if use_encrypted:
             print("\nEncryption has been enabled, ensure that you are bonded")
             permissions = (

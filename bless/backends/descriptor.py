@@ -2,13 +2,15 @@ import abc
 
 from enum import Flag
 from uuid import UUID
-from typing import Union, Optional, cast
+from typing import Union, Optional, cast, TYPE_CHECKING
 
 from bleak.backends.descriptor import BleakGATTDescriptor  # type: ignore
 
-from typing import TYPE_CHECKING
+from .attribute import GATTAttributePermissions
+
 if TYPE_CHECKING:
     from bless.backends.characteristic import BlessGATTCharacteristic
+
 
 class GATTDescriptorProperties(Flag):
     read = 0x0001
@@ -20,9 +22,6 @@ class GATTDescriptorProperties(Flag):
     # secure_read = 0x0040
     # secure_write = 0x0080
     # authorize = 0x0100
-
-
-from .attribute import GATTAttributePermissions
 
 
 class BlessGATTDescriptor(BleakGATTDescriptor):

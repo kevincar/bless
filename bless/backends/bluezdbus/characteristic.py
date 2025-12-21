@@ -1,10 +1,25 @@
 from uuid import UUID
 
-from typing import Union, Optional, List, cast, TYPE_CHECKING, Literal
+from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING, Literal
 
 from bleak.backends.characteristic import (  # type: ignore
     BleakGATTCharacteristic,
 )
+from bleak.backends.descriptor import BleakGATTDescriptor  # type: ignore
+
+from bless.backends.attribute import GATTAttributePermissions
+from bless.backends.characteristic import (
+    BlessGATTCharacteristic,
+    GATTCharacteristicProperties,
+)
+from bless.backends.bluezdbus.dbus.characteristic import (
+    Flags,
+    BlueZGattCharacteristic,
+)
+
+if TYPE_CHECKING:
+    from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
+    from bless.backends.service import BlessGATTService
 
 # GattCharacteristicsFlags mappings from Bleak v1.1.1
 _GattCharacteristicsFlagsEnum = {
@@ -19,23 +34,6 @@ _GattCharacteristicsFlagsEnum = {
     256: "reliable-write",
     512: "writable-auxiliaries",
 }
-
-if TYPE_CHECKING:
-    from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
-    from bless.backends.service import BlessGATTService
-
-from bless.backends.attribute import (  # type: ignore
-    GATTAttributePermissions,
-)
-from bless.backends.characteristic import (  # noqa: E402
-    BlessGATTCharacteristic,
-    GATTCharacteristicProperties,
-)
-
-from bless.backends.bluezdbus.dbus.characteristic import (  # noqa: E402
-    Flags,
-    BlueZGattCharacteristic,
-)
 
 
 class BlessGATTCharacteristicBlueZDBus(
@@ -71,7 +69,7 @@ class BlessGATTCharacteristicBlueZDBus(
         value = value if value is not None else bytearray(b"")
         BlessGATTCharacteristic.__init__(self, uuid, properties, permissions, value)
         self._value = value
-        self._descriptors = []
+        self._descriptors: Dict[int, BleakGATTDescriptor] = {}
 
     async def init(self, service: "BlessGATTService"):
         """
@@ -82,7 +80,10 @@ class BlessGATTCharacteristicBlueZDBus(
         service : BlessGATTService
             The service to assign the characteristic to
         """
-        flags: List[Flags] = [transform_flags_with_permissions(f, self._permissions) for f in  flags_to_dbus(self._properties)]
+        flags: List[Flags] = [
+            transform_flags_with_permissions(flag, self._permissions)
+            for flag in flags_to_dbus(self._properties_flags)
+        ]
 
         # Add to our BlueZDBus app
         bluez_service: "BlessGATTServiceBlueZDBus" = cast(
@@ -102,7 +103,7 @@ class BlessGATTCharacteristicBlueZDBus(
         self.path = gatt_char.path  # D-Bus path
         self._service_uuid = service.uuid
         self._handle = 0  # Handle will be assigned by BlueZ
-        self._max_write_without_response_size = 512  # Default MTU
+        self._max_write_without_response_size = lambda: 512  # Default MTU
 
     @property
     def service_uuid(self) -> str:
@@ -118,34 +119,6 @@ class BlessGATTCharacteristicBlueZDBus(
     def handle(self) -> int:
         """The handle of this characteristic"""
         return self._handle
-
-    @property
-    def properties(self) -> List[str]:
-        """The properties of this characteristic"""
-        flags = flags_to_dbus(self._properties)
-        # Convert Flags enum to string values
-        return [f.value for f in flags]
-
-    @property
-    def descriptors(self) -> List:
-        """List of descriptors for this characteristic"""
-        return self._descriptors
-
-    @property
-    def max_write_without_response_size(self) -> int:
-        """Maximum write size without response"""
-        return self._max_write_without_response_size
-
-    def add_descriptor(self, descriptor):
-        """Add a descriptor to this characteristic"""
-        self._descriptors.append(descriptor)
-
-    def get_descriptor(self, uuid: str):
-        """Get a descriptor by UUID"""
-        for desc in self._descriptors:
-            if desc.uuid == uuid:
-                return desc
-        return None
 
     @property
     def value(self) -> bytearray:
@@ -167,43 +140,27 @@ class BlessGATTCharacteristicBlueZDBus(
         """Description of this characteristic"""
         return f"Characteristic {self._uuid}"
 
-    @property
-    def descriptors(self) -> List[BlessGATTDescriptorBlueZDBus]:  # type: ignore
-        """List of characteristics for this service"""
-        return self.__descriptors
 
-    def add_descriptor(  # type: ignore
-        self,
-        descriptor: BlessGATTDescriptorBlueZDBus
+def transform_flags_with_permissions(
+    flag: Flags, permissions: GATTAttributePermissions
+) -> Flags:
+    """
+    Returns the encrypted variant of a flag if the corresponding permission is
+    set.
+    """
+    if (
+        flag == Flags.READ
+        and GATTAttributePermissions.read_encryption_required in permissions
     ):
-        """
-        Should not be used by end user, but rather by `bleak` itself.
-        """
-        self.__descriptors.append(descriptor)
-
-def transform_flags_with_permissions(flag: Flags, permissions: GATTAttributePermissions) -> Flags:
-    """
-    Returns the encrypted variant of a flag if the corresponding permission is set
-
-    Parameters
-    ----------
-    flag : GATTCharacteristicProperties
-        The numerical enumeration of a single flag
-    
-    permissions: GATTAttributePermissions
-        The permissions for the characteristic
-
-    Returns
-    -------
-    List[Flags]
-        A Flags enum value for use in BlueZDBus that has been updated to reflect if it should be encrypted
-    """
-    if flag == Flags.READ and GATTAttributePermissions.read_encryption_required in permissions:
         return Flags.ENCRYPT_READ
-    elif flag == Flags.WRITE and GATTAttributePermissions.write_encryption_required in permissions:
+    if (
+        flag == Flags.WRITE
+        and GATTAttributePermissions.write_encryption_required in permissions
+    ):
         return Flags.ENCRYPT_WRITE
-    
+
     return flag
+
 
 def flags_to_dbus(flags: GATTCharacteristicProperties) -> List[Flags]:
     """

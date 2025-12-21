@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Union, cast, TYPE_CHECKING, List, Dict
+from typing import Union, Optional, cast, TYPE_CHECKING, List, Dict
 
 from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
     GattServiceProviderResult,
@@ -31,8 +31,8 @@ class BlessGATTServiceWinRT(BaseBlessGATTService, BleakGATTService):
             The UUID to assign to the service
         """
         BaseBlessGATTService.__init__(self, uuid)
-        self.service_provider = None
-        self._local_service = None
+        self.service_provider: Optional[GattServiceProvider] = None
+        self._local_service: Optional[GattLocalService] = None
         self.__characteristics: List[BleakGATTCharacteristic] = []
         self._characteristics: Dict[int, BleakGATTCharacteristic] = (
             {}
@@ -51,13 +51,10 @@ class BlessGATTServiceWinRT(BaseBlessGATTService, BleakGATTService):
         service_provider_result: GattServiceProviderResult = (
             await GattServiceProvider.create_async(UUID(self._uuid))
         )
-        self.service_provider: GattServiceProvider = (
-            service_provider_result.service_provider
-        )
-        self.service_provider.add_advertisement_status_changed(
-            winrt_server._status_update
-        )
-        new_service: GattLocalService = self.service_provider.service
+        service_provider = service_provider_result.service_provider
+        self.service_provider = service_provider
+        service_provider.add_advertisement_status_changed(winrt_server._status_update)
+        new_service: GattLocalService = service_provider.service
         self._local_service = new_service
         self.obj = new_service
         self._handle = 0

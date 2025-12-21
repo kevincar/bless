@@ -1,0 +1,60 @@
+from CoreBluetooth import CBUUID, CBMutableDescriptor  # type: ignore
+
+from bleak.backends.corebluetooth.descriptor import (
+    BleakGATTDescriptorCoreBluetooth,
+)
+
+from bless.backends.descriptor import BlessGATTDescriptor
+from bless.backends.attribute import GATTAttributePermissions
+from bless.backends.descriptor import GATTDescriptorProperties
+
+from uuid import UUID
+from typing import Union, Optional
+
+
+class BlessGATTDescriptorCoreBluetooth(
+    BlessGATTDescriptor, BleakGATTDescriptorCoreBluetooth
+):
+    """
+    CoreBluetooth implementation of a GATT Descriptor
+    """
+
+    def __init__(
+        self,
+        uuid: Union[str, UUID],
+        properties: GATTDescriptorProperties,
+        permissions: GATTAttributePermissions,
+        value: Optional[bytearray],
+    ):
+        """
+        Instantiates a new GATT Descriptor but is not yet assigned to any
+        characteristic or application
+
+        Parameters
+        ----------
+        uuid : Union[str, UUID]
+            The string representation of the universal unique identifier for
+            the descriptor or the actual UUID object
+        properties : GATTDescriptorProperties
+            The properties that define the descriptors behavior
+        permissions : GATTAttributePermissions
+            Permissions that define the protection levels of the properties
+        value : Optional[bytearray]
+            The binary value of the descriptor
+        """
+        super().__init__(uuid, properties, permissions, value)
+        self.value = value
+
+    async def init(self, characteristic: BlessGATTCharacteristic):
+        cb_uuid: CBUUID = CBUUID.alloc().initWithString_(self._uuid)
+        cb_descriptor: CBMutableDescriptor = (
+            CBMutableDescriptor.alloc().initWithType_value_(
+                cb_uuid, self._initial_value
+            )
+        )
+
+        # Store the CoreBluetooth descriptor
+        self._cb_descriptor = cb_descriptor
+        self.obj = cb_descriptor
+        self._handle = 0
+        characterisistic.add_descriptor(self)

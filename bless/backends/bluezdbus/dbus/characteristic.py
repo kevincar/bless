@@ -188,7 +188,6 @@ class BlueZGattCharacteristic(ServiceInterface):
         await self._service.app._register_object(descriptor)
         return descriptor
 
-
     async def get_obj(self) -> Dict:
         """
         Obtain the underlying dictionary within the BlueZ API that describes

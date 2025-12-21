@@ -2,6 +2,7 @@ from uuid import UUID
 from typing import List, Dict, Union, cast, TYPE_CHECKING
 
 from bleak.backends.service import BleakGATTService  # type: ignore
+from bleak.backends.characteristic import BleakGATTCharacteristic  # type: ignore
 from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
 from bless.backends.bluezdbus.dbus.service import BlueZGattService
 from bless.backends.service import BlessGATTService as BaseBlessGATTService
@@ -27,7 +28,7 @@ class BlessGATTServiceBlueZDBus(BaseBlessGATTService, BleakGATTService):
         """
         BaseBlessGATTService.__init__(self, uuid)
         self.__characteristics: List[BlessGATTCharacteristicBlueZDBus] = []
-        self._characteristics: Dict[int, BlessGATTCharacteristicBlueZDBus] = (
+        self._characteristics: Dict[int, BleakGATTCharacteristic] = (
             {}
         )  # For Bleak compatibility
         self.__handle = 0

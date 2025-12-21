@@ -4,13 +4,17 @@ import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
 from typing import List, Dict, TYPE_CHECKING
 
-from dbus_next.service import ServiceInterface, method, dbus_property  # type: ignore
+from dbus_next.service import (  # type: ignore
+    ServiceInterface,
+    method,
+    dbus_property,
+)
 from dbus_next.constants import PropertyAccess  # type: ignore
 from dbus_next.signature import Variant  # type: ignore
 
 if TYPE_CHECKING:
-    from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore # noqa: F401
-        BlueZGattCharacteristic
+    from bless.backends.bluezdbus.dbus.characteristic import (
+        BlueZGattCharacteristic,
     )
 
 

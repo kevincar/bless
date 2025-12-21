@@ -1,10 +1,11 @@
 import sys
 from uuid import UUID
-from typing import Union, Optional, List
+from typing import Union, Optional, Dict
 
 from bleak.backends.characteristic import (  # type: ignore
     BleakGATTCharacteristic,
 )
+from bleak.backends.descriptor import BleakGATTDescriptor  # type: ignore
 
 if sys.version_info >= (3, 12):
     from winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
@@ -66,7 +67,7 @@ class BlessGATTCharacteristicWinRT(
         value = value if value is not None else bytearray(b"")
         BaseBlessGATTCharacteristic.__init__(self, uuid, properties, permissions, value)
         self._value = value
-        self._descriptors = []
+        self._descriptors: Dict[int, BleakGATTDescriptor] = {}
         self._gatt_characteristic = None
 
     async def init(self, service: BlessGATTService):
@@ -81,7 +82,7 @@ class BlessGATTCharacteristicWinRT(
         char_parameters: GattLocalCharacteristicParameters = (
             GattLocalCharacteristicParameters()
         )
-        char_parameters.characteristic_properties = self._properties.value
+        char_parameters.characteristic_properties = self._properties_flags.value
         char_parameters.read_protection_level = (
             BlessGATTCharacteristicWinRT.permissions_to_protection_level(
                 self._permissions, True
@@ -106,7 +107,7 @@ class BlessGATTCharacteristicWinRT(
         self.obj = gatt_char
         self._service_uuid = service.uuid
         self._handle = 0
-        self._max_write_without_response_size = 128
+        self._max_write_without_response_size = lambda: 128
 
     @property
     def service_uuid(self) -> str:
@@ -124,28 +125,6 @@ class BlessGATTCharacteristicWinRT(
         return self._handle
 
     @property
-    def properties(self) -> List[str]:
-        """The properties of this characteristic"""
-        props = []
-        if self._properties & GATTCharacteristicProperties.read:
-            props.append("read")
-        if self._properties & GATTCharacteristicProperties.write:
-            props.append("write")
-        if self._properties & GATTCharacteristicProperties.notify:
-            props.append("notify")
-        return props
-
-    @property
-    def descriptors(self) -> List:
-        """List of descriptors for this characteristic"""
-        return self._descriptors
-
-    @property
-    def max_write_without_response_size(self) -> int:
-        """Maximum write size without response"""
-        return self._max_write_without_response_size
-
-    @property
     def uuid(self) -> str:
         """The uuid of this characteristic"""
         return self._uuid
@@ -154,17 +133,6 @@ class BlessGATTCharacteristicWinRT(
     def description(self) -> str:
         """Description of this characteristic"""
         return f"Characteristic {self._uuid}"
-
-    def add_descriptor(self, descriptor):
-        """Add a descriptor to this characteristic"""
-        self._descriptors.append(descriptor)
-
-    def get_descriptor(self, uuid: str):
-        """Get a descriptor by UUID"""
-        for desc in self._descriptors:
-            if desc.uuid == uuid:
-                return desc
-        return None
 
     @staticmethod
     def permissions_to_protection_level(

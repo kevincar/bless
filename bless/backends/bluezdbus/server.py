@@ -234,7 +234,8 @@ class BlessServerBlueZDBus(BaseBlessServer):
         )
         std_char_uuid = normalize_uuid_str(char_uuid)
         characteristic: BlessGATTCharacteristicBlueZDBus = cast(
-            BlessGATTServiceBlueZDBus, service.get_characteristic(std_char_uuid)
+            BlessGATTCharacteristicBlueZDBus,
+            service.get_characteristic(std_char_uuid),
         )
         std_desc_uuid = normalize_uuid_str(desc_uuid)
         descriptor: BlessGATTDescriptorBlueZDBus = (
@@ -303,7 +304,7 @@ class BlessServerBlueZDBus(BaseBlessServer):
         bytes
             The value of the characteristic
         """
-        return bytes(self.read_request(char.UUID))
+        return bytes(self.read_request(char.UUID, {}))
 
     def write(self, char: BlueZGattCharacteristic, value: bytes):
         """

@@ -55,7 +55,7 @@ class BlessGATTServiceCoreBluetooth(BaseBlessGATTService, BleakGATTService):
     def uuid(self) -> str:
         """UUID for this service."""
         if self._cb_service is not None:
-            return self._cb_service.UUID().UUIDString()
+            return self._cb_service.UUID().UUIDString().lower()
         return self._uuid
 
     @property

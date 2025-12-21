@@ -1,12 +1,13 @@
 from enum import Flag
 from uuid import UUID
-from typing import Union, Optional, List
+from typing import Union, Optional, Dict
 
 from CoreBluetooth import CBUUID, CBMutableCharacteristic  # type: ignore
 
 from bleak.backends.characteristic import (  # type: ignore
     BleakGATTCharacteristic,
 )
+from bleak.backends.descriptor import BleakGATTDescriptor  # type: ignore
 
 from bless.backends.service import BlessGATTService
 
@@ -55,7 +56,7 @@ class BlessGATTCharacteristicCoreBluetooth(
             The binary value of the characteristic
         """
         BaseBlessGATTCharacteristic.__init__(self, uuid, properties, permissions, value)
-        self._descriptors = []
+        self._descriptors: Dict[int, BleakGATTDescriptor] = {}
         self._cb_characteristic: Optional[CBMutableCharacteristic] = None
 
     async def init(self, service: BlessGATTService):
@@ -63,7 +64,7 @@ class BlessGATTCharacteristicCoreBluetooth(
         Initializes the backend-specific characteristic object and stores it in
         self.obj
         """
-        properties_value: int = self._properties.value
+        properties_value: int = self._properties_flags.value
         permissions_value: int = self._permissions.value
 
         cb_uuid: CBUUID = CBUUID.alloc().initWithString_(self._uuid)
@@ -78,7 +79,7 @@ class BlessGATTCharacteristicCoreBluetooth(
         self.obj = cb_characteristic
         self._service_uuid = service.uuid
         self._handle = 0
-        self._max_write_without_response_size = 512
+        self._max_write_without_response_size = lambda: 512
 
     @property
     def service_uuid(self) -> str:
@@ -96,28 +97,6 @@ class BlessGATTCharacteristicCoreBluetooth(
         return self._handle
 
     @property
-    def properties(self) -> List[str]:
-        """The properties of this characteristic"""
-        props = []
-        if self._properties & GATTCharacteristicProperties.read:
-            props.append("read")
-        if self._properties & GATTCharacteristicProperties.write:
-            props.append("write")
-        if self._properties & GATTCharacteristicProperties.notify:
-            props.append("notify")
-        return props
-
-    @property
-    def descriptors(self) -> List:
-        """List of descriptors for this characteristic"""
-        return self._descriptors
-
-    @property
-    def max_write_without_response_size(self) -> int:
-        """Maximum write size without response"""
-        return self._max_write_without_response_size
-
-    @property
     def uuid(self) -> str:
         """The uuid of this characteristic"""
         return self._uuid
@@ -126,17 +105,6 @@ class BlessGATTCharacteristicCoreBluetooth(
     def description(self) -> str:
         """Description of this characteristic"""
         return f"Characteristic {self._uuid}"
-
-    def add_descriptor(self, descriptor):
-        """Add a descriptor to this characteristic"""
-        self._descriptors.append(descriptor)
-
-    def get_descriptor(self, uuid: str):
-        """Get a descriptor by UUID"""
-        for desc in self._descriptors:
-            if desc.uuid == uuid:
-                return desc
-        return None
 
     @property
     def value(self) -> bytearray:

@@ -273,7 +273,7 @@ class BaseBlessServer(abc.ABC):
                                 desc_info.get("Permissions")
                                 )
 
-    def read_request(self, uuid: str, options: Dict) -> bytearray:
+    def read_request(self, uuid: str, options: Optional[Dict] = None) -> bytearray:
         """
         This function should be handed off to the subsequent backend bluetooth
         servers as a callback for incoming read requests on values for

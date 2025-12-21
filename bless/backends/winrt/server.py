@@ -47,7 +47,10 @@ if sys.version_info >= (3, 12):
 else:
     from bleak_winrt.windows.foundation import Deferral  # type: ignore
 
-    from bleak_winrt.windows.storage.streams import DataReader, DataWriter  # type: ignore
+    from bleak_winrt.windows.storage.streams import (  # type: ignore
+        DataReader,
+        DataWriter,
+    )
 
     from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
         GattWriteOption,
@@ -139,7 +142,9 @@ class BlessServerWinRT(BaseBlessServer):
 
         for uuid, service in self.services.items():
             winrt_service: BlessGATTServiceWinRT = cast(BlessGATTServiceWinRT, service)
-            winrt_service.service_provider.start_advertising(adv_parameters)
+            service_provider = winrt_service.service_provider
+            assert service_provider is not None
+            service_provider.start_advertising(adv_parameters)
         self._advertising = True
         self._advertising_started.wait()
 
@@ -149,7 +154,9 @@ class BlessServerWinRT(BaseBlessServer):
         """
         for uuid, service in self.services.items():
             winrt_service: BlessGATTServiceWinRT = cast(BlessGATTServiceWinRT, service)
-            winrt_service.service_provider.stop_advertising()
+            service_provider = winrt_service.service_provider
+            assert service_provider is not None
+            service_provider.stop_advertising()
         self._advertising = False
 
     async def is_connected(self) -> bool:
@@ -176,9 +183,9 @@ class BlessServerWinRT(BaseBlessServer):
         all_services_advertising: bool = False
         for uuid, service in self.services.items():
             winrt_service: BlessGATTServiceWinRT = cast(BlessGATTServiceWinRT, service)
-            service_is_advertising: bool = (
-                winrt_service.service_provider.advertisement_status == 2
-            )
+            service_provider = winrt_service.service_provider
+            assert service_provider is not None
+            service_is_advertising: bool = service_provider.advertisement_status == 2
             all_services_advertising = (
                 all_services_advertising or service_is_advertising
             )
@@ -314,7 +321,7 @@ class BlessServerWinRT(BaseBlessServer):
         """
         logger.debug("Reading Characteristic")
         deferral: Deferral = args.get_deferral()
-        value: bytearray = self.read_request(str(sender.uuid))
+        value: bytearray = self.read_request(str(sender.uuid), {})
         logger.debug(f"Current Characteristic value {value}")
         value = value if value is not None else b"\x00"
         writer: DataWriter = DataWriter()
