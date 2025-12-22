@@ -1,10 +1,6 @@
 from uuid import UUID
 from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING, Literal
 
-from bleak.backends.bluezdbus.descriptor import (  # type: ignore
-    BleakGATTDescriptorBlueZDBus,
-)
-
 from bleak.backends.bluezdbus.defs import GattDescriptor1
 
 from bless.backends.attribute import GATTAttributePermissions
@@ -35,9 +31,7 @@ _GATTDescriptorsFlagsEnum = {
 }
 
 
-class BlessGATTDescriptorBlueZDBus(
-    BlessGATTDescriptor, BleakGATTDescriptorBlueZDBus
-):
+class BlessGATTDescriptorBlueZDBus(BlessGATTDescriptor):
     """
     BlueZ implementation of the BlessGATTDescriptor
     """
