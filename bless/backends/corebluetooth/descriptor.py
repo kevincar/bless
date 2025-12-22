@@ -57,3 +57,18 @@ class BlessGATTDescriptorCoreBluetooth(BlessGATTDescriptor, BleakGATTDescriptor)
         self.obj = cb_descriptor
         self._handle = 0
         characteristic.add_descriptor(self)
+
+    @property
+    def value(self) -> bytearray:
+        """Get the value of the descriptor"""
+        return self._value
+
+    @value.setter
+    def value(self, val: bytearray):
+        """Set the value of the characteristic"""
+        self._value = val
+
+    @property
+    def uuid(self) -> str:
+        """The uuid of this characteristic"""
+        return self.obj.get("UUID").value
