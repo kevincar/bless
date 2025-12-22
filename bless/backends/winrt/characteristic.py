@@ -13,6 +13,7 @@ if sys.version_info >= (3, 12):
         GattLocalCharacteristicParameters,
         GattLocalCharacteristic,
         GattLocalCharacteristicResult,
+        GattCharacteristicProperties,
     )
 else:
     from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
