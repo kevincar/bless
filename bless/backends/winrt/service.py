@@ -1,11 +1,19 @@
+import sys
 from uuid import UUID
 from typing import Union, Optional, cast, TYPE_CHECKING, List, Dict
 
-from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
-    GattServiceProviderResult,
-    GattServiceProvider,
-    GattLocalService,
-)
+if sys.version_info >= (3, 12):
+    from winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
+        GattServiceProviderResult,
+        GattServiceProvider,
+        GattLocalService,
+    )
+else:
+    from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
+        GattServiceProviderResult,
+        GattServiceProvider,
+        GattLocalService,
+    )
 
 from bleak.backends.characteristic import BleakGATTCharacteristic  # type: ignore
 from bleak.backends.service import BleakGATTService  # type: ignore
@@ -52,9 +60,13 @@ class BlessGATTServiceWinRT(BaseBlessGATTService, BleakGATTService):
             await GattServiceProvider.create_async(UUID(self._uuid))
         )
         service_provider = service_provider_result.service_provider
+        if service_provider is None:
+            raise RuntimeError("Failed to create GATT service provider")
         self.service_provider = service_provider
         service_provider.add_advertisement_status_changed(winrt_server._status_update)
-        new_service: GattLocalService = service_provider.service
+        new_service: Optional[GattLocalService] = service_provider.service
+        if new_service is None:
+            raise RuntimeError("Failed to create local GATT service")
         self._local_service = new_service
         self.obj = new_service
         self._handle = 0

@@ -20,6 +20,7 @@ else:
         GattLocalCharacteristicParameters,
         GattLocalCharacteristic,
         GattLocalCharacteristicResult,
+        GattCharacteristicProperties,
     )
 
 from bless.backends.service import BlessGATTService
@@ -68,7 +69,7 @@ class BlessGATTCharacteristicWinRT(
         BaseBlessGATTCharacteristic.__init__(self, uuid, properties, permissions, value)
         self._value = value
         self._descriptors: Dict[int, BleakGATTDescriptor] = {}
-        self._gatt_characteristic = None
+        self._gatt_characteristic: Optional[GattLocalCharacteristic] = None
 
     async def init(self, service: BlessGATTService):
         """
@@ -82,7 +83,9 @@ class BlessGATTCharacteristicWinRT(
         char_parameters: GattLocalCharacteristicParameters = (
             GattLocalCharacteristicParameters()
         )
-        char_parameters.characteristic_properties = self._properties_flags.value
+        char_parameters.characteristic_properties = GattCharacteristicProperties(
+            self._properties_flags.value
+        )
         char_parameters.read_protection_level = (
             BlessGATTCharacteristicWinRT.permissions_to_protection_level(
                 self._permissions, True
@@ -100,7 +103,9 @@ class BlessGATTCharacteristicWinRT(
             )
         )
 
-        gatt_char: GattLocalCharacteristic = characteristic_result.characteristic
+        gatt_char: Optional[GattLocalCharacteristic] = (
+            characteristic_result.characteristic
+        )
 
         # Store the WinRT characteristic
         self._gatt_characteristic = gatt_char
@@ -158,7 +163,7 @@ class BlessGATTCharacteristicWinRT(
         shift_value: int = 3 if read else 4
         permission_value: int = permissions.value >> shift_value
         if permission_value & 1:
-            result |= GattProtectionLevel.ENCRYPTION_REQURIED
+            result |= GattProtectionLevel.ENCRYPTION_REQURIED  # type: ignore
         return result
 
     @property

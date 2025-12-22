@@ -42,6 +42,7 @@ class BlessGATTCharacteristicBlueZDBus(
     """
     BlueZ implementation of the BlessGATTCharacteristic
     """
+    gatt: "BlueZGattCharacteristic"
 
     def __init__(
         self,

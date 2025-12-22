@@ -41,6 +41,7 @@ class BlessGATTDescriptorBlueZDBus(
     """
     BlueZ implementation of the BlessGATTDescriptor
     """
+    gatt: "BlueZGattDescriptor"
 
     def __init__(
         self,
@@ -92,6 +93,7 @@ class BlessGATTDescriptorBlueZDBus(
                 self._uuid, flags, bytes(self.value)
             )
         )
+        self.gatt: BlueZGattDescriptor = gatt_desc
         dict_obj: Dict = await gatt_desc.get_obj()
         obj: GattDescriptor1 = GattDescriptor1(
             UUID=dict_obj["UUID"],
@@ -101,7 +103,6 @@ class BlessGATTDescriptorBlueZDBus(
         )
 
         # Add a Bleak Descriptor properties
-        self.gatt = gatt_desc
         super(BlessGATTDescriptor, self).__init__(
             obj, 0, self._uuid, characteristic
         )

@@ -1,12 +1,13 @@
 from CoreBluetooth import CBUUID, CBMutableDescriptor  # type: ignore
 
-from bleak.backends.corebluetooth.descriptor import (
+from bleak.backends.corebluetooth.descriptor import (  # type: ignore
     BleakGATTDescriptorCoreBluetooth,
 )
 
 from bless.backends.descriptor import BlessGATTDescriptor
 from bless.backends.attribute import GATTAttributePermissions
 from bless.backends.descriptor import GATTDescriptorProperties
+from bless.backends.characteristic import BlessGATTCharacteristic
 
 from uuid import UUID
 from typing import Union, Optional
@@ -43,7 +44,7 @@ class BlessGATTDescriptorCoreBluetooth(
             The binary value of the descriptor
         """
         super().__init__(uuid, properties, permissions, value)
-        self.value = value
+        self.value = value if value is not None else bytearray()
 
     async def init(self, characteristic: BlessGATTCharacteristic):
         cb_uuid: CBUUID = CBUUID.alloc().initWithString_(self._uuid)
@@ -57,4 +58,4 @@ class BlessGATTDescriptorCoreBluetooth(
         self._cb_descriptor = cb_descriptor
         self.obj = cb_descriptor
         self._handle = 0
-        characterisistic.add_descriptor(self)
+        characteristic.add_descriptor(self)
