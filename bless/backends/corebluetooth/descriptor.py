@@ -1,7 +1,7 @@
 from CoreBluetooth import CBUUID, CBMutableDescriptor  # type: ignore
 
-from bleak.backends.corebluetooth.descriptor import (  # type: ignore
-    BleakGATTDescriptorCoreBluetooth,
+from bleak.backends.descriptor import (  # type: ignore
+    BleakGATTDescriptor,
 )
 
 from bless.backends.descriptor import BlessGATTDescriptor
@@ -13,9 +13,7 @@ from uuid import UUID
 from typing import Union, Optional
 
 
-class BlessGATTDescriptorCoreBluetooth(
-    BlessGATTDescriptor, BleakGATTDescriptorCoreBluetooth
-):
+class BlessGATTDescriptorCoreBluetooth(BlessGATTDescriptor, BleakGATTDescriptor):
     """
     CoreBluetooth implementation of a GATT Descriptor
     """
