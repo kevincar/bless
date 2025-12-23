@@ -1,28 +1,43 @@
+import sys
 from uuid import UUID
-from typing import Union, Optional
+from typing import Union, Optional, Dict
 
-from bleak.backends.winrt.characteristic import (  # type: ignore
-    BleakGATTCharacteristicWinRT,
+from bleak.backends.characteristic import (  # type: ignore
+    BleakGATTCharacteristic,
 )
+from bleak.backends.descriptor import BleakGATTDescriptor  # type: ignore
 
-from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
-    GattProtectionLevel,
-    GattLocalCharacteristicParameters,
-    GattLocalCharacteristic,
-    GattLocalCharacteristicResult,
-)
+if sys.version_info >= (3, 12):
+    from winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
+        GattProtectionLevel,
+        GattLocalCharacteristicParameters,
+        GattLocalCharacteristic,
+        GattLocalCharacteristicResult,
+        GattCharacteristicProperties,
+    )
+else:
+    from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
+        GattProtectionLevel,
+        GattLocalCharacteristicParameters,
+        GattLocalCharacteristic,
+        GattLocalCharacteristicResult,
+        GattCharacteristicProperties,
+    )
 
 from bless.backends.service import BlessGATTService
 
-from bless.backends.characteristic import (
-    BlessGATTCharacteristic,
-    GATTCharacteristicProperties,
+from bless.backends.attribute import (
     GATTAttributePermissions,
+)
+
+from bless.backends.characteristic import (
+    BlessGATTCharacteristic as BaseBlessGATTCharacteristic,
+    GATTCharacteristicProperties,
 )
 
 
 class BlessGATTCharacteristicWinRT(
-    BlessGATTCharacteristic, BleakGATTCharacteristicWinRT
+    BaseBlessGATTCharacteristic, BleakGATTCharacteristic
 ):
     """
     WinRT implementation of the BlessGATTCharacteristic
@@ -52,8 +67,10 @@ class BlessGATTCharacteristicWinRT(
             The binary value of the characteristic
         """
         value = value if value is not None else bytearray(b"")
-        super().__init__(uuid, properties, permissions, value)
-        self.value = value
+        BaseBlessGATTCharacteristic.__init__(self, uuid, properties, permissions, value)
+        self._value = value
+        self._descriptors: Dict[int, BleakGATTDescriptor] = {}
+        self._gatt_characteristic: Optional[GattLocalCharacteristic] = None
 
     async def init(self, service: BlessGATTService):
         """
@@ -67,7 +84,9 @@ class BlessGATTCharacteristicWinRT(
         char_parameters: GattLocalCharacteristicParameters = (
             GattLocalCharacteristicParameters()
         )
-        char_parameters.characteristic_properties = self._properties.value
+        char_parameters.characteristic_properties = GattCharacteristicProperties(
+            self._properties_flags.value
+        )
         char_parameters.read_protection_level = (
             BlessGATTCharacteristicWinRT.permissions_to_protection_level(
                 self._permissions, True
@@ -85,10 +104,41 @@ class BlessGATTCharacteristicWinRT(
             )
         )
 
-        gatt_char: GattLocalCharacteristic = characteristic_result.characteristic
-        super(BlessGATTCharacteristic, self).__init__(
-            obj=gatt_char, max_write_without_response_size=128
+        gatt_char: Optional[GattLocalCharacteristic] = (
+            characteristic_result.characteristic
         )
+
+        # Store the WinRT characteristic
+        self._gatt_characteristic = gatt_char
+        self.obj = gatt_char
+        self._service_uuid = service.uuid
+        self._handle = 0
+        self._max_write_without_response_size = lambda: 128
+
+    @property
+    def service_uuid(self) -> str:
+        """The UUID of the service this characteristic belongs to"""
+        return self._service_uuid
+
+    @property
+    def service_handle(self) -> int:
+        """The handle of the service this characteristic belongs to"""
+        return 0
+
+    @property
+    def handle(self) -> int:
+        """The handle of this characteristic"""
+        return self._handle
+
+    @property
+    def uuid(self) -> str:
+        """The uuid of this characteristic"""
+        return self._uuid
+
+    @property
+    def description(self) -> str:
+        """Description of this characteristic"""
+        return f"Characteristic {self._uuid}"
 
     @staticmethod
     def permissions_to_protection_level(

@@ -1,42 +1,48 @@
-import sys
 from uuid import UUID
 
-if sys.version_info[:2] < (3, 8):
-    from typing_extensions import Literal
-else:
-    from typing import Literal
+from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING, Literal
 
-from typing import Union, Optional, List, Dict, cast, TYPE_CHECKING
-
-from bleak.backends.bluezdbus.characteristic import (  # type: ignore
-    _GattCharacteristicsFlagsEnum,
-    BleakGATTCharacteristicBlueZDBus,
+from bleak.backends.characteristic import (  # type: ignore
+    BleakGATTCharacteristic,
 )
+from bleak.backends.descriptor import BleakGATTDescriptor  # type: ignore
 
-from bleak.backends.bluezdbus.defs import GattCharacteristic1
+from bless.backends.attribute import GATTAttributePermissions
+from bless.backends.characteristic import (
+    BlessGATTCharacteristic,
+    GATTCharacteristicProperties,
+)
+from bless.backends.bluezdbus.dbus.characteristic import (
+    Flags,
+    BlueZGattCharacteristic,
+)
 
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
     from bless.backends.service import BlessGATTService
 
-from bless.backends.characteristic import (  # noqa: E402
-    BlessGATTCharacteristic,
-    GATTCharacteristicProperties,
-    GATTAttributePermissions,
-)
-
-from bless.backends.bluezdbus.dbus.characteristic import (  # noqa: E402
-    Flags,
-    BlueZGattCharacteristic,
-)
+# GattCharacteristicsFlags mappings from Bleak v1.1.1
+_GattCharacteristicsFlagsEnum = {
+    1: "broadcast",
+    2: "read",
+    4: "write-without-response",
+    8: "write",
+    16: "notify",
+    32: "indicate",
+    64: "authenticated-signed-writes",
+    128: "extended-properties",
+    256: "reliable-write",
+    512: "writable-auxiliaries",
+}
 
 
 class BlessGATTCharacteristicBlueZDBus(
-    BlessGATTCharacteristic, BleakGATTCharacteristicBlueZDBus
+    BlessGATTCharacteristic, BleakGATTCharacteristic
 ):
     """
     BlueZ implementation of the BlessGATTCharacteristic
     """
+    gatt: "BlueZGattCharacteristic"
 
     def __init__(
         self,
@@ -62,8 +68,9 @@ class BlessGATTCharacteristicBlueZDBus(
             The binary value of the characteristic
         """
         value = value if value is not None else bytearray(b"")
-        super().__init__(uuid, properties, permissions, value)
-        self.value = value
+        BlessGATTCharacteristic.__init__(self, uuid, properties, permissions, value)
+        self._value = value
+        self._descriptors: Dict[int, BleakGATTDescriptor] = {}
 
     async def init(self, service: "BlessGATTService"):
         """
@@ -74,7 +81,10 @@ class BlessGATTCharacteristicBlueZDBus(
         service : BlessGATTService
             The service to assign the characteristic to
         """
-        flags: List[Flags] = flags_to_dbus(self._properties)
+        flags: List[Flags] = [
+            transform_flags_with_permissions(flag, self._permissions)
+            for flag in flags_to_dbus(self._properties_flags)
+        ]
 
         # Add to our BlueZDBus app
         bluez_service: "BlessGATTServiceBlueZDBus" = cast(
@@ -82,26 +92,34 @@ class BlessGATTCharacteristicBlueZDBus(
         )
         gatt_char: BlueZGattCharacteristic = (
             await bluez_service.gatt.add_characteristic(
-                self._uuid, flags, bytes(self.value)
+                self._uuid, flags, bytes(self._value)
             )
         )
-        dict_obj: Dict = await gatt_char.get_obj()
-        obj: GattCharacteristic1 = GattCharacteristic1(
-            UUID=dict_obj["UUID"],
-            Service=service.uuid,
-            Value=bytes(self.value),
-            WriteAcquired=False,
-            NotifyAcquired=False,
-            Notifying=False,
-            Flags=cast(_Flags, flags),
-            MTU=512,
-        )
 
-        # Add a Bleak Characteristic properties
+        # Store the BlueZ GATT characteristic
         self.gatt = gatt_char
-        super(BlessGATTCharacteristic, self).__init__(
-            obj, gatt_char.path, service.uuid, 0, 128
-        )
+
+        # Set attributes expected by BleakGATTCharacteristic
+        self.obj = gatt_char  # The backend-specific object
+        self.path = gatt_char.path  # D-Bus path
+        self._service_uuid = service.uuid
+        self._handle = 0  # Handle will be assigned by BlueZ
+        self._max_write_without_response_size = lambda: 512  # Default MTU
+
+    @property
+    def service_uuid(self) -> str:
+        """The UUID of the service this characteristic belongs to"""
+        return self._service_uuid
+
+    @property
+    def service_handle(self) -> int:
+        """The handle of the service this characteristic belongs to"""
+        return 0  # Not used in BlueZ DBus
+
+    @property
+    def handle(self) -> int:
+        """The handle of this characteristic"""
+        return self._handle
 
     @property
     def value(self) -> bytearray:
@@ -116,7 +134,33 @@ class BlessGATTCharacteristicBlueZDBus(
     @property
     def uuid(self) -> str:
         """The uuid of this characteristic"""
-        return self.obj.get("UUID").value
+        return self._uuid
+
+    @property
+    def description(self) -> str:
+        """Description of this characteristic"""
+        return f"Characteristic {self._uuid}"
+
+
+def transform_flags_with_permissions(
+    flag: Flags, permissions: GATTAttributePermissions
+) -> Flags:
+    """
+    Returns the encrypted variant of a flag if the corresponding permission is
+    set.
+    """
+    if (
+        flag == Flags.READ
+        and GATTAttributePermissions.read_encryption_required in permissions
+    ):
+        return Flags.ENCRYPT_READ
+    if (
+        flag == Flags.WRITE
+        and GATTAttributePermissions.write_encryption_required in permissions
+    ):
+        return Flags.ENCRYPT_WRITE
+
+    return flag
 
 
 def flags_to_dbus(flags: GATTCharacteristicProperties) -> List[Flags]:

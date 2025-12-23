@@ -17,31 +17,54 @@ from typing import List, Any  # noqa: E402
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
 
-from bless.backends.characteristic import (  # type: ignore # noqa: E402
-    GATTCharacteristicProperties,
+from bless.backends.attribute import (  # type: ignore # noqa: E402
     GATTAttributePermissions,
 )
 
-from bleak_winrt.windows.foundation import Deferral  # type: ignore # noqa: E402 E501
-
-from bleak_winrt.windows.storage.streams import DataReader, DataWriter  # type: ignore # noqa: E402 E501
-
-from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E402 F401 E501
-    GattWriteOption,
-    GattServiceProviderResult,
-    GattServiceProvider,
-    GattLocalService,
-    GattLocalCharacteristicResult,
-    GattLocalCharacteristic,
-    GattLocalCharacteristicParameters,
-    GattServiceProviderAdvertisingParameters,
-    GattServiceProviderAdvertisementStatusChangedEventArgs,
-    GattReadRequestedEventArgs,
-    GattReadRequest,
-    GattWriteRequestedEventArgs,
-    GattWriteRequest,
-    GattSubscribedClient,
+from bless.backends.characteristic import (  # type: ignore # noqa: E402
+    GATTCharacteristicProperties,
 )
+
+if sys.version_info >= (3, 12):
+    from winrt.windows.foundation import Deferral  # type: ignore # noqa: E402 E501
+    from winrt.windows.storage.streams import DataReader, DataWriter  # type: ignore # noqa: E402 E501
+    from winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E402 F401 E501
+        GattWriteOption,
+        GattServiceProviderResult,
+        GattServiceProvider,
+        GattLocalService,
+        GattLocalCharacteristicResult,
+        GattLocalCharacteristic,
+        GattLocalCharacteristicParameters,
+        GattServiceProviderAdvertisingParameters,
+        GattServiceProviderAdvertisementStatusChangedEventArgs,
+        GattReadRequestedEventArgs,
+        GattReadRequest,
+        GattWriteRequestedEventArgs,
+        GattWriteRequest,
+        GattSubscribedClient,
+    )
+else:
+    from bleak_winrt.windows.foundation import Deferral  # type: ignore # noqa: E402 E501
+
+    from bleak_winrt.windows.storage.streams import DataReader, DataWriter  # type: ignore # noqa: E402 E501
+
+    from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E402 F401 E501
+        GattWriteOption,
+        GattServiceProviderResult,
+        GattServiceProvider,
+        GattLocalService,
+        GattLocalCharacteristicResult,
+        GattLocalCharacteristic,
+        GattLocalCharacteristicParameters,
+        GattServiceProviderAdvertisingParameters,
+        GattServiceProviderAdvertisementStatusChangedEventArgs,
+        GattReadRequestedEventArgs,
+        GattReadRequest,
+        GattWriteRequestedEventArgs,
+        GattWriteRequest,
+        GattSubscribedClient,
+    )
 
 
 @hardware_only
@@ -96,7 +119,6 @@ class TestServiceProvider:
 
             async def f():
                 nonlocal request
-                nonlocal args
                 request = await args.get_request_async()
             asyncio.run(f())
             request.respond_with_value(writer.detach_buffer())
@@ -110,7 +132,6 @@ class TestServiceProvider:
             request: GattWriteRequest
 
             async def f():
-                nonlocal args
                 nonlocal request
                 request = await args.get_request_async()
             asyncio.run(f())

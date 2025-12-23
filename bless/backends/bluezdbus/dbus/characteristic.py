@@ -2,16 +2,17 @@ from enum import Enum
 
 import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
-from typing import List, Dict, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Any, Dict
 
 from dbus_next.service import ServiceInterface, method, dbus_property  # type: ignore
 from dbus_next.constants import PropertyAccess  # type: ignore
 from dbus_next.signature import Variant  # type: ignore
 
+from .descriptor import BlueZGattDescriptor, DescriptorFlags  # type: ignore
+
 if TYPE_CHECKING:
     from bless.backends.bluezdbus.dbus.service import (  # type: ignore # noqa: F401
-        BlueZGattService,
-        BlueZGattDescriptor
+        BlueZGattService
     )
 
 
@@ -162,6 +163,30 @@ class BlueZGattCharacteristic(ServiceInterface):
             raise NotImplementedError()
         f(None)
         self._service.app.subscribed_characteristics.remove(self._uuid)
+
+    async def add_descriptor(
+        self, uuid: str, flags: List[DescriptorFlags], value: Any
+    ) -> BlueZGattDescriptor:
+        """
+        Adds a BlueZGattDescriptor to the characteristic.
+
+        Parameters
+        ----------
+        uuid : str
+            The string representation of the UUID for the descriptor
+        flags : List[DescriptorFlags],
+            A list of flags to apply to the descriptor
+        value : Any
+            The descriptor's value
+        """
+        index: int = len(self.descriptors) + 1
+        descriptor: BlueZGattDescriptor = BlueZGattDescriptor(
+            uuid, flags, index, self
+        )
+        descriptor._value = value  # type: ignore
+        self.descriptors.append(descriptor)
+        await self._service.app._register_object(descriptor)
+        return descriptor
 
     async def get_obj(self) -> Dict:
         """

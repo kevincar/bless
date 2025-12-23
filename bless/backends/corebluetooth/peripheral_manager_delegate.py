@@ -3,7 +3,7 @@ import asyncio
 import logging
 import threading
 
-from typing import Callable, Dict, Any, List
+from typing import Callable, Dict, Any, List, Optional
 from Foundation import NSObject, NSError  # type: ignore
 from CoreBluetooth import (  # type: ignore
     CBService,
@@ -36,7 +36,7 @@ class PeripheralManagerDelegate(  # type: ignore
     def init(self: "PeripheralManagerDelegate"):
         self = objc.super(PeripheralManagerDelegate, self).init()
 
-        self.event_loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+        self.event_loop: Optional[asyncio.AbstractEventLoop] = None
 
         self.peripheral_manager: CBPeripheralManager = (
             CBPeripheralManager.alloc().initWithDelegate_queue_(
@@ -61,6 +61,17 @@ class PeripheralManagerDelegate(  # type: ignore
             LOGGER.warning("PeripheralManagerDelegate is not compliant")
 
         return self
+
+    def _ensure_event_loop(self) -> None:
+        if self.event_loop is None:
+            self.event_loop = asyncio.get_running_loop()
+
+    def _call_soon_threadsafe(self, func: Callable, *args) -> None:
+        if self.event_loop is None:
+            LOGGER.warning("Event loop not set; calling delegate directly")
+            func(*args)
+            return
+        self.event_loop.call_soon_threadsafe(func, *args)
 
     def compliant(self) -> bool:
         """
@@ -119,6 +130,7 @@ class PeripheralManagerDelegate(  # type: ignore
                         + "the local name to less than 28 characters."
                     )
 
+        self._ensure_event_loop()
         self.peripheral_manager.startAdvertising_(advertisement_data)
 
         await asyncio.wait_for(self._advertisement_started_event.wait(), timeout)
@@ -165,6 +177,7 @@ class PeripheralManagerDelegate(  # type: ignore
         service : CBMutableService
             The service to be added to the server
         """
+        self._ensure_event_loop()
         uuid: str = service.UUID().UUIDString()
         self._services_added_events[uuid] = asyncio.Event()
 
@@ -197,7 +210,7 @@ class PeripheralManagerDelegate(  # type: ignore
         service: CBService,
         error: NSError,
     ):
-        self.event_loop.call_soon_threadsafe(
+        self._call_soon_threadsafe(
             self.peripheralManager_didAddService_error,
             peripheral_manager,
             service,
@@ -218,7 +231,7 @@ class PeripheralManagerDelegate(  # type: ignore
         self, peripheral_manager: CBPeripheralManager, error: NSError
     ):
         LOGGER.debug("Received DidStartAdvertising Message")
-        self.event_loop.call_soon_threadsafe(
+        self._call_soon_threadsafe(
             self.peripheralManagerDidStartAdvertising_error, peripheral_manager, error
         )
 

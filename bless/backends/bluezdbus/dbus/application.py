@@ -17,6 +17,7 @@ from bless.backends.bluezdbus.dbus.characteristic import (  # type: ignore
     Flags,
     BlueZGattCharacteristic,
 )
+from bless.backends.bluezdbus.dbus.descriptor import BlueZGattDescriptor  # type: ignore
 
 
 class BlueZGattApplication(ServiceInterface):
@@ -223,7 +224,7 @@ class BlueZGattApplication(ServiceInterface):
         return len(self.subscribed_characteristics) > 0
 
     async def _register_object(
-        self, o: Union[BlueZGattService, BlueZGattCharacteristic]
+        self, o: Union[BlueZGattService, BlueZGattCharacteristic, BlueZGattDescriptor]
     ):
         """
         Register a service or characteristic object on the bus
