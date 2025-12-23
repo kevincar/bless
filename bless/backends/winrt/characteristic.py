@@ -161,10 +161,10 @@ class BlessGATTCharacteristicWinRT(
             The protection level equivalent
         """
         result: GattProtectionLevel = GattProtectionLevel.PLAIN
-        shift_value: int = 3 if read else 4
+        shift_value: int = 2 if read else 3
         permission_value: int = permissions.value >> shift_value
         if permission_value & 1:
-            result |= GattProtectionLevel.ENCRYPTION_REQURIED  # type: ignore
+            result |= GattProtectionLevel.ENCRYPTION_REQUIRED
         return result
 
     @property
