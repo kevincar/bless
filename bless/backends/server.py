@@ -7,10 +7,15 @@ from asyncio import AbstractEventLoop
 from typing import Any, Optional, Dict, Callable, List
 
 from bless.backends.service import BlessGATTService
+from bless.backends.attribute import (  # type: ignore
+    GATTAttributePermissions
+)
 from bless.backends.characteristic import (  # type: ignore
     BlessGATTCharacteristic,
-    GATTCharacteristicProperties,
-    GATTAttributePermissions
+    GATTCharacteristicProperties
+)
+from bless.backends.descriptor import (  # type: ignore
+    GATTDescriptorProperties
 )
 
 from bless.exceptions import BlessError
@@ -136,6 +141,39 @@ class BaseBlessServer(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
+    async def add_new_descriptor(
+        self,
+        service_uuid: str,
+        char_uuid: str,
+        desc_uuid: str,
+        properties: GATTDescriptorProperties,
+        value: Optional[bytearray],
+        permissions: GATTAttributePermissions,
+    ):
+        """
+        Add a new characteristic to be associated with the server
+
+        Parameters
+        ----------
+        service_uuid : str
+            The string representation of the UUID of the GATT service to which
+            this existing characteristic belongs
+        char_uuid : str
+            The string representation of the UUID of the GATT characteristic
+            to which this new descriptor should belong
+        desc_uuid : str
+            The string representation of the UUID of the descriptor
+        properties : GATTDescriptorProperties
+            GATT Characteristic Flags that define the descriptor
+        value : Optional[bytearray]
+            A byterray representation of the value to be associated with the
+            descriptor. Can be None if the descriptor is writable
+        permissions : GATTAttributePermissions
+            GATT flags that define the permissions for the descriptor
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
         Update the characteristic value. This is different than using
@@ -225,8 +263,17 @@ class BaseBlessServer(abc.ABC):
                         service_uuid, char_uuid, char_info.get("Properties"),
                         char_info.get("Value"), char_info.get("Permissions")
                         )
+                descriptors = char_info.get("Descriptors")
+                if isinstance(descriptors, dict):
+                    for desc_uuid, desc_info in descriptors.items():
+                        await self.add_new_descriptor(
+                                service_uuid, char_uuid, desc_uuid,
+                                desc_info.get("Properties"),
+                                desc_info.get("Value"),
+                                desc_info.get("Permissions")
+                                )
 
-    def read_request(self, uuid: str) -> bytearray:
+    def read_request(self, uuid: str, options: Optional[Dict] = None) -> bytearray:
         """
         This function should be handed off to the subsequent backend bluetooth
         servers as a callback for incoming read requests on values for

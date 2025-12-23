@@ -35,6 +35,11 @@ elif sys.platform == "linux":
         BlessGATTCharacteristicBlueZDBus as BlessGATTCharacteristic,
     )
 
+    # Descriptor Classes
+    from bless.backends.bluezdbus.descriptor import (  # noqa: F401
+        BlessGATTDescriptorBlueZDBus as BlessGATTDescriptor,
+    )
+
 elif sys.platform == "win32":
 
     # Server
@@ -52,11 +57,19 @@ elif sys.platform == "win32":
         BlessGATTCharacteristicWinRT as BlessGATTCharacteristic,
     )
 
+# type: ignore
+from bless.backends.attribute import (  # noqa: E402 F401
+    GATTAttributePermissions,
+)
 
 # type: ignore
 from bless.backends.characteristic import (  # noqa: E402 F401
     GATTCharacteristicProperties,
-    GATTAttributePermissions,
+)
+
+# type: ignore
+from bless.backends.descriptor import (  # noqa: E402 F401
+    GATTDescriptorProperties,
 )
 
 

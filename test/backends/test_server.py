@@ -2,6 +2,7 @@ import sys
 import uuid
 import pytest
 import asyncio
+import os
 import aioconsole  # type: ignore
 
 import numpy as np  # type: ignore
@@ -20,12 +21,15 @@ if sys.platform not in ['darwin', 'linux', 'win32']:
             )
 
 from bless import BlessServer  # type: ignore  # noqa: E402
+from bless.backends.attribute import (  # noqa: E402
+        GATTAttributePermissions,
+        )
 from bless.backends.characteristic import (  # noqa: E402
         GATTCharacteristicProperties,
-        GATTAttributePermissions
         )
 
 hardware_only = pytest.mark.skipif("os.environ.get('TEST_HARDWARE') is None")
+use_encrypted = os.environ.get('TEST_ENCRYPTED') is not None
 
 
 @hardware_only
@@ -83,6 +87,13 @@ class TestBlessServer:
                 GATTAttributePermissions.readable |
                 GATTAttributePermissions.writeable
                 )
+
+        if use_encrypted:
+            print("\nEncryption has been enabled, ensure that you are bonded")
+            permissions = (
+                    GATTAttributePermissions.read_encryption_required |
+                    GATTAttributePermissions.write_encryption_required
+                    )
 
         await server.add_new_characteristic(
                 service_uuid,

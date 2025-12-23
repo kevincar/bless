@@ -2,13 +2,18 @@ import abc
 
 from enum import Flag
 from uuid import UUID
-from typing import Union, Optional, cast
+from typing import Union, Optional, cast, List, TYPE_CHECKING
 
-from bleak.backends.characteristic import BleakGATTCharacteristic  # type: ignore
+from bleak.backends.characteristic import (  # type: ignore
+    BleakGATTCharacteristic,
+    CharacteristicPropertyName,
+)
 
-from typing import TYPE_CHECKING
+from .attribute import GATTAttributePermissions
+
 if TYPE_CHECKING:
     from bless.backends.service import BlessGATTService
+    from bless.backends.descriptor import BlessGATTDescriptor
 
 
 class GATTCharacteristicProperties(Flag):
@@ -24,11 +29,31 @@ class GATTCharacteristicProperties(Flag):
     writable_auxiliaries = 0x0200
 
 
-class GATTAttributePermissions(Flag):
-    readable = 0x1
-    writeable = 0x2
-    read_encryption_required = 0x4
-    write_encryption_required = 0x8
+_PROPERTY_FLAG_TO_NAME = [
+    (GATTCharacteristicProperties.broadcast, "broadcast"),
+    (GATTCharacteristicProperties.read, "read"),
+    (GATTCharacteristicProperties.write_without_response, "write-without-response"),
+    (GATTCharacteristicProperties.write, "write"),
+    (GATTCharacteristicProperties.notify, "notify"),
+    (GATTCharacteristicProperties.indicate, "indicate"),
+    (
+        GATTCharacteristicProperties.authenticated_signed_writes,
+        "authenticated-signed-writes",
+    ),
+    (GATTCharacteristicProperties.extended_properties, "extended-properties"),
+    (GATTCharacteristicProperties.reliable_write, "reliable-write"),
+    (GATTCharacteristicProperties.writable_auxiliaries, "writable-auxiliaries"),
+]
+
+
+def _properties_to_bleak(
+    properties: GATTCharacteristicProperties,
+) -> List[CharacteristicPropertyName]:
+    result: List[CharacteristicPropertyName] = []
+    for flag, name in _PROPERTY_FLAG_TO_NAME:
+        if properties & flag:
+            result.append(cast(CharacteristicPropertyName, name))
+    return result
 
 
 class BlessGATTCharacteristic(BleakGATTCharacteristic):
@@ -63,7 +88,10 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
             uuid_str: str = cast(str, uuid)
             uuid = UUID(uuid_str)
         self._uuid: str = str(uuid)
-        self._properties: GATTCharacteristicProperties = properties
+        self._properties_flags: GATTCharacteristicProperties = properties
+        self._properties: List[CharacteristicPropertyName] = _properties_to_bleak(
+            properties
+        )
         self._permissions: GATTAttributePermissions = permissions
         self._initial_value: Optional[bytearray] = value
 
@@ -92,3 +120,9 @@ class BlessGATTCharacteristic(BleakGATTCharacteristic):
     def value(self, val: bytearray):
         """Set the value of this characteristic"""
         raise NotImplementedError()
+
+    def get_descriptor(
+        self, specifier: Union[int, str, UUID]
+    ) -> Optional["BlessGATTDescriptor"]:
+        """Get a descriptor by handle or UUID."""
+        return cast("BlessGATTDescriptor", super().get_descriptor(specifier))

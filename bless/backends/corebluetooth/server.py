@@ -10,6 +10,7 @@ from CoreBluetooth import (  # type: ignore
     CBService,
     CBPeripheralManager,
     CBMutableCharacteristic,
+    CBMutableDescriptor,
     CBAdvertisementDataLocalNameKey,
     CBAdvertisementDataServiceUUIDsKey,
 )
@@ -22,9 +23,19 @@ from bless.backends.corebluetooth.service import BlessGATTServiceCoreBluetooth
 from bless.backends.corebluetooth.characteristic import (  # type: ignore
     BlessGATTCharacteristicCoreBluetooth,
 )
+from bless.backends.corebluetooth.descriptor import (  # type: ignore
+    BlessGATTDescriptorCoreBluetooth
+)
+
+from bless.backends.descriptor import (  # type: ignore
+    GATTDescriptorProperties,
+)
+
+from bless.backends.attribute import (
+    GATTAttributePermissions,
+)
 from bless.backends.characteristic import (
     GATTCharacteristicProperties,
-    GATTAttributePermissions,
 )
 
 
@@ -175,7 +186,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             The permissions for the characteristic
         """
         service_uuid = str(UUID(service_uuid))
-        logger.debug("Craeting a new characteristic with uuid: {}".format(char_uuid))
+        logger.debug("Creating a new characteristic with uuid: {}".format(char_uuid))
         characteristic: BlessGATTCharacteristicCoreBluetooth = (
             BlessGATTCharacteristicCoreBluetooth(
                 char_uuid, properties, permissions, value
@@ -192,6 +203,31 @@ class BlessServerCoreBluetooth(BaseBlessServer):
             characteristic.obj for characteristic in service.characteristics
         ]
         service.obj.setCharacteristics_(characteristics)
+
+    async def add_new_descriptor(
+        self,
+        service_uuid: str,
+        char_uuid: str,
+        descriptor_uuid: str,
+        properties: GATTDescriptorProperties,
+        value: Optional[bytearray],
+        permissions: GATTAttributePermissions,
+    ):
+        logger.debug("Creating a new descriptor with uuid: {}".format(descriptor_uuid))
+        descriptor: BlessGATTDescriptorCoreBluetooth = BlessGATTDescriptorCoreBluetooth(
+            descriptor_uuid, properties, permissions, value
+        )
+
+        characteristic: BlessGATTCharacteristicCoreBluetooth = cast(
+            BlessGATTCharacteristicCoreBluetooth, self.get_characteristic(char_uuid)
+        )
+        await descriptor.init(characteristic)
+
+        characteristic.add_descriptor(descriptor)
+        descriptors: List[CBMutableDescriptor] = [
+            descriptor.obj for descriptor in characteristic.descriptors
+        ]
+        characteristic.obj.setDescriptors_(descriptors)
 
     def update_value(self, service_uuid: str, char_uuid: str) -> bool:
         """
