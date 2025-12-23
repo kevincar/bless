@@ -11,7 +11,13 @@ from bless import (
     GATTAttributePermissions,
 )
 
+hardware_only_on_linux = pytest.mark.skipif(
+    "sys.platform.lower() == 'linux' and os.environ.get('TEST_HARDWARE') is None",
+    allow_module_level=True,
+)
 
+
+@hardware_only_on_linux
 class TestBleakV1Compatibility:
     """Test compatibility with Bleak v1.1.1"""
 
