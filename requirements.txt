@@ -3,6 +3,7 @@ mypy
 pytest
 pytest-asyncio
 bleak>=1.1.1
+bleak-winrt; platform_system == "Windows" and python_version<"3.12"
 aioconsole
 numpy
 pyobjc; platform_system == "Darwin"
