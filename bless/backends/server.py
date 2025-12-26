@@ -7,6 +7,7 @@ from asyncio import AbstractEventLoop
 from typing import Any, Optional, Dict, Callable, List
 
 from bless.backends.service import BlessGATTService
+from bless.backends.advertisement import BlessAdvertisementData
 from bless.backends.attribute import (  # type: ignore
     GATTAttributePermissions
 )
@@ -52,9 +53,16 @@ class BaseBlessServer(abc.ABC):
     # Abstract Methods
 
     @abc.abstractmethod
-    async def start(self, **kwargs) -> bool:
+    async def start(
+        self, advertisement_data: Optional[BlessAdvertisementData] = None, **kwargs
+    ) -> bool:
         """
         Start the server
+
+        Parameters
+        ----------
+        advertisement_data : Optional[BlessAdvertisementData]
+            Optional advertisement payload to customize backend advertising
 
         Returns
         -------

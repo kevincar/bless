@@ -8,6 +8,7 @@ from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface  # type: ignor
 from dbus_next.service import ServiceInterface  # type: ignore
 from dbus_next.signature import Variant  # type: ignore
 
+from bless.backends.advertisement import BlessAdvertisementData
 from bless.backends.bluezdbus.dbus.advertisement import (  # type: ignore
     Type,
     BlueZLEAdvertisement,
@@ -150,7 +151,11 @@ class BlueZGattApplication(ServiceInterface):
         iface: ProxyInterface = adapter.get_interface(defs.GATT_MANAGER_INTERFACE)
         await iface.call_unregister_application(self.path)  # type: ignore
 
-    async def start_advertising(self, adapter: ProxyObject):
+    async def start_advertising(
+        self,
+        adapter: ProxyObject,
+        advertisement_data: Optional[BlessAdvertisementData] = None,
+    ):
         """
         Start Advertising the application
 
@@ -158,16 +163,32 @@ class BlueZGattApplication(ServiceInterface):
         ----------
         adapter : ProxyObject
             The adapter object to start advertising on
+        advertisement_data : Optional[BlessAdvertisementData]
+            Optional advertisement payload to populate BlueZ advertisement data
         """
-        await self.set_name(adapter, self.app_name)
+        local_name: str = self.app_name
+        if advertisement_data and advertisement_data.local_name is not None:
+            local_name = advertisement_data.local_name
+        await self.set_name(adapter, local_name)
 
         advertisement: BlueZLEAdvertisement = BlueZLEAdvertisement(
             Type.PERIPHERAL, len(self.advertisements) + 1, self
         )
         self.advertisements.append(advertisement)
 
-        # Only add the first UUID
-        advertisement._service_uuids.append(self.services[0].UUID)
+        if advertisement_data and advertisement_data.local_name is not None:
+            advertisement._local_name = advertisement_data.local_name
+        if advertisement_data and advertisement_data.service_uuids is not None:
+            advertisement._service_uuids.extend(advertisement_data.service_uuids)
+        elif len(self.services) > 0:
+            # Only add the first UUID
+            advertisement._service_uuids.append(self.services[0].UUID)
+        if advertisement_data and advertisement_data.manufacturer_data is not None:
+            advertisement._manufacturer_data = advertisement_data.manufacturer_data
+        if advertisement_data and advertisement_data.service_data is not None:
+            advertisement._service_data = advertisement_data.service_data
+        if advertisement_data and advertisement_data.tx_power is not None:
+            advertisement._tx_power = advertisement_data.tx_power
 
         self.bus.export(advertisement.path, advertisement)
 
