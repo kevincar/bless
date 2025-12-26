@@ -3,12 +3,14 @@ from uuid import UUID
 from typing import Union, Optional, cast, TYPE_CHECKING, List, Dict
 
 if sys.version_info >= (3, 12):
+    from winrt.windows.devices.bluetooth import BluetoothError  # type: ignore
     from winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
         GattServiceProviderResult,
         GattServiceProvider,
         GattLocalService,
     )
 else:
+    from bleak_winrt.windows.devices.bluetooth import BluetoothError  # type: ignore
     from bleak_winrt.windows.devices.bluetooth.genericattributeprofile import (  # type: ignore # noqa: E501
         GattServiceProviderResult,
         GattServiceProvider,
@@ -59,6 +61,11 @@ class BlessGATTServiceWinRT(BaseBlessGATTService, BleakGATTService):
         service_provider_result: GattServiceProviderResult = (
             await GattServiceProvider.create_async(UUID(self._uuid))
         )
+        if service_provider_result.error != BluetoothError.SUCCESS:
+            raise RuntimeError(
+                "Failed to create GATT service provider: "
+                f"{service_provider_result.error}"
+            )
         service_provider = service_provider_result.service_provider
         if service_provider is None:
             raise RuntimeError("Failed to create GATT service provider")
