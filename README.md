@@ -7,6 +7,8 @@ Test](https://github.com/kevincar/bless/actions/workflows/build-and-test.yml/bad
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/bless)
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+Documentation: https://bless.readthedocs.io/en/latest/
+
 Bless is an acronym for Bluetooth Low Energy (BLE) Server Supplement.
 
 Bless provides an OS-independent python package for creating a BLE Generic

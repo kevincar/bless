@@ -8,16 +8,12 @@ from typing import Any, Optional, Dict, Callable, List
 
 from bless.backends.service import BlessGATTService
 from bless.backends.advertisement import BlessAdvertisementData
-from bless.backends.attribute import (  # type: ignore
-    GATTAttributePermissions
-)
+from bless.backends.attribute import GATTAttributePermissions  # type: ignore
 from bless.backends.characteristic import (  # type: ignore
     BlessGATTCharacteristic,
-    GATTCharacteristicProperties
+    GATTCharacteristicProperties,
 )
-from bless.backends.descriptor import (  # type: ignore
-    GATTDescriptorProperties
-)
+from bless.backends.descriptor import GATTDescriptorProperties  # type: ignore
 
 from bless.exceptions import BlessError
 
@@ -268,18 +264,23 @@ class BaseBlessServer(abc.ABC):
             await self.add_new_service(service_uuid)
             for char_uuid, char_info in service_info.items():
                 await self.add_new_characteristic(
-                        service_uuid, char_uuid, char_info.get("Properties"),
-                        char_info.get("Value"), char_info.get("Permissions")
-                        )
+                    service_uuid,
+                    char_uuid,
+                    char_info.get("Properties"),
+                    char_info.get("Value"),
+                    char_info.get("Permissions"),
+                )
                 descriptors = char_info.get("Descriptors")
                 if isinstance(descriptors, dict):
                     for desc_uuid, desc_info in descriptors.items():
                         await self.add_new_descriptor(
-                                service_uuid, char_uuid, desc_uuid,
-                                desc_info.get("Properties"),
-                                desc_info.get("Value"),
-                                desc_info.get("Permissions")
-                                )
+                            service_uuid,
+                            char_uuid,
+                            desc_uuid,
+                            desc_info.get("Properties"),
+                            desc_info.get("Value"),
+                            desc_info.get("Permissions"),
+                        )
 
     def read_request(self, uuid: str, options: Optional[Dict] = None) -> bytearray:
         """
@@ -329,6 +330,50 @@ class BaseBlessServer(abc.ABC):
     def read_request_func(self) -> Callable[[Any], Any]:
         """
         Return an instance of the function to handle incoming read requests
+
+        Note
+        ----
+        This will be deprecated in version 0.4. Prefer using `on_read`.
+        """
+        return self.on_read
+
+    @read_request_func.setter
+    def read_request_func(self, func: Callable):
+        """
+        Set the function to handle incoming read requests
+
+        Note
+        ----
+        This will be deprecated in version 0.4. Prefer using `on_read`.
+        """
+        self.on_read = func
+
+    @property
+    def write_request_func(self) -> Callable:
+        """
+        Return an instance of the function to handle incoming write requests
+
+        Note
+        ----
+        This will be deprecated in version 0.4. Prefer using `on_write`.
+        """
+        return self.on_write
+
+    @write_request_func.setter
+    def write_request_func(self, func: Callable):
+        """
+        Set the function to handle incoming write requests
+
+        Note
+        ----
+        This will be deprecated in version 0.4. Prefer using `on_write`.
+        """
+        self.on_write = func
+
+    @property
+    def on_read(self) -> Callable[[Any], Any]:
+        """
+        Alias for `read_request_func`.
         """
         func: Optional[Callable[[Any], Any]] = self._callbacks.get("read")
         if func is not None:
@@ -336,17 +381,17 @@ class BaseBlessServer(abc.ABC):
         else:
             raise BlessError("Server: Read Callback is undefined")
 
-    @read_request_func.setter
-    def read_request_func(self, func: Callable):
+    @on_read.setter
+    def on_read(self, func: Callable):
         """
-        Set the function to handle incoming read requests
+        Alias for `read_request_func`.
         """
         self._callbacks["read"] = func
 
     @property
-    def write_request_func(self) -> Callable:
+    def on_write(self) -> Callable:
         """
-        Return an instance of the function to handle incoming write requests
+        Alias for `write_request_func`.
         """
         func: Optional[Callable[[Any], Any]] = self._callbacks.get("write")
         if func is not None:
@@ -354,10 +399,10 @@ class BaseBlessServer(abc.ABC):
         else:
             raise BlessError("Server: Write Callback is undefined")
 
-    @write_request_func.setter
-    def write_request_func(self, func: Callable):
+    @on_write.setter
+    def on_write(self, func: Callable):
         """
-        Set the function to handle incoming write requests
+        Alias for `write_request_func`.
         """
         self._callbacks["write"] = func
 
