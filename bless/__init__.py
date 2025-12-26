@@ -1,7 +1,10 @@
-# type: ignore
+import os
 import sys
 
-if sys.platform == "darwin":
+# Avoid OS-specific imports during docs builds.
+if os.environ.get("BLESS_DOCS_BUILD"):
+    pass
+elif sys.platform == "darwin":
 
     # Server
     from bless.backends.corebluetooth.server import (  # noqa: F401

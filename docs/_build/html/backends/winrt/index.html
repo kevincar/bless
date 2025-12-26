@@ -1,0 +1,516 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WinRT (Windows) &mdash; bless 0.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=e259d695"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="API Reference" href="../../api.html" />
+    <link rel="prev" title="CoreBluetooth (macOS)" href="../corebluetooth/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            bless
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Backends</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../advertisement.html">Advertisement Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../attribute.html">Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../characteristic.html">Characteristics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../descriptor.html">Descriptors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../service.html">Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../server.html">Server Base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bluezdbus/index.html">BlueZ DBus (Linux)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../corebluetooth/index.html">CoreBluetooth (macOS)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">WinRT (Windows)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.name"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.services"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.services</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.add_new_characteristic"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.add_new_characteristic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.add_new_descriptor"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.add_new_descriptor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.add_new_service"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.add_new_service()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.is_advertising"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.is_advertising()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.is_connected"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.is_connected()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.read_characteristic"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.read_characteristic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.start"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.stop"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.stop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.subscribe_characteristic"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.subscribe_characteristic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.update_value"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.update_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT.write_characteristic"><code class="docutils literal notranslate"><span class="pre">BlessServerWinRT.write_characteristic()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#bless.backends.winrt.service.BlessGATTServiceWinRT"><code class="docutils literal notranslate"><span class="pre">BlessGATTServiceWinRT</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.add_characteristic"><code class="docutils literal notranslate"><span class="pre">BlessGATTServiceWinRT.add_characteristic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.characteristics"><code class="docutils literal notranslate"><span class="pre">BlessGATTServiceWinRT.characteristics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.description"><code class="docutils literal notranslate"><span class="pre">BlessGATTServiceWinRT.description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.get_characteristic"><code class="docutils literal notranslate"><span class="pre">BlessGATTServiceWinRT.get_characteristic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.handle"><code class="docutils literal notranslate"><span class="pre">BlessGATTServiceWinRT.handle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.init"><code class="docutils literal notranslate"><span class="pre">BlessGATTServiceWinRT.init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.uuid"><code class="docutils literal notranslate"><span class="pre">BlessGATTServiceWinRT.uuid</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT"><code class="docutils literal notranslate"><span class="pre">BlessGATTCharacteristicWinRT</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.description"><code class="docutils literal notranslate"><span class="pre">BlessGATTCharacteristicWinRT.description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.handle"><code class="docutils literal notranslate"><span class="pre">BlessGATTCharacteristicWinRT.handle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.init"><code class="docutils literal notranslate"><span class="pre">BlessGATTCharacteristicWinRT.init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.permissions_to_protection_level"><code class="docutils literal notranslate"><span class="pre">BlessGATTCharacteristicWinRT.permissions_to_protection_level()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.service_handle"><code class="docutils literal notranslate"><span class="pre">BlessGATTCharacteristicWinRT.service_handle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.service_uuid"><code class="docutils literal notranslate"><span class="pre">BlessGATTCharacteristicWinRT.service_uuid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.uuid"><code class="docutils literal notranslate"><span class="pre">BlessGATTCharacteristicWinRT.uuid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.value"><code class="docutils literal notranslate"><span class="pre">BlessGATTCharacteristicWinRT.value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#bless.backends.winrt.descriptor.BlessGATTDescriptorWinRT"><code class="docutils literal notranslate"><span class="pre">BlessGATTDescriptorWinRT</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.descriptor.BlessGATTDescriptorWinRT.init"><code class="docutils literal notranslate"><span class="pre">BlessGATTDescriptorWinRT.init()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bless.backends.winrt.descriptor.BlessGATTDescriptorWinRT.value"><code class="docutils literal notranslate"><span class="pre">BlessGATTDescriptorWinRT.value</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../readthedocs.html">Read the Docs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">bless</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Backends</a></li>
+      <li class="breadcrumb-item active">WinRT (Windows)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/backends/winrt/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="winrt-windows">
+<h1>WinRT (Windows)<a class="headerlink" href="#winrt-windows" title="Link to this heading"></a></h1>
+<p>The WinRT backend implements GATT services and advertising using Windows
+Runtime Bluetooth APIs.</p>
+<dl class="py class" id="module-bless.backends.winrt.server">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bless.backends.winrt.server.</span></span><span class="sig-name descname"><span class="pre">BlessServerWinRT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AbstractEventLoop</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_overwrite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT" title="Link to this definition"></a></dt>
+<dd><p>WinRT Implementation of BlessServer</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.name" title="Link to this definition"></a></dt>
+<dd><p>The name of the server to advertise</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.services">
+<span class="sig-name descname"><span class="pre">services</span></span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.services" title="Link to this definition"></a></dt>
+<dd><p>A dictionary of services to be advertised by this server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, <a class="reference internal" href="#bless.backends.winrt.service.BlessGATTServiceWinRT" title="bless.backends.winrt.service.BlessGATTServiceWinRT">BlessGATTServiceWinRT</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.add_new_characteristic">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_new_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">service_uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">char_uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../characteristic.html#bless.backends.characteristic.GATTCharacteristicProperties" title="bless.backends.characteristic.GATTCharacteristicProperties"><span class="pre">GATTCharacteristicProperties</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permissions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../attribute.html#bless.backends.attribute.GATTAttributePermissions" title="bless.backends.attribute.GATTAttributePermissions"><span class="pre">GATTAttributePermissions</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.add_new_characteristic" title="Link to this definition"></a></dt>
+<dd><p>Generate a new characteristic to be associated with the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>service_uuid</strong> (<em>str</em>) – The string representation of the uuid of the service to associate
+the new characteristic with</p></li>
+<li><p><strong>char_uuid</strong> (<em>str</em>) – The string representation of the uuid of the new characteristic</p></li>
+<li><p><strong>properties</strong> (<a class="reference internal" href="../characteristic.html#bless.backends.characteristic.GATTCharacteristicProperties" title="bless.backends.characteristic.GATTCharacteristicProperties"><em>GATTCharacteristicProperties</em></a>) – The flags for the characteristic</p></li>
+<li><p><strong>value</strong> (<em>Optional</em><em>[</em><em>bytearray</em><em>]</em>) – The initial value for the characteristic</p></li>
+<li><p><strong>permissions</strong> (<a class="reference internal" href="../attribute.html#bless.backends.attribute.GATTAttributePermissions" title="bless.backends.attribute.GATTAttributePermissions"><em>GATTAttributePermissions</em></a>) – The permissions for the characteristic</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.add_new_descriptor">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_new_descriptor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">service_uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">char_uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descriptor_uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../descriptor.html#bless.backends.descriptor.GATTDescriptorProperties" title="bless.backends.descriptor.GATTDescriptorProperties"><span class="pre">GATTDescriptorProperties</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytearray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permissions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../attribute.html#bless.backends.attribute.GATTAttributePermissions" title="bless.backends.attribute.GATTAttributePermissions"><span class="pre">GATTAttributePermissions</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.add_new_descriptor" title="Link to this definition"></a></dt>
+<dd><p>Add a new characteristic to be associated with the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>service_uuid</strong> (<em>str</em>) – The string representation of the UUID of the GATT service to which
+this existing characteristic belongs</p></li>
+<li><p><strong>char_uuid</strong> (<em>str</em>) – The string representation of the UUID of the GATT characteristic
+to which this new descriptor should belong</p></li>
+<li><p><strong>desc_uuid</strong> (<em>str</em>) – The string representation of the UUID of the descriptor</p></li>
+<li><p><strong>properties</strong> (<a class="reference internal" href="../descriptor.html#bless.backends.descriptor.GATTDescriptorProperties" title="bless.backends.descriptor.GATTDescriptorProperties"><em>GATTDescriptorProperties</em></a>) – GATT Characteristic Flags that define the descriptor</p></li>
+<li><p><strong>value</strong> (<em>Optional</em><em>[</em><em>bytearray</em><em>]</em>) – A byterray representation of the value to be associated with the
+descriptor. Can be None if the descriptor is writable</p></li>
+<li><p><strong>permissions</strong> (<a class="reference internal" href="../attribute.html#bless.backends.attribute.GATTAttributePermissions" title="bless.backends.attribute.GATTAttributePermissions"><em>GATTAttributePermissions</em></a>) – GATT flags that define the permissions for the descriptor</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.add_new_service">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_new_service</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.add_new_service" title="Link to this definition"></a></dt>
+<dd><p>Generate a new service to be associated with the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>uuid</strong> (<em>str</em>) – The string representation of the UUID of the service to be added</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.is_advertising">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_advertising</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.is_advertising" title="Link to this definition"></a></dt>
+<dd><p>Determine whether the server is advertising</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if advertising</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.is_connected">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_connected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.is_connected" title="Link to this definition"></a></dt>
+<dd><p>Determine whether there are any connected peripheral devices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if there are any central devices that have subscribed to our
+characteristics</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.read_characteristic">
+<span class="sig-name descname"><span class="pre">read_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bleak_winrt.windows.devices.bluetooth.genericattributeprofile.GattLocalCharacteristic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bleak_winrt.windows.devices.bluetooth.genericattributeprofile.GattReadRequestedEventArgs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.read_characteristic" title="Link to this definition"></a></dt>
+<dd><p>The is triggered by pythonnet when windows receives a read request for
+a given characteristic</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> (<em>GattLocalCharacteristic</em>) – The characteristic Gatt object whose value was requested</p></li>
+<li><p><strong>args</strong> (<em>GattReadRequestedEventArgs</em>) – Arguments for the read request</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.start">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">advertisement_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../advertisement.html#bless.backends.advertisement.BlessAdvertisementData" title="bless.backends.advertisement.BlessAdvertisementData"><span class="pre">BlessAdvertisementData</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.start" title="Link to this definition"></a></dt>
+<dd><p>Start the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timeout</strong> (<em>float</em>) – Floating point decimal in seconds for how long to wait for the
+on-board bluetooth module to power on</p></li>
+<li><p><strong>advertisement_data</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="../advertisement.html#bless.backends.advertisement.BlessAdvertisementData" title="bless.backends.advertisement.BlessAdvertisementData"><em>BlessAdvertisementData</em></a><em>]</em>) – Optional advertisement payload to customize local name and
+connectable/discoverable settings</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.stop">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.stop" title="Link to this definition"></a></dt>
+<dd><p>Stop the server</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.subscribe_characteristic">
+<span class="sig-name descname"><span class="pre">subscribe_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bleak_winrt.windows.devices.bluetooth.genericattributeprofile.GattLocalCharacteristic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.subscribe_characteristic" title="Link to this definition"></a></dt>
+<dd><p>Called when a characteristic is subscribed to</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> (<em>GattLocalCharacteristic</em>) – The characteristic object associated with the characteristic to
+which the device would like to subscribe</p></li>
+<li><p><strong>args</strong> (<em>Object</em>) – Additional arguments to use for the subscription</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.update_value">
+<span class="sig-name descname"><span class="pre">update_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">service_uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">char_uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.update_value" title="Link to this definition"></a></dt>
+<dd><p>Update the characteristic value. This is different than using
+characteristic.set_value. This send notifications to subscribed
+central devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>service_uuid</strong> (<em>str</em>) – The string representation of the UUID for the service associated
+with the characteristic to be added</p></li>
+<li><p><strong>char_uuid</strong> (<em>str</em>) – The string representation of the UUID for the characteristic to be
+added</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether the value was successfully updated</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.server.BlessServerWinRT.write_characteristic">
+<span class="sig-name descname"><span class="pre">write_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bleak_winrt.windows.devices.bluetooth.genericattributeprofile.GattLocalCharacteristic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bleak_winrt.windows.devices.bluetooth.genericattributeprofile.GattWriteRequestedEventArgs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.server.BlessServerWinRT.write_characteristic" title="Link to this definition"></a></dt>
+<dd><p>Called by pythonnet when a write request is submitted</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> (<em>GattLocalCharacteristic</em>) – The object representation of the gatt characteristic whose value we
+should write to</p></li>
+<li><p><strong>args</strong> (<em>GattWriteRequestedEventArgs</em>) – The event arguments for the write request</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class" id="module-bless.backends.winrt.service">
+<dt class="sig sig-object py" id="bless.backends.winrt.service.BlessGATTServiceWinRT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bless.backends.winrt.service.</span></span><span class="sig-name descname"><span class="pre">BlessGATTServiceWinRT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.service.BlessGATTServiceWinRT" title="Link to this definition"></a></dt>
+<dd><p>GATT Characteristic implementation for the WinRT backend</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.service.BlessGATTServiceWinRT.add_characteristic">
+<span class="sig-name descname"><span class="pre">add_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">characteristic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BleakGATTCharacteristic</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.add_characteristic" title="Link to this definition"></a></dt>
+<dd><p>Add a characteristic to this service</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.service.BlessGATTServiceWinRT.characteristics">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">characteristics</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">BleakGATTCharacteristic</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.characteristics" title="Link to this definition"></a></dt>
+<dd><p>List of characteristics for this service</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.service.BlessGATTServiceWinRT.description">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.description" title="Link to this definition"></a></dt>
+<dd><p>Description of this service</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.service.BlessGATTServiceWinRT.get_characteristic">
+<span class="sig-name descname"><span class="pre">get_characteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">UUID</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.get_characteristic" title="Link to this definition"></a></dt>
+<dd><p>Get a characteristic by UUID</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.service.BlessGATTServiceWinRT.handle">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handle</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.handle" title="Link to this definition"></a></dt>
+<dd><p>The integer handle of this service</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.service.BlessGATTServiceWinRT.init">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../server.html#bless.backends.server.BaseBlessServer" title="bless.backends.server.BaseBlessServer"><span class="pre">BaseBlessServer</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.init" title="Link to this definition"></a></dt>
+<dd><p>Initialize the GattLocalService Object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>server</strong> (<a class="reference internal" href="#bless.backends.winrt.server.BlessServerWinRT" title="bless.backends.winrt.server.BlessServerWinRT"><em>BlessServerWinRT</em></a>) – The server to assign the service to</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.service.BlessGATTServiceWinRT.uuid">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uuid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#bless.backends.winrt.service.BlessGATTServiceWinRT.uuid" title="Link to this definition"></a></dt>
+<dd><p>UUID for this service</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class" id="module-bless.backends.winrt.characteristic">
+<dt class="sig sig-object py" id="bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bless.backends.winrt.characteristic.</span></span><span class="sig-name descname"><span class="pre">BlessGATTCharacteristicWinRT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT" title="Link to this definition"></a></dt>
+<dd><p>WinRT implementation of the BlessGATTCharacteristic</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.description">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.description" title="Link to this definition"></a></dt>
+<dd><p>Description of this characteristic</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.handle">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handle</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.handle" title="Link to this definition"></a></dt>
+<dd><p>The handle of this characteristic</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.init">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">service</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../service.html#bless.backends.service.BlessGATTService" title="bless.backends.service.BlessGATTService"><span class="pre">BlessGATTService</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.init" title="Link to this definition"></a></dt>
+<dd><p>Initialize the WinRT GattLocalCharacteristic object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>service</strong> (<a class="reference internal" href="#bless.backends.winrt.service.BlessGATTServiceWinRT" title="bless.backends.winrt.service.BlessGATTServiceWinRT"><em>BlessGATTServiceWinRT</em></a>) – The service to assign the characteristic to</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.permissions_to_protection_level">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">permissions_to_protection_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">permissions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../attribute.html#bless.backends.attribute.GATTAttributePermissions" title="bless.backends.attribute.GATTAttributePermissions"><span class="pre">GATTAttributePermissions</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">read</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bleak_winrt.windows.devices.bluetooth.genericattributeprofile.GattProtectionLevel</span></span></span><a class="headerlink" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.permissions_to_protection_level" title="Link to this definition"></a></dt>
+<dd><p>Convert the GATTAttributePermissions into a GattProtectionLevel
+GATTAttributePermissions currently only consider Encryption or Plain</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>permissions</strong> (<a class="reference internal" href="../attribute.html#bless.backends.attribute.GATTAttributePermissions" title="bless.backends.attribute.GATTAttributePermissions"><em>GATTAttributePermissions</em></a>) – The permission flags for the characteristic</p></li>
+<li><p><strong>read</strong> (<em>bool</em>) – If True, processes the permissions for Reading, else process for Writing</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The protection level equivalent</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>GattProtectionLevel</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.service_handle">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">service_handle</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.service_handle" title="Link to this definition"></a></dt>
+<dd><p>The handle of the service this characteristic belongs to</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.service_uuid">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">service_uuid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.service_uuid" title="Link to this definition"></a></dt>
+<dd><p>The UUID of the service this characteristic belongs to</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.uuid">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uuid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.uuid" title="Link to this definition"></a></dt>
+<dd><p>The uuid of this characteristic</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytearray</span></em><a class="headerlink" href="#bless.backends.winrt.characteristic.BlessGATTCharacteristicWinRT.value" title="Link to this definition"></a></dt>
+<dd><p>Get the value of the characteristic</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class" id="module-bless.backends.winrt.descriptor">
+<dt class="sig sig-object py" id="bless.backends.winrt.descriptor.BlessGATTDescriptorWinRT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bless.backends.winrt.descriptor.</span></span><span class="sig-name descname"><span class="pre">BlessGATTDescriptorWinRT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.descriptor.BlessGATTDescriptorWinRT" title="Link to this definition"></a></dt>
+<dd><p>WinRT implementation of a GATT Descriptor</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="bless.backends.winrt.descriptor.BlessGATTDescriptorWinRT.init">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">characteristic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../characteristic.html#bless.backends.characteristic.BlessGATTCharacteristic" title="bless.backends.characteristic.BlessGATTCharacteristic"><span class="pre">BlessGATTCharacteristic</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bless.backends.winrt.descriptor.BlessGATTDescriptorWinRT.init" title="Link to this definition"></a></dt>
+<dd><p>Initializes the backend-specific descriptor object and stores it in
+self.obj</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="bless.backends.winrt.descriptor.BlessGATTDescriptorWinRT.value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bytearray</span></em><a class="headerlink" href="#bless.backends.winrt.descriptor.BlessGATTDescriptorWinRT.value" title="Link to this definition"></a></dt>
+<dd><p>Get the value of the descriptor</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../corebluetooth/index.html" class="btn btn-neutral float-left" title="CoreBluetooth (macOS)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -31,6 +31,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 mypy pytest
         pip install -r requirements.txt
+        pip install -r docs/requirements.txt
     - name: Install bluetooth ctl linux
       if: runner.os == 'Linux'
       run: |
@@ -52,6 +53,10 @@ jobs:
       if: runner.os != 'Windows'
       run: |
           mypy bless
+    - name: Build Sphinx docs
+      if: runner.os == 'Linux' && matrix.python-version == '3.11'
+      run: |
+        sphinx-build -b html docs docs/_build/html
     - name: Test with pytest
       run: |
         python -m pytest
