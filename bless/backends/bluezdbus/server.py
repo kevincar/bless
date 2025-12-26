@@ -10,6 +10,7 @@ from dbus_next.aio import MessageBus, ProxyObject  # type: ignore
 from dbus_next.constants import BusType  # type: ignore
 
 from bless.backends.server import BaseBlessServer  # type: ignore
+from bless.backends.advertisement import BlessAdvertisementData
 from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
 from bless.backends.bluezdbus.descriptor import BlessGATTDescriptorBlueZDBus
 from bless.backends.bluezdbus.dbus.application import (  # type: ignore
@@ -79,9 +80,16 @@ class BlessServerBlueZDBus(BaseBlessServer):
             raise Exception("Could not locate bluetooth adapter")
         self.adapter: ProxyObject = cast(ProxyObject, potential_adapter)
 
-    async def start(self, **kwargs) -> bool:
+    async def start(
+        self, advertisement_data: Optional[BlessAdvertisementData] = None, **kwargs
+    ) -> bool:
         """
         Start the server
+
+        Parameters
+        ----------
+        advertisement_data : Optional[BlessAdvertisementData]
+            Optional advertisement payload to customize BlueZ advertising data
 
         Returns
         -------
@@ -97,7 +105,9 @@ class BlessServerBlueZDBus(BaseBlessServer):
         await self.app.register(self.adapter)
 
         # advertise
-        await self.app.start_advertising(self.adapter)
+        await self.app.start_advertising(
+            self.adapter, advertisement_data=advertisement_data
+        )
 
         return True
 

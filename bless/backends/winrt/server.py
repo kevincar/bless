@@ -8,6 +8,7 @@ from asyncio.events import AbstractEventLoop
 from typing import Optional, List, Any, cast
 
 from bless.backends.server import BaseBlessServer  # type: ignore
+from bless.backends.advertisement import BlessAdvertisementData
 from bless.backends.attribute import (  # type: ignore
     GATTAttributePermissions,
 )
@@ -122,7 +123,11 @@ class BlessServerWinRT(BaseBlessServer):
         self._adapter: BLEAdapter = BLEAdapter()
         self._name_overwrite: bool = name_overwrite
 
-    async def start(self: "BlessServerWinRT", **kwargs):
+    async def start(
+        self: "BlessServerWinRT",
+        advertisement_data: Optional[BlessAdvertisementData] = None,
+        **kwargs,
+    ):
         """
         Start the server
 
@@ -131,16 +136,27 @@ class BlessServerWinRT(BaseBlessServer):
         timeout : float
             Floating point decimal in seconds for how long to wait for the
             on-board bluetooth module to power on
+        advertisement_data : Optional[BlessAdvertisementData]
+            Optional advertisement payload to customize local name and
+            connectable/discoverable settings
         """
 
-        if self._name_overwrite:
+        if advertisement_data and advertisement_data.local_name is not None:
+            self._adapter.set_local_name(advertisement_data.local_name)
+        elif self._name_overwrite:
             self._adapter.set_local_name(self.name)
 
         adv_parameters: GattServiceProviderAdvertisingParameters = (
             GattServiceProviderAdvertisingParameters()
         )
-        adv_parameters.is_discoverable = True
-        adv_parameters.is_connectable = True
+        if advertisement_data and advertisement_data.is_discoverable is not None:
+            adv_parameters.is_discoverable = advertisement_data.is_discoverable
+        else:
+            adv_parameters.is_discoverable = True
+        if advertisement_data and advertisement_data.is_connectable is not None:
+            adv_parameters.is_connectable = advertisement_data.is_connectable
+        else:
+            adv_parameters.is_connectable = True
 
         for uuid, service in self.services.items():
             winrt_service: BlessGATTServiceWinRT = cast(BlessGATTServiceWinRT, service)
