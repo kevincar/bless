@@ -4,3 +4,4 @@
 /dist
 .mypy_cache/
 *~
+docs/_build
