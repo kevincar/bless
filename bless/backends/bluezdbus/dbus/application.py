@@ -2,7 +2,7 @@ import re
 
 import bleak.backends.bluezdbus.defs as defs  # type: ignore
 
-from typing import List, Any, Callable, Optional, Union
+from typing import List, Any, Callable, Optional, Union, Dict
 
 from dbus_next.aio import MessageBus, ProxyObject, ProxyInterface  # type: ignore
 from dbus_next.service import ServiceInterface  # type: ignore
@@ -51,8 +51,12 @@ class BlueZGattApplication(ServiceInterface):
         self.advertisements: List[BlueZLEAdvertisement] = []
         self.services: List[BlueZGattService] = []
 
-        self.Read: Optional[Callable[[BlueZGattCharacteristic], bytes]] = None
-        self.Write: Optional[Callable[[BlueZGattCharacteristic, bytes], None]] = None
+        self.Read: Optional[
+            Callable[[BlueZGattCharacteristic, Dict[str, Any]], bytes]
+        ] = None
+        self.Write: Optional[
+            Callable[[BlueZGattCharacteristic, bytes, Dict[str, Any]], None]
+        ] = None
         self.StartNotify: Optional[Callable[[None], None]] = None
         self.StopNotify: Optional[Callable[[None], None]] = None
 

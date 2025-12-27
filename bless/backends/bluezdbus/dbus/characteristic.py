@@ -122,7 +122,7 @@ class BlueZGattCharacteristic(ServiceInterface):
         f = self._service.app.Read
         if f is None:
             raise NotImplementedError()
-        return f(self)
+        return f(self, options)
 
     @method()  # noqa: F722
     def WriteValue(self, value: "ay", options: "a{sv}"):  # type: ignore # noqa
@@ -140,7 +140,7 @@ class BlueZGattCharacteristic(ServiceInterface):
         f = self._service.app.Write
         if f is None:
             raise NotImplementedError()
-        f(self, value)
+        f(self, value, options)
 
     @method()
     def StartNotify(self):  # noqa: N802

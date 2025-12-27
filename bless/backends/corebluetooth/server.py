@@ -69,6 +69,7 @@ class BlessServerCoreBluetooth(BaseBlessServer):
         self.peripheral_manager_delegate: PeripheralManagerDelegate = (
             PeripheralManagerDelegate.alloc().init()
         )
+        self.peripheral_manager_delegate.server = self
         self.peripheral_manager_delegate.read_request_func = self.read_request
         self.peripheral_manager_delegate.write_request_func = self.write_request
 

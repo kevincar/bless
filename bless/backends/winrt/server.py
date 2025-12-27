@@ -444,4 +444,12 @@ class BlessServerWinRT(BaseBlessServer):
         """
         clients = sender.subscribed_clients
         self._subscribed_clients = list(clients) if clients is not None else []
+        if self._subscribed_clients:
+            mtu_values = [
+                int(client.max_pdu_size)
+                for client in self._subscribed_clients
+                if getattr(client, "max_pdu_size", None) is not None
+            ]
+            if mtu_values:
+                self._mtu = max(mtu_values)
         logger.info("New device subscribed")

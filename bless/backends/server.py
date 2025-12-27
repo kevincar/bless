@@ -36,6 +36,7 @@ class BaseBlessServer(abc.ABC):
         self._callbacks: Dict[str, Callable[[Any], Any]] = {}
 
         self.services: Dict[str, BlessGATTService] = {}
+        self._mtu: Optional[int] = None
 
     # Async Context managers
 
@@ -304,6 +305,8 @@ class BaseBlessServer(abc.ABC):
             A bytearray value that represents the value for the characteristic
             requested
         """
+        if options is not None:
+            self._update_mtu_from_options(options)
         characteristic: Optional[BlessGATTCharacteristic] = self.get_characteristic(
             uuid
         )
@@ -313,13 +316,15 @@ class BaseBlessServer(abc.ABC):
 
         return self.read_request_func(characteristic)
 
-    def write_request(self, uuid: str, value: Any):
+    def write_request(self, uuid: str, value: Any, options: Optional[Dict] = None):
         """
         Obtain the characteristic to write and pass on to the user-defined
         write_request_func
 
         Note: write_request_func must be defined on the child class
         """
+        if options is not None:
+            self._update_mtu_from_options(options)
         characteristic: Optional[BlessGATTCharacteristic] = self.get_characteristic(
             uuid
         )
@@ -405,6 +410,36 @@ class BaseBlessServer(abc.ABC):
         Alias for `write_request_func`.
         """
         self._callbacks["write"] = func
+
+    @property
+    def mtu(self) -> Optional[int]:
+        """
+        The most recently observed MTU value for this server.
+        """
+        return self._mtu
+
+    @mtu.setter
+    def mtu(self, value: Optional[int]):
+        """
+        Set the MTU value for this server.
+        """
+        self._mtu = value
+
+    @staticmethod
+    def _coerce_mtu_value(value: Any) -> Optional[int]:
+        if value is None:
+            return None
+        if hasattr(value, "value"):
+            return BaseBlessServer._coerce_mtu_value(value.value)
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    def _update_mtu_from_options(self, options: Dict[str, Any]) -> None:
+        mtu_value = self._coerce_mtu_value(options.get("mtu"))
+        if mtu_value is not None:
+            self._mtu = mtu_value
 
     @staticmethod
     def is_uuid(uuid: str) -> bool:

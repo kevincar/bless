@@ -10,6 +10,7 @@ if TYPE_CHECKING:
         _advertisement_started_event: Any
         _services_added_events: Dict[str, Any]
         _central_subscriptions: Dict[str, Any]
+        server: Optional[Any]
         pyobjc_classMethods: Any
 
         @classmethod
@@ -98,6 +99,7 @@ else:
             self = objc.super(PeripheralManagerDelegate, self).init()
 
             self.event_loop: Optional[asyncio.AbstractEventLoop] = None
+            self.server: Optional[Any] = None
 
             self.peripheral_manager: CBPeripheralManager = (
                 CBPeripheralManager.alloc().initWithDelegate_queue_(
@@ -342,6 +344,14 @@ else:
                     central_uuid, char_uuid
                 )
             )
+            mtu_value = None
+            max_update = getattr(central, "maximumUpdateValueLength", None)
+            if callable(max_update):
+                mtu_value = max_update()
+            else:
+                mtu_value = max_update
+            if mtu_value is not None and self.server is not None:
+                self.server._mtu = int(mtu_value)
             if central_uuid in self._central_subscriptions:
                 subscriptions = self._central_subscriptions[central_uuid]
                 if char_uuid not in subscriptions:
