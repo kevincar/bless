@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, cast  # noqa: E402
 from dbus_next.aio import MessageBus, ProxyObject  # noqa: E402
 from dbus_next.constants import BusType  # noqa: E402
 
+from bless.backends.advertisement import BlessAdvertisementData
 from bless.backends.bluezdbus.dbus.characteristic import Flags  # type: ignore # noqa: E402 E501
 from bless.backends.bluezdbus.dbus.utils import get_adapter  # type: ignore # noqa: E402 E501
 from bless.backends.bluezdbus.dbus.application import BlueZGattApplication  # type: ignore # noqa: E402 E501
@@ -110,7 +111,13 @@ class TestBlueZGattApplication:
         assert await app.is_advertising(adapter) is False
 
         # Advertise
-        await app.start_advertising(adapter)
+        await app.start_advertising(adapter, BlessAdvertisementData(
+                local_name="Test Device",
+                manufacturer_data={
+                    0xFFFF: bytes([0xDE, 0xAD, 0xBE, 0xEF])
+                }
+            )
+        )
 
         # Check
         assert await app.is_advertising(adapter) is True
