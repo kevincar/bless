@@ -222,7 +222,10 @@ class BlueZGattApplication(ServiceInterface):
             # Only add the first UUID
             advertisement._service_uuids.append(self.services[0].UUID)
         if advertisement_data and advertisement_data.manufacturer_data is not None:
-            advertisement._manufacturer_data = advertisement_data.manufacturer_data
+            advertisement._manufacturer_data = {
+                k: Variant("ay", v) for k, v in
+                advertisement_data.manufacturer_data.items()
+            }
         if advertisement_data and advertisement_data.service_data is not None:
             advertisement._service_data = advertisement_data.service_data
         if advertisement_data and advertisement_data.tx_power is not None:
