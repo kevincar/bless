@@ -27,7 +27,7 @@ and server programs.
 pip install bless
 ```
 
-⚠️ Note: Windows users must also install the pysetupdi:
+Note: Windows users must also install the pysetupdi:
 
 ```bash
 pip install git+https://github.com/gwangyi/pysetupdi
