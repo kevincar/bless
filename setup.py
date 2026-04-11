@@ -29,31 +29,31 @@ setuptools.setup(
             'python_version<"3.12"'
         ),
         (
-            'winrt-Windows.Devices.Bluetooth==2.0.0b1; '
+            'winrt-Windows.Devices.Bluetooth==3.1; '
             'platform_system=="Windows" and python_version>="3.12"'
         ),
         (
-            'winrt-Windows.Devices.Bluetooth.Advertisement==2.0.0b1; '
+            'winrt-Windows.Devices.Bluetooth.Advertisement==3.1; '
             'platform_system=="Windows" and python_version>="3.12"'
         ),
         (
-            'winrt-Windows.Devices.Bluetooth.GenericAttributeProfile==2.0.0b1; '
+            'winrt-Windows.Devices.Bluetooth.GenericAttributeProfile==3.1; '
             'platform_system=="Windows" and python_version>="3.12"'
         ),
         (
-            'winrt-Windows.Devices.Enumeration==2.0.0b1; '
+            'winrt-Windows.Devices.Enumeration==3.1; '
             'platform_system=="Windows" and python_version>="3.12"'
         ),
         (
-            'winrt-Windows.Foundation==2.0.0b1; '
+            'winrt-Windows.Foundation==3.1; '
             'platform_system=="Windows" and python_version>="3.12"'
         ),
         (
-            'winrt-Windows.Foundation.Collections==2.0.0b1; '
+            'winrt-Windows.Foundation.Collections==3.1; '
             'platform_system=="Windows" and python_version>="3.12"'
         ),
         (
-            'winrt-Windows.Storage.Streams==2.0.0b1; '
+            'winrt-Windows.Storage.Streams==3.1; '
             'platform_system=="Windows" and python_version>="3.12"'
         ),
     ],
