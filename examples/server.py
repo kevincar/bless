@@ -59,7 +59,7 @@ async def run(loop):
         | GATTCharacteristicProperties.write
         | GATTCharacteristicProperties.indicate
     )
-    permissions = GATTAttributePermissions.readable | GATTAttributePermissions.writable
+    permissions = GATTAttributePermissions.readable | GATTAttributePermissions.writeable
     await server.add_new_characteristic(
         my_service_uuid, my_char_uuid, char_flags, None, permissions
     )
