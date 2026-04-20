@@ -55,7 +55,7 @@ async def run(loop):
                 ),
                 "Permissions": (
                     GATTAttributePermissions.readable
-                    | GATTAttributePermissions.writable
+                    | GATTAttributePermissions.writeable
                 ),
                 "Value": None,
             }
